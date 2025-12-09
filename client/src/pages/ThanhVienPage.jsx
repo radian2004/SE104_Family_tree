@@ -19,7 +19,9 @@ export default function ThanhVienPage() {
   const {
     thanhvienList,
     selectedThanhVien,
-    pagination: { total, page, limit },
+    total,
+    page,
+    limit,
     setThanhVienList,
     setPagination,
     removeThanhVienFromList,

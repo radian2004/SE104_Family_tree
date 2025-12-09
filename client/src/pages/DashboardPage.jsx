@@ -47,7 +47,7 @@ export default function DashboardPage() {
               <div className="text-5xl mb-4">👥</div>
               <h3 className="text-2xl font-bold text-gray-800">Thành viên</h3>
               <p className="text-gray-600 mt-2">Quản lý các thành viên gia phả</p>
-              <button className="btn-primary mt-4">Xem thêm</button>
+              <button onClick={(e) => { e.stopPropagation(); navigate('/thanhvien'); }} className="btn-primary mt-4">Xem thêm</button>
             </div>
           </div>
 

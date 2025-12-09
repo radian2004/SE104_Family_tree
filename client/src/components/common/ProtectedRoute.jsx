@@ -12,6 +12,14 @@ import { useAuthStore } from '../../store/authStore.js';
  * Protected Route - chỉ user đã login mới vào được
  */
 export const ProtectedRoute = ({ children }) => {
+  // TEMPORARY: Bypass auth để test UI
+  // TODO: Remove this when auth is ready
+  const BYPASS_AUTH = false; // ← Set to false để bật auth lại
+
+  if (BYPASS_AUTH) {
+    return children;
+  }
+
   const { isLoggedIn, isLoading } = useAuthStore();
 
   if (isLoading) {

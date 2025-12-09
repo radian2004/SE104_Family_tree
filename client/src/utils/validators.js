@@ -84,8 +84,9 @@ export const validateData = async (schema, data) => {
     return { success: true, data: validatedData };
   } catch (error) {
     const errors = {};
-    if (error.errors) {
-      error.errors.forEach((err) => {
+    // Zod errors - error.issues là mảng các lỗi
+    if (error.issues && Array.isArray(error.issues)) {
+      error.issues.forEach((err) => {
         const path = err.path.join('.');
         errors[path] = err.message;
       });
