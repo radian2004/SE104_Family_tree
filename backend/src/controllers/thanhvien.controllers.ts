@@ -33,7 +33,7 @@ export const getAllThanhVienController = async (req: Request, res: Response) => 
     const result = await thanhvienService.getAllThanhVien();
     return res.status(200).json({
       message: 'Lấy danh sách thành công',
-      data: result
+      result: result
     });
   } catch (error: any) {
     console.error('Lỗi getAllThanhVien:', error);
@@ -59,7 +59,7 @@ export const getThanhVienByMaTVController = async (req: Request, res: Response) 
 
     return res.status(200).json({
       message: 'Tìm thành viên thành công',
-      data: result
+      result: result
     });
   } catch (error: any) {
     console.error('Lỗi getThanhVienByMaTV:', error);

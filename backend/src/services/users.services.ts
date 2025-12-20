@@ -25,12 +25,16 @@ interface RefreshTokenRow extends RowDataPacket {
 class UsersService {
 
 private signAccessToken(user_id: string) {
+  const secretKey = process.env.JWT_SECRET_ACCESS_TOKEN as string;
+  if (!secretKey) {
+    throw new Error('JWT_SECRET_ACCESS_TOKEN is not defined in environment variables');
+  }
   return signToken(
     {
       user_id,
       token_type: TokenType.AccessToken
     },
-    process.env.JWT_SECRET_ACCESS_TOKEN as string,
+    secretKey,
     {
       algorithm: 'HS256',
       expiresIn: process.env.ACCESS_TOKEN_EXPIRE || '15m' as any
@@ -39,12 +43,16 @@ private signAccessToken(user_id: string) {
 }
 
 private signRefreshToken(user_id: string) {
+  const secretKey = process.env.JWT_SECRET_REFRESH_TOKEN as string;
+  if (!secretKey) {
+    throw new Error('JWT_SECRET_REFRESH_TOKEN is not defined in environment variables');
+  }
   return signToken(
     {
       user_id,
       token_type: TokenType.RefreshToken
     },
-    process.env.JWT_SECRET_REFRESH_TOKEN as string,
+    secretKey,
     {
       algorithm: 'HS256',
       expiresIn: process.env.REFRESH_TOKEN_EXPIRE || '7d' as any
