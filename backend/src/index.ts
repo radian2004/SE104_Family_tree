@@ -4,6 +4,8 @@ import databaseService from '~/services/database.services';
 import usersRouter from '~/routes/users.routes';
 import thanhvienRouter from '~/routes/thanhvien.routes';
 import lookupsRouter from '~/routes/lookups.routes';
+import thanhTichRouter from '~/routes/thanhtich.routes';
+import ketthucRouter from './routes/ketthuc.routes'
 import { defaultErrorHandler } from '~/middlewares/error.middlewares';
 
 const app = express();
@@ -24,7 +26,8 @@ app.use(express.json());
 app.use('/users', usersRouter);
 app.use('/thanhvien', thanhvienRouter);
 app.use('/', lookupsRouter);
-
+app.use('/thanhtich', thanhTichRouter);
+app.use('/ketthuc', ketthucRouter)
 // Default error handler (đặt sau tất cả routes)
 app.use(defaultErrorHandler);
 

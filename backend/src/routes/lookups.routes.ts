@@ -10,8 +10,11 @@ const lookupsRouter = Router();
  */
 lookupsRouter.get('/gioitinh', async (req: Request, res: Response) => {
   try {
-    const sql = 'SELECT * FROM GIOITINH ORDER BY TenGioiTinh';
-    const result = await databaseService.query(sql);
+    // ✅ ĐÚNG: Trả về danh sách giới tính hardcoded vì không có bảng GIOITINH
+    const result = [
+      { MaGioiTinh: 'Nam', TenGioiTinh: 'Nam' },
+      { MaGioiTinh: 'Nữ', TenGioiTinh: 'Nữ' }
+    ];
     return res.json({
       message: 'Lấy danh sách giới tính thành công',
       result
@@ -63,11 +66,11 @@ lookupsRouter.get('/nghenghiep', async (req: Request, res: Response) => {
 });
 
 /**
- * GET /caygiaphat - Lấy danh sách gia phả
+ * GET /caygiapha - Lấy danh sách gia phả
  */
-lookupsRouter.get('/caygiaphat', async (req: Request, res: Response) => {
+lookupsRouter.get('/caygiapha', async (req: Request, res: Response) => {
   try {
-    const sql = 'SELECT * FROM CAYGIAPHAT ORDER BY TenCayGiaP';
+    const sql = 'SELECT * FROM CAYGIAPHA ORDER BY TenGiaPha';  // ✅ ĐÚNG: Tên bảng và cột đúng
     const result = await databaseService.query(sql);
     return res.json({
       message: 'Lấy danh sách gia phả thành công',
@@ -95,6 +98,25 @@ lookupsRouter.get('/loaitaikhoan', async (req: Request, res: Response) => {
   } catch (error: any) {
     return res.status(500).json({
       message: error.message || 'Lỗi lấy danh sách loại tài khoản',
+      error
+    });
+  }
+});
+
+/**
+ * GET /lookups/loaithanhtich - Lấy danh sách loại thành tích
+ */
+lookupsRouter.get('/loaithanhtich', async (req: Request, res: Response) => {
+  try {
+    const sql = 'SELECT * FROM LOAITHANHTICH ORDER BY TenLTT';
+    const result = await databaseService.query(sql);
+    return res.json({
+      message: 'Lấy danh sách loại thành tích thành công',
+      result
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      message: error.message || 'Lỗi lấy danh sách loại thành tích',
       error
     });
   }
