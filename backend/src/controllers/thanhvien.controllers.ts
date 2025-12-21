@@ -4,16 +4,16 @@ import thanhvienService from '~/services/thanhvien.services';
 
 // Controller đăng ký thành viên mới
 export const registerController = async (req: Request, res: Response) => {
-  const { HoTen, NgayGioSinh, DiaChi, MaQueQuan, MaNgheNghiep, MaGioiTinh, MaGiaPha } = req.body;
+  const { HoTen, NgayGioSinh, DiaChi, MaQueQuan, MaNgheNghiep, GioiTinh, MaGiaPha } = req.body;  // ✅ ĐÚNG
 
   try {
     const result = await thanhvienService.register({
       HoTen,
-      NgayGioSinh: new Date(NgayGioSinh), // Convert string to Date
+      NgayGioSinh: new Date(NgayGioSinh),
       DiaChi,
       MaQueQuan,
       MaNgheNghiep,
-      MaGioiTinh,
+      GioiTinh,  // ✅ ĐÚNG: 'Nam' hoặc 'Nữ'
       MaGiaPha
     });
 

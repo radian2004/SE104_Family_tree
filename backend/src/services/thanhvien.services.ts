@@ -13,42 +13,45 @@ interface ThanhVienRow extends RowDataPacket {
   DOI: number;
   MaQueQuan: string;
   MaNgheNghiep: string;
-  MaGioiTinh: string;
+  GioiTinh: string;  // ✅ ĐÚNG: VARCHAR(3) - 'Nam'/'Nữ'
+  MaNguyenNhanMat: string | null;  // ✅ THÊM: Cột này có trong DB
+  NgayGioMat: Date | null;  // ✅ THÊM: Cột này có trong DB
+  MaDiaDiem: string | null;  // ✅ THÊM: Cột này có trong DB
   MaGiaPha: string | null;
 }
 
 class ThanhVienService {
   // Đăng ký thành viên mới
-  async register(payload: {
-    HoTen: string;
-    NgayGioSinh: Date;
-    DiaChi: string;
-    MaQueQuan: string;
-    MaNgheNghiep: string;
-    MaGioiTinh: string;
-    MaGiaPha?: string;
-  }) {
+async register(payload: {
+  HoTen: string;
+  NgayGioSinh: Date;
+  DiaChi: string;
+  MaQueQuan: string;
+  MaNgheNghiep: string;
+  GioiTinh: string;  // ✅ ĐÚNG: 'Nam' hoặc 'Nữ'
+  MaGiaPha?: string;
+}) {
     const thanhvien = new ThanhVien(payload);
 
     // INSERT không cần MaTV vì trigger TRG_GEN_ID_THANHVIEN sẽ tự sinh
-    const sql = `
-      INSERT INTO THANHVIEN (
-        HoTen, NgayGioSinh, DiaChi, TrangThai, 
-        DOI, MaQueQuan, MaNgheNghiep, MaGioiTinh, MaGiaPha
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
+const sql = `
+  INSERT INTO THANHVIEN (
+    HoTen, NgayGioSinh, DiaChi, TrangThai, 
+    DOI, MaQueQuan, MaNgheNghiep, GioiTinh, MaGiaPha
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+`;
 
     const params = [
-      thanhvien.HoTen,
-      thanhvien.NgayGioSinh,
-      thanhvien.DiaChi,
-      thanhvien.TrangThai,
-      thanhvien.DOI,
-      thanhvien.MaQueQuan,
-      thanhvien.MaNgheNghiep,
-      thanhvien.MaGioiTinh,
-      thanhvien.MaGiaPha || null
-    ];
+  thanhvien.HoTen,
+  thanhvien.NgayGioSinh,
+  thanhvien.DiaChi,
+  thanhvien.TrangThai,
+  thanhvien.DOI,
+  thanhvien.MaQueQuan,
+  thanhvien.MaNgheNghiep,
+  thanhvien.GioiTinh,  // ✅ ĐÚNG
+  thanhvien.MaGiaPha || null
+];
 
     const result = await databaseService.query<ResultSetHeader>(sql, params);
 
@@ -86,51 +89,64 @@ class ThanhVienService {
   }
 
   // Cập nhật thông tin thành viên
-  async updateThanhVien(MaTV: string, payload: Partial<ThanhVien>) {
-    const fields: string[] = [];
-    const values: any[] = [];
+async updateThanhVien(MaTV: string, payload: Partial<ThanhVien>) {
+  const fields: string[] = [];
+  const values: any[] = [];
 
-    // Chỉ update các field được truyền vào
-    if (payload.HoTen !== undefined) {
-      fields.push('HoTen = ?');
-      values.push(payload.HoTen);
-    }
-    if (payload.NgayGioSinh !== undefined) {
-      fields.push('NgayGioSinh = ?');
-      values.push(payload.NgayGioSinh);
-    }
-    if (payload.DiaChi !== undefined) {
-      fields.push('DiaChi = ?');
-      values.push(payload.DiaChi);
-    }
-    if (payload.MaQueQuan !== undefined) {
-      fields.push('MaQueQuan = ?');
-      values.push(payload.MaQueQuan);
-    }
-    if (payload.MaNgheNghiep !== undefined) {
-      fields.push('MaNgheNghiep = ?');
-      values.push(payload.MaNgheNghiep);
-    }
-    if (payload.MaGiaPha !== undefined) {
-      fields.push('MaGiaPha = ?');
-      values.push(payload.MaGiaPha);
-    }
-
-    if (fields.length === 0) {
-      throw new Error('Không có trường nào để cập nhật');
-    }
-
-    values.push(MaTV); // Thêm MaTV vào cuối cho WHERE clause
-
-    const sql = `UPDATE THANHVIEN SET ${fields.join(', ')} WHERE MaTV = ?`;
-    const result = await databaseService.query<ResultSetHeader>(sql, values);
-
-    return {
-      message: 'Cập nhật thành công',
-      affectedRows: result.affectedRows
-    };
+  if (payload.HoTen !== undefined) {
+    fields.push('HoTen = ?');
+    values.push(payload.HoTen);
+  }
+  if (payload.NgayGioSinh !== undefined) {
+    fields.push('NgayGioSinh = ?');
+    values.push(payload.NgayGioSinh);
+  }
+  if (payload.DiaChi !== undefined) {
+    fields.push('DiaChi = ?');
+    values.push(payload.DiaChi);
+  }
+  if (payload.MaQueQuan !== undefined) {
+    fields.push('MaQueQuan = ?');
+    values.push(payload.MaQueQuan);
+  }
+  if (payload.MaNgheNghiep !== undefined) {
+    fields.push('MaNgheNghiep = ?');
+    values.push(payload.MaNgheNghiep);
+  }
+  if (payload.GioiTinh !== undefined) {  // ✅ THÊM
+    fields.push('GioiTinh = ?');
+    values.push(payload.GioiTinh);
+  }
+  if (payload.MaNguyenNhanMat !== undefined) {  // ✅ THÊM
+    fields.push('MaNguyenNhanMat = ?');
+    values.push(payload.MaNguyenNhanMat);
+  }
+  if (payload.NgayGioMat !== undefined) {  // ✅ THÊM
+    fields.push('NgayGioMat = ?');
+    values.push(payload.NgayGioMat);
+  }
+  if (payload.MaDiaDiem !== undefined) {  // ✅ THÊM
+    fields.push('MaDiaDiem = ?');
+    values.push(payload.MaDiaDiem);
+  }
+  if (payload.MaGiaPha !== undefined) {
+    fields.push('MaGiaPha = ?');
+    values.push(payload.MaGiaPha);
   }
 
+  if (fields.length === 0) {
+    throw new Error('Không có trường nào để cập nhật');
+  }
+
+  values.push(MaTV);
+  const sql = `UPDATE THANHVIEN SET ${fields.join(', ')} WHERE MaTV = ?`;
+  const result = await databaseService.query<ResultSetHeader>(sql, values);
+
+  return {
+    message: 'Cập nhật thành công',
+    affectedRows: result.affectedRows
+  };
+}
   // Xóa thành viên
   async deleteThanhVien(MaTV: string) {
     const sql = 'DELETE FROM THANHVIEN WHERE MaTV = ?';

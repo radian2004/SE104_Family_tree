@@ -1,5 +1,5 @@
 // src/services/database.services.ts
-import mysql from 'mysql2/promise';
+import mysql, { PoolConnection } from 'mysql2/promise';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -38,7 +38,12 @@ class DatabaseService {
     const [rows] = await this.pool.execute(sql, params);
     return rows as T;
   }
-
+  
+  // Add this method to get a connection for transactions
+  async getConnection(): Promise<PoolConnection> {
+    return await this.pool.getConnection();
+  }
+  
   // Lấy pool để dùng transaction
   getPool() {
     return this.pool;
