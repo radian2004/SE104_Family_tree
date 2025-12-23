@@ -91,9 +91,9 @@ export default function ThanhVienCreatePage() {
           <button
             onClick={() => navigate('/thanhvien')}
             disabled={isLoading}
-            className="btn-secondary"
+            className="btn btn-ghost"
           >
-            Quay lại
+            ← Quay lại danh sách
           </button>
         </div>
       </div>

@@ -204,25 +204,25 @@ export default function ThanhVienForm({ initialData, onSubmit, isLoading }) {
         </div>
 
         {/* Submit Button */}
-        <div className="flex gap-2 pt-4">
+        <div className="flex gap-3 pt-6">
           <button
             type="submit"
             disabled={isLoading}
-            className="btn-primary"
+            className="btn btn-primary"
           >
             {isLoading ? (
               <>
-                <span className="spinner mr-2"></span>
+                <div className="spinner"></div>
                 Đang lưu...
               </>
             ) : (
-              'Lưu'
+              'Lưu thành viên'
             )}
           </button>
           <button
             type="button"
             onClick={() => window.history.back()}
-            className="btn-secondary"
+            className="btn btn-ghost"
           >
             Quay lại
           </button>

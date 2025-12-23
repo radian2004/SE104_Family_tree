@@ -18,7 +18,7 @@ export default function ThanhVienDetailPage() {
   const navigate = useNavigate();
   const { MaTV } = useParams();
   const { removeThanhVienFromList } = useThanhVienStore();
-  const { setAllLookups } = useLookupsStore();
+  const { setAllLookups, queQuan, ngheNghiep, cayGiaPha } = useLookupsStore();
 
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
@@ -86,6 +86,30 @@ export default function ThanhVienDetailPage() {
       console.error('Error reloading member:', err);
     }
   };
+
+  // Helper functions to get names from lookups
+  const getQueQuanName = (maQueQuan) => {
+    if (!maQueQuan || !queQuan) return 'Chưa có';
+    const found = queQuan.find(item => item.MaQueQuan === maQueQuan);
+    return found?.TenQueQuan || maQueQuan;
+  };
+
+  const getNgheNghiepName = (maNgheNghiep) => {
+    if (!maNgheNghiep || !ngheNghiep) return 'Chưa cập nhật';
+    const found = ngheNghiep.find(item => item.MaNgheNghiep === maNgheNghiep);
+    return found?.TenNgheNghiep || maNgheNghiep;
+  };
+
+  const getGiaPhaName = (maGiaPha) => {
+    if (!maGiaPha || !cayGiaPha) return 'Chưa thuộc gia phả nào';
+    const found = cayGiaPha.find(item => item.MaGiaPha === maGiaPha);
+    return found?.TenGiaPha || maGiaPha;
+  };
+
+  // Check if member is deceased
+  const isDeceased = thanhvien ?
+    ((thanhvien.TrangThai || '').toLowerCase().includes('mất') ||
+      (thanhvien.TrangThai || '').toLowerCase().includes('mat')) : false;
 
   return (
     <div className="min-h-screen">
@@ -159,8 +183,8 @@ export default function ThanhVienDetailPage() {
               <div className="px-6 pb-6 -mt-16 relative">
                 {/* Avatar */}
                 <div className={`w-32 h-32 rounded-2xl border-4 border-white shadow-xl flex items-center justify-center text-5xl mb-4 ${thanhvien.GioiTinh === 'Nữ'
-                    ? 'bg-gradient-to-br from-pink-100 to-pink-200'
-                    : 'bg-gradient-to-br from-blue-100 to-blue-200'
+                  ? 'bg-gradient-to-br from-pink-100 to-pink-200'
+                  : 'bg-gradient-to-br from-blue-100 to-blue-200'
                   }`}>
                   {thanhvien.GioiTinh === 'Nữ' ? '👩' : '👨'}
                 </div>
@@ -172,9 +196,15 @@ export default function ThanhVienDetailPage() {
                       {thanhvien.HoTen}
                     </h1>
                     <div className="flex flex-wrap items-center gap-3 text-sm text-neutral-500">
-                      <span className={`badge ${thanhvien.TrangThai === 'Còn sống' ? 'badge-success' : 'badge-neutral'}`}>
-                        {thanhvien.TrangThai || 'Còn sống'}
-                      </span>
+                      {isDeceased ? (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-neutral-100 text-neutral-600 border border-neutral-200">
+                          Đã mất
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                          Còn sống
+                        </span>
+                      )}
                       <span className="flex items-center gap-1">
                         <FiUser className="w-4 h-4" />
                         {thanhvien.GioiTinh}
@@ -213,7 +243,7 @@ export default function ThanhVienDetailPage() {
                     <h3 className="text-sm font-medium text-neutral-500 mb-1">Địa chỉ</h3>
                     <p className="text-neutral-800 font-medium">{thanhvien.DiaChi || 'Chưa cập nhật'}</p>
                     <p className="text-sm text-neutral-500 mt-1">
-                      Quê quán: {thanhvien.TenQueQuan || thanhvien.MaQueQuan || 'Chưa có'}
+                      Quê quán: {getQueQuanName(thanhvien.MaQueQuan)}
                     </p>
                   </div>
                 </div>
@@ -228,7 +258,7 @@ export default function ThanhVienDetailPage() {
                   <div>
                     <h3 className="text-sm font-medium text-neutral-500 mb-1">Nghề nghiệp</h3>
                     <p className="text-neutral-800 font-medium">
-                      {thanhvien.TenNgheNghiep || thanhvien.MaNgheNghiep || 'Chưa cập nhật'}
+                      {getNgheNghiepName(thanhvien.MaNgheNghiep)}
                     </p>
                   </div>
                 </div>
@@ -243,7 +273,7 @@ export default function ThanhVienDetailPage() {
                   <div>
                     <h3 className="text-sm font-medium text-neutral-500 mb-1">Gia phả</h3>
                     <p className="text-neutral-800 font-medium">
-                      {thanhvien.TenGiaPha || thanhvien.MaGiaPha || 'Chưa thuộc gia phả nào'}
+                      {getGiaPhaName(thanhvien.MaGiaPha)}
                     </p>
                   </div>
                 </div>

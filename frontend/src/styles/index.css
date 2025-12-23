@@ -305,6 +305,16 @@ h6 {
   transform: none !important;
 }
 
+.btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(232, 118, 23, 0.2);
+}
+
+.btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(232, 118, 23, 0.3);
+}
+
 /* ==================== FORM ELEMENTS ==================== */
 .form-group {
   margin-bottom: 1.25rem;
@@ -361,6 +371,22 @@ h6 {
 
 .form-error::before {
   content: '⚠';
+}
+
+/* Input with icon padding */
+.input-field.pl-12 {
+  padding-left: 3rem;
+}
+
+.input-field.pr-12 {
+  padding-right: 3rem;
+}
+
+/* Input placeholder */
+.input-field::placeholder,
+.textarea-field::placeholder {
+  color: var(--neutral-400);
+  font-weight: 400;
 }
 
 /* ==================== ALERTS ==================== */

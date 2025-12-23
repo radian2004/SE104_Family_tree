@@ -4,14 +4,15 @@
  * ============================================
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { FiPlus, FiUsers, FiSearch, FiArrowLeft, FiGrid, FiList, FiFilter } from 'react-icons/fi';
+import { FiPlus, FiUsers, FiArrowLeft, FiGrid, FiList, FiFilter } from 'react-icons/fi';
 import ThanhVienFilter from '../components/thanhvien/ThanhVienFilter.jsx';
 import ThanhVienList from '../components/thanhvien/ThanhVienList.jsx';
 import { useThanhVienStore } from '../store/thanhvienStore.js';
 import { useLookupsStore } from '../store/lookupsStore.js';
 import thanhvienService from '../services/thanhvien.js';
+import thanhTichService from '../services/thanhtich.js';
 
 export default function ThanhVienPage() {
   const navigate = useNavigate();
@@ -29,13 +30,29 @@ export default function ThanhVienPage() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
+  const [viewMode, setViewMode] = useState('list');
   const [showFilter, setShowFilter] = useState(true);
+  const [achievementCount, setAchievementCount] = useState(0);
   const [filters, setFilters] = useState({
     search: '',
     sortBy: 'HoTen',
     sortOrder: 'asc',
   });
+
+  // Calculate stats from thanhvienList
+  const stats = useMemo(() => {
+    if (!thanhvienList || thanhvienList.length === 0) {
+      return { alive: 0, deceased: 0, withAchievements: 0 };
+    }
+    // Count deceased - normalize to lowercase for comparison
+    const deceased = thanhvienList.filter(tv => {
+      const status = (tv.TrangThai || '').toLowerCase();
+      return status.includes('đã mất') || status.includes('mất') || status.includes('mat');
+    }).length;
+    // Alive is everyone who is NOT deceased
+    const alive = thanhvienList.length - deceased;
+    return { alive, deceased, withAchievements: 0 };
+  }, [thanhvienList]);
 
   // Load lookups data on mount
   useEffect(() => {
@@ -49,6 +66,22 @@ export default function ThanhVienPage() {
     };
     loadLookups();
   }, [setAllLookups]);
+
+  // Load achievement stats on mount
+  useEffect(() => {
+    const loadAchievements = async () => {
+      try {
+        const response = await thanhTichService.traCuu({});
+        const achievements = response.result || response || [];
+        // Count unique members with achievements
+        const uniqueMembers = new Set(achievements.map(a => a.MaTV || a.HoTen));
+        setAchievementCount(uniqueMembers.size);
+      } catch (err) {
+        console.error('Error loading achievements:', err);
+      }
+    };
+    loadAchievements();
+  }, []);
 
   // Load thành viên list when filters or pagination changes
   useEffect(() => {
@@ -130,7 +163,7 @@ export default function ThanhVienPage() {
                 <h1 className="text-lg font-bold text-neutral-800" style={{ fontFamily: 'Playfair Display, serif' }}>
                   Thành viên
                 </h1>
-                <p className="text-xs text-neutral-500">{total} thành viên</p>
+                <p className="text-xs text-neutral-500">{total || thanhvienList?.length || 0} thành viên</p>
               </div>
             </div>
           </div>
@@ -157,18 +190,26 @@ export default function ThanhVienPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 animate-fade-in" style={{ animationDelay: '0.1s', opacity: 0 }}>
-          {[
-            { label: 'Tổng thành viên', value: total || 0, icon: '👥', color: 'from-orange-400 to-orange-500' },
-            { label: 'Còn sống', value: '-', icon: '💚', color: 'from-emerald-400 to-emerald-500' },
-            { label: 'Đã mất', value: '-', icon: '🕯️', color: 'from-neutral-400 to-neutral-500' },
-            { label: 'Có thành tích', value: '-', icon: '🏆', color: 'from-yellow-400 to-yellow-500' },
-          ].map((stat) => (
-            <div key={stat.label} className="glass-card p-4 text-center hover:scale-105 transition-transform">
-              <div className="text-2xl mb-2">{stat.icon}</div>
-              <div className="text-2xl font-bold text-neutral-800">{stat.value}</div>
-              <div className="text-xs text-neutral-500">{stat.label}</div>
-            </div>
-          ))}
+          <div className="glass-card p-4 text-center hover:scale-105 transition-transform">
+            <div className="text-2xl mb-2">👥</div>
+            <div className="text-2xl font-bold text-neutral-800">{total || thanhvienList?.length || 0}</div>
+            <div className="text-xs text-neutral-500">Tổng thành viên</div>
+          </div>
+          <div className="glass-card p-4 text-center hover:scale-105 transition-transform border-l-4 border-emerald-500">
+            <div className="text-2xl mb-2">💚</div>
+            <div className="text-2xl font-bold text-emerald-600">{stats.alive}</div>
+            <div className="text-xs text-neutral-500">Còn sống</div>
+          </div>
+          <div className="glass-card p-4 text-center hover:scale-105 transition-transform">
+            <div className="text-2xl mb-2">🕯️</div>
+            <div className="text-2xl font-bold text-neutral-600">{stats.deceased}</div>
+            <div className="text-xs text-neutral-500">Đã mất</div>
+          </div>
+          <div className="glass-card p-4 text-center hover:scale-105 transition-transform">
+            <div className="text-2xl mb-2">🏆</div>
+            <div className="text-2xl font-bold text-yellow-600">{achievementCount || 0}</div>
+            <div className="text-xs text-neutral-500">Có thành tích</div>
+          </div>
         </div>
 
         {/* Error Alert */}

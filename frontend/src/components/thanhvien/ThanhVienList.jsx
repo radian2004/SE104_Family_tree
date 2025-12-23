@@ -105,7 +105,7 @@ export default function ThanhVienList({
             <button
               onClick={() => onPageChange(page - 1)}
               disabled={page === 1 || isLoading}
-              className="btn-secondary btn-small"
+              className="btn btn-ghost btn-small"
             >
               ← Trước
             </button>
@@ -129,11 +129,10 @@ export default function ThanhVienList({
                     key={pageNum}
                     onClick={() => onPageChange(pageNum)}
                     disabled={isLoading}
-                    className={`px-3 py-1 rounded ${
-                      pageNum === page
+                    className={`px-3 py-1 rounded ${pageNum === page
                         ? 'bg-blue-600 text-white'
                         : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-                    }`}
+                      }`}
                   >
                     {pageNum}
                   </button>
@@ -144,7 +143,7 @@ export default function ThanhVienList({
             <button
               onClick={() => onPageChange(page + 1)}
               disabled={page === totalPages || isLoading}
-              className="btn-secondary btn-small"
+              className="btn btn-ghost btn-small"
             >
               Sau →
             </button>

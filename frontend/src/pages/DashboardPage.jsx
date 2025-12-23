@@ -32,7 +32,7 @@ export default function DashboardPage() {
       icon: <FiGitBranch className="w-8 h-8" />,
       color: 'from-emerald-400 to-emerald-600',
       shadowColor: 'rgba(52, 211, 153, 0.4)',
-      path: '/giaphat',
+      path: '/giapha',
       count: '5',
     },
     {

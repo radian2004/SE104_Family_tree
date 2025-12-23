@@ -1,8 +1,6 @@
 /**
  * ============================================
- * REGISTER PAGE (Final Version)
- * - Hỗ trợ hiển thị lỗi chi tiết từ Backend
- * - Hỗ trợ ẩn/hiện mật khẩu
+ * REGISTER PAGE - Premium Family Tree Design
  * ============================================
  */
 
@@ -10,254 +8,291 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { validateData, registerSchema } from '../utils/validators';
+import { FiUser, FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight } from 'react-icons/fi';
 
 export default function RegisterPage() {
   const { handleRegister, isLoading, error, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  
-  // 1. State lưu dữ liệu Form
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     confirm_password: '',
   });
-  
-  // 2. State lưu lỗi (validation errors)
+
   const [formErrors, setFormErrors] = useState({});
-  
-  // 3. State điều khiển ẩn/hiện mật khẩu
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Nếu đã đăng nhập thì chuyển hướng về Dashboard
   if (isAuthenticated) {
     navigate('/dashboard');
   }
 
-  // Xử lý khi người dùng nhập liệu
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    
-    // Tự động xóa lỗi của ô đang nhập để giao diện sạch sẽ hơn
     if (formErrors[name]) {
       setFormErrors((prev) => ({ ...prev, [name]: '' }));
     }
   };
 
-  // Xử lý khi nhấn nút Đăng ký
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setFormErrors({}); // Reset lỗi cũ
+    setFormErrors({});
 
-    // Bước 1: Validate phía Frontend (Client-side)
     const validation = await validateData(registerSchema, formData);
     if (!validation.success) {
       setFormErrors(validation.errors);
       return;
     }
 
-    // Bước 2: Gọi API Đăng ký
     try {
       await handleRegister(formData);
-      // Nếu thành công, useAuth hoặc App sẽ tự điều hướng
     } catch (err) {
       console.error("Register Error:", err);
-
-      // --- LOGIC XỬ LÝ LỖI TỪ BACKEND ---
-      // Kiểm tra nếu Backend trả về danh sách lỗi chi tiết (thường là express-validator)
-      if (err.response && err.response.data && err.response.data.errors) {
+      if (err.response?.data?.errors) {
         const backendErrors = err.response.data.errors;
         const processedErrors = {};
-
-        // Duyệt qua từng key lỗi để "làm phẳng" (flatten) object
         Object.keys(backendErrors).forEach((key) => {
           const errorValue = backendErrors[key];
-          
-          // Nếu lỗi là Object có chứa .msg (format của express-validator)
           if (typeof errorValue === 'object' && errorValue !== null && errorValue.msg) {
-             processedErrors[key] = errorValue.msg;
+            processedErrors[key] = errorValue.msg;
           } else {
-             // Nếu lỗi chỉ là string bình thường
-             processedErrors[key] = errorValue;
+            processedErrors[key] = errorValue;
           }
         });
-
         setFormErrors(processedErrors);
       } else {
-        // Trường hợp lỗi chung (không có field cụ thể), hoặc lỗi Server 500
         const errorMessage = err.response?.data?.message || err.message || '';
-        
-        // Nếu thông báo lỗi có chứa từ "email" (ví dụ: "Email đã tồn tại") -> Gán vào ô Email
         if (errorMessage.toLowerCase().includes('email')) {
-           setFormErrors(prev => ({ ...prev, email: errorMessage }));
+          setFormErrors(prev => ({ ...prev, email: errorMessage }));
         }
-        // Các lỗi khác sẽ được hiển thị ở Alert đỏ phía trên cùng (do logic bên dưới render)
       }
     }
   };
 
-  // Component Icon Mắt (Tái sử dụng)
-  const EyeIcon = ({ isVisible, toggle }) => (
-    <button
-      type="button"
-      onClick={toggle}
-      className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-blue-600 focus:outline-none"
-      tabIndex="-1" // Tránh focus khi nhấn Tab
-    >
-      {isVisible ? (
-        // Icon Mở Mắt
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-      ) : (
-        // Icon Nhắm Mắt
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
-        </svg>
-      )}
-    </button>
-  );
-
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold tracking-tight">Tạo tài khoản mới</h1>
-          <p className="text-lg text-gray-600 dark:text-gray-400 mt-2">Bắt đầu quản lý cây gia phả của bạn ngay hôm nay</p>
+    <div className="min-h-screen flex">
+      {/* Left Side - Decorative */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+        {/* Gradient Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 via-teal-500 to-orange-500"></div>
+
+        {/* Decorative Elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-20 left-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-20 right-20 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/5 rounded-full"></div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8">
-          <form onSubmit={handleSubmit} noValidate>
-            
-            {/* ALERT LỖI CHUNG (Chỉ hiện khi có lỗi hệ thống/mạng, còn lỗi nhập liệu hiện ở input) */}
-            {error && Object.keys(formErrors).length === 0 && (
-              <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md mb-6" role="alert">
-                <p className="font-bold">Đăng ký không thành công</p>
-                <p>{error}</p>
+        {/* Tree Illustration */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center text-white z-10">
+            <div className="text-9xl mb-6 animate-float">🌳</div>
+            <h2 className="text-4xl font-bold mb-4" style={{ fontFamily: 'Playfair Display, serif' }}>
+              Gia Phả
+            </h2>
+            <p className="text-xl text-white/80 max-w-md mx-auto">
+              Bắt đầu xây dựng cây gia phả của bạn ngay hôm nay
+            </p>
+          </div>
+        </div>
+
+        {/* Floating Elements */}
+        <div className="absolute top-1/4 left-1/4 text-6xl animate-float" style={{ animationDelay: '0.5s' }}>👨‍👩‍👧‍👦</div>
+        <div className="absolute bottom-1/4 right-1/4 text-5xl animate-float" style={{ animationDelay: '1s' }}>💚</div>
+        <div className="absolute top-1/3 right-1/3 text-4xl animate-float" style={{ animationDelay: '1.5s' }}>🏡</div>
+      </div>
+
+      {/* Right Side - Register Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-neutral-50">
+        <div className="w-full max-w-md">
+          {/* Logo for Mobile */}
+          <div className="lg:hidden text-center mb-8">
+            <div className="inline-flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-2xl shadow-lg">
+                🌳
               </div>
-            )}
-
-            {/* --- INPUT: HỌ TÊN --- */}
-            <div className="mb-4">
-              <label htmlFor="name" className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                Họ và Tên
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Nguyễn Văn A"
-                className={`w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
-                  formErrors.name ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600'
-                }`}
-                disabled={isLoading}
-                autoComplete="name"
-              />
-              {formErrors.name && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{formErrors.name}</p>}
+              <span className="text-2xl font-bold" style={{ fontFamily: 'Playfair Display, serif' }}>
+                Gia Phả
+              </span>
             </div>
+          </div>
 
-            {/* --- INPUT: EMAIL --- */}
-            <div className="mb-4">
-              <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="email@example.com"
-                className={`w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
-                  formErrors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600'
-                }`}
-                disabled={isLoading}
-                autoComplete="email"
-              />
-              {formErrors.email && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{formErrors.email}</p>}
-            </div>
+          {/* Welcome Text */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-neutral-800 mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>
+              Tạo tài khoản mới
+            </h1>
+            <p className="text-neutral-500">
+              Đăng ký để bắt đầu quản lý gia phả của bạn
+            </p>
+          </div>
 
-            {/* --- INPUT: MẬT KHẨU --- */}
-            <div className="mb-4">
-              <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                Mật khẩu
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="••••••••"
-                  className={`w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 transition-colors ${
-                    formErrors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600'
-                  }`}
-                  disabled={isLoading}
-                  autoComplete="new-password"
-                />
-                <EyeIcon isVisible={showPassword} toggle={() => setShowPassword(!showPassword)} />
-              </div>
-              {formErrors.password && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{formErrors.password}</p>}
-            </div>
-
-            {/* --- INPUT: XÁC NHẬN MẬT KHẨU --- */}
-            <div className="mb-6">
-              <label htmlFor="confirm_password" className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                Xác nhận Mật khẩu
-              </label>
-              <div className="relative">
-                <input
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  id="confirm_password"
-                  name="confirm_password"
-                  value={formData.confirm_password}
-                  onChange={handleChange}
-                  placeholder="••••••••"
-                  className={`w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 transition-colors ${
-                    formErrors.confirm_password ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600'
-                  }`}
-                  disabled={isLoading}
-                  autoComplete="new-password"
-                />
-                <EyeIcon isVisible={showConfirmPassword} toggle={() => setShowConfirmPassword(!showConfirmPassword)} />
-              </div>
-              {formErrors.confirm_password && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{formErrors.confirm_password}</p>}
-            </div>
-
-            {/* --- BUTTON SUBMIT --- */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full flex justify-center items-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 disabled:bg-blue-400 dark:disabled:bg-blue-500 transition-all duration-300"
-            >
-              {isLoading ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Đang xử lý...
-                </>
-              ) : (
-                'Tạo tài khoản'
+          {/* Register Card */}
+          <div className="glass-card p-8">
+            <form onSubmit={handleSubmit} noValidate>
+              {/* Error Alert */}
+              {error && Object.keys(formErrors).length === 0 && (
+                <div className="alert alert-danger mb-6">
+                  <span className="text-lg">⚠️</span>
+                  <div>
+                    <p className="font-semibold">Đăng ký không thành công</p>
+                    <p className="text-sm">{error}</p>
+                  </div>
+                </div>
               )}
-            </button>
-          </form>
 
-          {/* Footer Link */}
-          <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-8">
-            Đã có tài khoản?{' '}
-            <Link to="/login" className="font-medium text-blue-600 hover:underline dark:text-blue-500">
-              Đăng nhập
-            </Link>
+              {/* Name Input */}
+              <div className="form-group">
+                <label htmlFor="name" className="form-label">
+                  Họ và Tên
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-neutral-400">
+                    <FiUser className="w-5 h-5" />
+                  </div>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="Nguyễn Văn A"
+                    className={`input-field pl-12 ${formErrors.name ? 'input-field-error' : ''}`}
+                    disabled={isLoading}
+                    autoComplete="name"
+                  />
+                </div>
+                {formErrors.name && <p className="form-error">{formErrors.name}</p>}
+              </div>
+
+              {/* Email Input */}
+              <div className="form-group">
+                <label htmlFor="email" className="form-label">
+                  Email
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-neutral-400">
+                    <FiMail className="w-5 h-5" />
+                  </div>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="email@example.com"
+                    className={`input-field pl-12 ${formErrors.email ? 'input-field-error' : ''}`}
+                    disabled={isLoading}
+                    autoComplete="email"
+                  />
+                </div>
+                {formErrors.email && <p className="form-error">{formErrors.email}</p>}
+              </div>
+
+              {/* Password Input */}
+              <div className="form-group">
+                <label htmlFor="password" className="form-label">
+                  Mật khẩu
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-neutral-400">
+                    <FiLock className="w-5 h-5" />
+                  </div>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder="••••••••"
+                    className={`input-field pl-12 pr-12 ${formErrors.password ? 'input-field-error' : ''}`}
+                    disabled={isLoading}
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-neutral-400 hover:text-neutral-600 transition-colors"
+                  >
+                    {showPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
+                  </button>
+                </div>
+                {formErrors.password && <p className="form-error">{formErrors.password}</p>}
+              </div>
+
+              {/* Confirm Password Input */}
+              <div className="form-group">
+                <label htmlFor="confirm_password" className="form-label">
+                  Xác nhận Mật khẩu
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-neutral-400">
+                    <FiLock className="w-5 h-5" />
+                  </div>
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    id="confirm_password"
+                    name="confirm_password"
+                    value={formData.confirm_password}
+                    onChange={handleChange}
+                    placeholder="••••••••"
+                    className={`input-field pl-12 pr-12 ${formErrors.confirm_password ? 'input-field-error' : ''}`}
+                    disabled={isLoading}
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-neutral-400 hover:text-neutral-600 transition-colors"
+                  >
+                    {showConfirmPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
+                  </button>
+                </div>
+                {formErrors.confirm_password && <p className="form-error">{formErrors.confirm_password}</p>}
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="btn btn-primary w-full py-4 text-lg mt-4"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="spinner"></div>
+                    Đang xử lý...
+                  </>
+                ) : (
+                  <>
+                    Tạo tài khoản
+                    <FiArrowRight className="w-5 h-5" />
+                  </>
+                )}
+              </button>
+            </form>
+
+            {/* Divider */}
+            <div className="flex items-center gap-4 my-6">
+              <div className="flex-1 h-px bg-neutral-200"></div>
+              <span className="text-neutral-400 text-sm">hoặc</span>
+              <div className="flex-1 h-px bg-neutral-200"></div>
+            </div>
+
+            {/* Login Link */}
+            <p className="text-center text-neutral-600">
+              Đã có tài khoản?{' '}
+              <Link to="/login" className="font-semibold text-orange-600 hover:text-orange-700 transition-colors">
+                Đăng nhập ngay →
+              </Link>
+            </p>
+          </div>
+
+          {/* Footer */}
+          <p className="text-center text-neutral-400 text-sm mt-8">
+            © 2025 Gia Phả Management System designed by team SE104
           </p>
         </div>
       </div>

@@ -18,9 +18,8 @@ import ThanhVienPage from './pages/ThanhVienPage';
 import ThanhVienDetailPage from './pages/ThanhVienDetailPage';
 import ThanhVienCreatePage from './pages/ThanhVienCreatePage';
 import ThanhVienEditPage from './pages/ThanhVienEditPage';
-
-// Placeholder pages (sẽ tạo sau)
-const GiaPhaBrowserPage = () => <div className="p-8">Gia phả - Coming Soon</div>;
+import GiaPhaPage from './pages/GiaPhaPage';
+import GiaPhaDetailPage from './pages/GiaPhaDetailPage';
 
 export default function App() {
   const checkAuth = useAuthStore((state) => state.checkAuth);
@@ -46,6 +45,8 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* Thành viên routes */}
         <Route
           path="/thanhvien"
           element={
@@ -78,11 +79,21 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* Gia phả routes */}
         <Route
-          path="/giaphat"
+          path="/giapha"
           element={
             <ProtectedRoute>
-              <GiaPhaBrowserPage />
+              <GiaPhaPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/giapha/:MaGiaPha"
+          element={
+            <ProtectedRoute>
+              <GiaPhaDetailPage />
             </ProtectedRoute>
           }
         />

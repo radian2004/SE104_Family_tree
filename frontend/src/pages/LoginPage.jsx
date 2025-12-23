@@ -221,7 +221,7 @@ export default function LoginPage() {
 
           {/* Footer */}
           <p className="text-center text-neutral-400 text-sm mt-8">
-            © 2024 Gia Phả Management System
+            © 2025 Gia Phả Management System designed by team SE104
           </p>
         </div>
       </div>

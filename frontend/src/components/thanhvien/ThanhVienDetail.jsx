@@ -42,8 +42,9 @@ export default function ThanhVienDetailCard({ thanhvien, onDelete, isLoading }) 
     }
   };
 
-  const statusBadge =
-    thanhvien.TrangThai === 'Sống' ? 'badge-success' : 'badge-danger';
+  // Check if member is deceased - normalize to lowercase
+  const statusText = (thanhvien.TrangThai || '').toLowerCase();
+  const isDeceased = statusText.includes('mất') || statusText.includes('mat');
 
   return (
     <div className="space-y-6">
@@ -66,7 +67,7 @@ export default function ThanhVienDetailCard({ thanhvien, onDelete, isLoading }) 
           <button
             onClick={() => navigate(`/thanhvien/${thanhvien.MaTV}/edit`)}
             disabled={isLoading}
-            className="btn-secondary flex items-center gap-2"
+            className="btn btn-ghost"
           >
             <FiEdit />
             Chỉnh sửa
@@ -142,9 +143,15 @@ export default function ThanhVienDetailCard({ thanhvien, onDelete, isLoading }) 
             <div>
               <p className="text-sm text-gray-600 font-medium">Trạng thái</p>
               <p>
-                <span className={`badge ${statusBadge}`}>
-                  {thanhvien.TrangThai}
-                </span>
+                {isDeceased ? (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-neutral-100 text-neutral-600 border border-neutral-200">
+                    Đã mất
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                    Còn sống
+                  </span>
+                )}
               </p>
             </div>
           </div>

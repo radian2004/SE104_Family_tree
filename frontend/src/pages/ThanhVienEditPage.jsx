@@ -130,9 +130,9 @@ export default function ThanhVienEditPage() {
               <button
                 onClick={() => navigate(`/thanhvien/${MaTV}`)}
                 disabled={isLoading}
-                className="btn-secondary"
+                className="btn btn-ghost"
               >
-                Quay lại
+                ← Quay lại
               </button>
             </div>
           </>

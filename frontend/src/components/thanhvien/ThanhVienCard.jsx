@@ -1,6 +1,6 @@
 /**
  * ============================================
- * THÀNH VIÊN CARD COMPONENT
+ * THÀNH VIÊN CARD COMPONENT - Premium Design
  * Hiển thị thông tin 1 thành viên
  * ============================================
  */
@@ -18,52 +18,59 @@ export default function ThanhVienCard({ thanhvien, onDelete }) {
     }
   };
 
-  const statusBadge =
-    thanhvien.TrangThai === 'Sống' ? 'badge-success' : 'badge-danger';
+  // Check actual status from database - normalize to lowercase
+  const statusText = (thanhvien.TrangThai || '').toLowerCase();
+  const isDeceased = statusText.includes('mất') || statusText.includes('mat');
 
   return (
-    <tr className="table-row-hover">
+    <tr className="hover:bg-neutral-50 transition-colors">
       <td className="px-6 py-4 whitespace-nowrap">
-        <span className="font-medium text-gray-900">{thanhvien.HoTen}</span>
+        <span className="font-medium text-neutral-800">{thanhvien.HoTen}</span>
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">
         {formatDate(thanhvien.NgayGioSinh)}
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 truncate-1">
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600 max-w-xs truncate">
         {thanhvien.DiaChi}
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <span className={`badge ${statusBadge}`}>
-          {thanhvien.TrangThai}
-        </span>
+        {isDeceased ? (
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-neutral-100 text-neutral-600 border border-neutral-200">
+            Đã mất
+          </span>
+        ) : (
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">
+            Còn sống
+          </span>
+        )}
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm">
         <div className="flex gap-2">
-          {/* View Button */}
+          {/* View Button - BLUE */}
           <button
             onClick={() => navigate(`/thanhvien/${thanhvien.MaTV}`)}
-            className="btn-primary btn-small"
+            className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors shadow-sm"
             title="Xem chi tiết"
           >
-            <FiEye />
+            <FiEye className="w-4 h-4" />
           </button>
 
-          {/* Edit Button */}
+          {/* Edit Button - ORANGE */}
           <button
             onClick={() => navigate(`/thanhvien/${thanhvien.MaTV}/edit`)}
-            className="btn-secondary btn-small"
+            className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors shadow-sm"
             title="Chỉnh sửa"
           >
-            <FiEdit />
+            <FiEdit className="w-4 h-4" />
           </button>
 
-          {/* Delete Button */}
+          {/* Delete Button - RED */}
           <button
             onClick={handleDelete}
-            className="btn-danger btn-small"
+            className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors shadow-sm"
             title="Xóa"
           >
-            <FiTrash2 />
+            <FiTrash2 className="w-4 h-4" />
           </button>
         </div>
       </td>
