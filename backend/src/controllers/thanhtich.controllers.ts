@@ -48,7 +48,7 @@ export const ghiNhanThanhTichController = async (req: Request, res: Response) =>
     return res.status(HTTP_STATUS.CREATED).json(result);
   } catch (error: any) {
     console.error('Lỗi ghiNhanThanhTich:', error);
-    
+
     // Xử lý lỗi từ trigger
     if (error.message.includes('ngày sinh')) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
@@ -74,9 +74,10 @@ export const ghiNhanThanhTichController = async (req: Request, res: Response) =>
  */
 export const traCuuThanhTichController = async (req: Request, res: Response) => {
   try {
-    const { HoTen, TenLoaiThanhTich, TuNgay, DenNgay } = req.query;
+    const { HoTen, TenLoaiThanhTich, TuNgay, DenNgay, MaTV } = req.query;
 
     const filters: any = {};
+    if (MaTV) filters.MaTV = MaTV as string;
     if (HoTen) filters.HoTen = HoTen as string;
     if (TenLoaiThanhTich) filters.TenLoaiThanhTich = TenLoaiThanhTich as string;
     if (TuNgay) filters.TuNgay = new Date(TuNgay as string);
@@ -146,15 +147,15 @@ export const xoaThanhTichController = async (req: Request, res: Response) => {
     }
 
     const result = await thanhTichService.xoaThanhTich({
-      MaTV, 
-      MaLTT, 
+      MaTV,
+      MaLTT,
       NgayPhatSinh: new Date(NgayPhatSinh)
     });
 
     return res.status(HTTP_STATUS.OK).json(result);
   } catch (error: any) {
     console.error('Lỗi xoaThanhTich:', error);
-    
+
     if (error.message.includes('Không tìm thấy')) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({
         message: error.message

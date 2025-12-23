@@ -11,6 +11,8 @@ import ThanhVienDetail from '../components/thanhvien/ThanhVienDetail.jsx';
 import { useThanhVienStore } from '../store/thanhvienStore.js';
 import { useLookupsStore } from '../store/lookupsStore.js';
 import thanhvienService from '../services/thanhvien.js';
+import ThanhTichList from '../components/thanhvien/ThanhTichList.jsx';
+import KetThucSection from '../components/thanhvien/KetThucSection.jsx';
 import { useNavigate } from 'react-router-dom';
 
 export default function ThanhVienDetailPage() {
@@ -102,6 +104,38 @@ export default function ThanhVienDetailPage() {
           <div className="alert alert-danger">
             <p>Không tìm thấy thành viên</p>
           </div>
+        )}
+
+        {/* DEBUG: Test if this renders */}
+        <div className="bg-blue-100 p-4 mt-6 rounded border-2 border-blue-500">
+          <h3 className="font-bold text-blue-800">🔍 DEBUG TEST</h3>
+          <p>thanhvien exists: {thanhvien ? 'YES' : 'NO'}</p>
+          <p>MaTV: {MaTV || 'null'}</p>
+        </div>
+
+        {/* Thành tích & Kết thúc Sections */}
+        {thanhvien && (
+          <>
+            <div className="my-6 border-t border-gray-200"></div>
+
+            <KetThucSection
+              MaTV={MaTV}
+              onStatusChange={() => {
+                const loadThanhVien = async () => {
+                  try {
+                    const response = await thanhvienService.getDetail(MaTV);
+                    const data = response.result || response;
+                    setThanhVien(data);
+                  } catch (err) {
+                    console.error('Error reloading member:', err);
+                  }
+                };
+                loadThanhVien();
+              }}
+            />
+
+            <ThanhTichList MaTV={MaTV} />
+          </>
         )}
       </div>
     </div>

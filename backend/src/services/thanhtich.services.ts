@@ -62,7 +62,7 @@ class ThanhTichService {
 
     try {
       const result = await databaseService.query<ResultSetHeader>(sql, params);
-      
+
       return {
         message: 'Ghi nhận thành tích thành công',
         data: {
@@ -92,6 +92,7 @@ class ThanhTichService {
     TenLoaiThanhTich?: string;  // ✅ MỚI: Search theo TÊN loại thành tích
     TuNgay?: Date;
     DenNgay?: Date;
+    MaTV?: string;  // ✅ ADDED: Search by Member ID
   }) {
     let sql = `
       SELECT 
@@ -110,7 +111,12 @@ class ThanhTichService {
 
     // Thêm điều kiện filter
     if (filters) {
-      // ✅ Tìm theo tên thành viên
+      // ✅ Tìm theo MaTV (Member ID)
+      if (filters.MaTV) {
+        sql += ' AND g.MaTV = ?';
+        params.push(filters.MaTV);
+      }
+
       if (filters.HoTen) {
         sql += ' AND tv.HoTen LIKE ?';
         params.push(`%${filters.HoTen}%`);
@@ -177,8 +183,8 @@ class ThanhTichService {
     `;
 
     const result = await databaseService.query<ResultSetHeader>(sql, [
-      payload.MaTV, 
-      payload.MaLTT, 
+      payload.MaTV,
+      payload.MaLTT,
       payload.NgayPhatSinh
     ]);
 
@@ -201,7 +207,7 @@ class ThanhTichService {
       FROM GHINHANTHANHTICH 
       WHERE MaTV = ? AND MaLTT = ? AND DATE(NgayPhatSinh) = DATE(?)
     `;
-    
+
     const [result] = await databaseService.query<RowDataPacket[]>(sql, [MaTV, MaLTT, NgayPhatSinh]);
     return result.count > 0;
   }
