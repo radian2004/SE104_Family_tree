@@ -1,4 +1,11 @@
+/**
+ * ============================================
+ * KẾT THÚC SECTION - Premium Design
+ * ============================================
+ */
+
 import { useState, useEffect } from 'react';
+import { FiHeart, FiAlertCircle, FiEdit2, FiX, FiCheck, FiCalendar, FiMapPin } from 'react-icons/fi';
 import ketThucService from '../../services/ketthuc';
 
 export default function KetThucSection({ MaTV, onStatusChange }) {
@@ -49,10 +56,8 @@ export default function KetThucSection({ MaTV, onStatusChange }) {
             setIsLoading(true);
             setError(null);
             if (ketThucInfo) {
-                // Update
                 await ketThucService.update(MaTV, formData);
             } else {
-                // Create (Báo tử)
                 await ketThucService.ghiNhan({ ...formData, MaTV });
             }
             setIsEditing(false);
@@ -85,10 +90,10 @@ export default function KetThucSection({ MaTV, onStatusChange }) {
 
     if (isLoading && !ketThucInfo && !isEditing) {
         return (
-            <div className="bg-white p-6 rounded-lg shadow-sm mt-6">
-                <div className="text-center py-4">
-                    <div className="spinner inline-block"></div>
-                    <p className="text-gray-500 mt-2">Đang tải thông tin...</p>
+            <div className="glass-card p-6 mt-6">
+                <div className="text-center py-8">
+                    <div className="spinner spinner-large mx-auto mb-4"></div>
+                    <p className="text-neutral-500">Đang tải thông tin...</p>
                 </div>
             </div>
         );
@@ -97,17 +102,28 @@ export default function KetThucSection({ MaTV, onStatusChange }) {
     // Alive state - Show "Báo tử" button
     if (!ketThucInfo && !isEditing) {
         return (
-            <div className="bg-white p-6 rounded-lg shadow-sm mt-6 border-l-4 border-green-500">
-                <div className="flex justify-between items-center">
-                    <div>
-                        <h3 className="text-xl font-bold text-gray-800">Trạng thái: Còn Sống</h3>
-                        <p className="text-gray-500 text-sm mt-1">Thành viên hiện đang còn sống.</p>
+            <div className="glass-card p-6 mt-6 relative overflow-hidden">
+                {/* Success indicator */}
+                <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-emerald-400 to-emerald-600"></div>
+
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shadow-lg animate-pulse">
+                            <FiHeart className="w-7 h-7" />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-bold text-neutral-800" style={{ fontFamily: 'Playfair Display, serif' }}>
+                                Còn sống
+                            </h3>
+                            <p className="text-neutral-500 text-sm">Thành viên hiện đang còn sống</p>
+                        </div>
                     </div>
                     <button
                         onClick={() => setIsEditing(true)}
-                        className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-900"
+                        className="btn btn-ghost"
                     >
-                        ⚰️ Báo tử
+                        <FiAlertCircle className="w-4 h-4" />
+                        Báo tử
                     </button>
                 </div>
             </div>
@@ -117,45 +133,78 @@ export default function KetThucSection({ MaTV, onStatusChange }) {
     // View Mode (Dead)
     if (ketThucInfo && !isEditing) {
         return (
-            <div className="bg-gray-100 p-6 rounded-lg shadow-sm mt-6 border-l-4 border-gray-500">
+            <div className="glass-card p-6 mt-6 relative overflow-hidden">
+                {/* Indicator */}
+                <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-neutral-400 to-neutral-600"></div>
+
                 {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
-                        {error}
+                    <div className="alert alert-danger mb-4">
+                        <span>⚠️</span>
+                        <p>{error}</p>
                     </div>
                 )}
 
-                <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-xl font-bold text-gray-800">🪦 Thông tin Kết thúc</h3>
-                    <div>
+                {/* Header */}
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-neutral-400 to-neutral-600 flex items-center justify-center text-white shadow-lg">
+                            <span className="text-2xl">🕯️</span>
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-bold text-neutral-800" style={{ fontFamily: 'Playfair Display, serif' }}>
+                                Thông tin Kết thúc
+                            </h3>
+                            <p className="text-neutral-500 text-sm">Thành viên đã qua đời</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
                         <button
                             onClick={() => setIsEditing(true)}
-                            className="text-blue-600 hover:underline mr-4">
+                            className="btn btn-ghost btn-small"
+                        >
+                            <FiEdit2 className="w-4 h-4" />
                             Sửa
                         </button>
                         <button
                             onClick={handleDelete}
-                            className="text-red-600 hover:underline">
-                            Hủy (Hồi sinh)
+                            className="btn btn-outline btn-small text-emerald-600 border-emerald-500 hover:bg-emerald-500"
+                        >
+                            <FiHeart className="w-4 h-4" />
+                            Hồi sinh
                         </button>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <span className="block text-gray-500 text-sm">Ngày giờ mất</span>
-                        <span className="font-semibold">
+                {/* Info Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="p-4 bg-neutral-50 rounded-xl">
+                        <div className="flex items-center gap-2 text-neutral-500 text-sm mb-1">
+                            <FiCalendar className="w-4 h-4" />
+                            Ngày giờ mất
+                        </div>
+                        <p className="font-semibold text-neutral-800">
                             {ketThucInfo.NgayGioMat
                                 ? new Date(ketThucInfo.NgayGioMat).toLocaleString('vi-VN')
-                                : 'N/A'}
-                        </span>
+                                : 'Không xác định'}
+                        </p>
                     </div>
-                    <div>
-                        <span className="block text-gray-500 text-sm">Nguyên nhân</span>
-                        <span className="font-semibold">{ketThucInfo.TenNguyenNhan || ketThucInfo.MaNguyenNhanMat || 'Không rõ'}</span>
+                    <div className="p-4 bg-neutral-50 rounded-xl">
+                        <div className="flex items-center gap-2 text-neutral-500 text-sm mb-1">
+                            <FiAlertCircle className="w-4 h-4" />
+                            Nguyên nhân
+                        </div>
+                        <p className="font-semibold text-neutral-800">
+                            {ketThucInfo.TenNguyenNhan || ketThucInfo.MaNguyenNhanMat || 'Không rõ'}
+                        </p>
                     </div>
-                    <div>
-                        <span className="block text-gray-500 text-sm">Địa điểm</span>
-                        <span className="font-semibold">{ketThucInfo.TenDiaDiem || ketThucInfo.MaDiaDiem || 'Không rõ'}</span>
+                    <div className="p-4 bg-neutral-50 rounded-xl">
+                        <div className="flex items-center gap-2 text-neutral-500 text-sm mb-1">
+                            <FiMapPin className="w-4 h-4" />
+                            Địa điểm
+                        </div>
+                        <p className="font-semibold text-neutral-800">
+                            {ketThucInfo.TenDiaDiem || ketThucInfo.MaDiaDiem || 'Không rõ'}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -164,26 +213,42 @@ export default function KetThucSection({ MaTV, onStatusChange }) {
 
     // Edit/Create Form
     return (
-        <div className="bg-white p-6 rounded-lg shadow-sm mt-6 border border-gray-200">
+        <div className="glass-card p-6 mt-6 relative overflow-hidden animate-fade-in">
+            {/* Indicator */}
+            <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-orange-400 to-red-500"></div>
+
             {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
-                    {error}
+                <div className="alert alert-danger mb-4">
+                    <span>⚠️</span>
+                    <p>{error}</p>
                 </div>
             )}
 
-            <h3 className="text-xl font-bold text-gray-800 mb-4">
-                {ketThucInfo ? 'Chỉnh sửa thông tin kết thúc' : 'Ghi nhận kết thúc (Báo tử)'}
-            </h3>
+            {/* Header */}
+            <div className="flex items-center gap-4 mb-6">
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-white shadow-lg">
+                    <FiAlertCircle className="w-7 h-7" />
+                </div>
+                <div>
+                    <h3 className="text-xl font-bold text-neutral-800" style={{ fontFamily: 'Playfair Display, serif' }}>
+                        {ketThucInfo ? 'Chỉnh sửa thông tin' : 'Ghi nhận kết thúc'}
+                    </h3>
+                    <p className="text-neutral-500 text-sm">
+                        {ketThucInfo ? 'Cập nhật thông tin kết thúc' : 'Báo tử cho thành viên này'}
+                    </p>
+                </div>
+            </div>
 
             <form onSubmit={handleSubmit}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div className="col-span-2 md:col-span-1">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div>
+                        <label className="form-label">
+                            <FiCalendar className="inline w-4 h-4 mr-1" />
                             Ngày giờ mất *
                         </label>
                         <input
                             type="datetime-local"
-                            className="w-full border rounded px-3 py-2"
+                            className="input-field"
                             value={formData.NgayGioMat}
                             onChange={e => setFormData({ ...formData, NgayGioMat: e.target.value })}
                             required
@@ -191,41 +256,51 @@ export default function KetThucSection({ MaTV, onStatusChange }) {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Nguyên nhân (Mã)
+                        <label className="form-label">
+                            <FiAlertCircle className="inline w-4 h-4 mr-1" />
+                            Nguyên nhân
                         </label>
                         <input
                             type="text"
-                            className="w-full border rounded px-3 py-2"
+                            className="input-field"
                             placeholder="Nhập mã nguyên nhân"
                             value={formData.MaNguyenNhanMat}
                             onChange={e => setFormData({ ...formData, MaNguyenNhanMat: e.target.value })}
                         />
-                        <p className="text-xs text-gray-400 mt-1">* Backend chưa có API danh sách</p>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Địa điểm (Mã)
+                        <label className="form-label">
+                            <FiMapPin className="inline w-4 h-4 mr-1" />
+                            Địa điểm
                         </label>
                         <input
                             type="text"
-                            className="w-full border rounded px-3 py-2"
+                            className="input-field"
                             placeholder="Nhập mã địa điểm"
                             value={formData.MaDiaDiem}
                             onChange={e => setFormData({ ...formData, MaDiaDiem: e.target.value })}
                         />
-                        <p className="text-xs text-gray-400 mt-1">* Backend chưa có API danh sách</p>
                     </div>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex gap-3">
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 disabled:opacity-50"
+                        className="btn btn-danger"
                     >
-                        {isLoading ? 'Đang xử lý...' : 'Xác nhận'}
+                        {isLoading ? (
+                            <>
+                                <div className="spinner"></div>
+                                Đang xử lý...
+                            </>
+                        ) : (
+                            <>
+                                <FiCheck className="w-4 h-4" />
+                                Xác nhận
+                            </>
+                        )}
                     </button>
                     <button
                         type="button"
@@ -236,8 +311,9 @@ export default function KetThucSection({ MaTV, onStatusChange }) {
                                 setFormData({ NgayGioMat: '', MaNguyenNhanMat: '', MaDiaDiem: '' });
                             }
                         }}
-                        className="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300"
+                        className="btn btn-ghost"
                     >
+                        <FiX className="w-4 h-4" />
                         Hủy
                     </button>
                 </div>

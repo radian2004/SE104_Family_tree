@@ -26,13 +26,14 @@ import { create } from 'zustand';
  * @property {Function} clearError - Xóa error
  */
 
-export const useLookupsStore = create((set) => ({
+export const useLookupsStore = create((set, get) => ({
   // ==================== STATE ====================
   gioiTinh: [],
   queQuan: [],
   ngheNghiep: [],
   cayGiaPha: [],
   loaiTaiKhoan: [],
+  loaithanhtich: [],
   isLoading: false,
   error: null,
 
@@ -63,6 +64,11 @@ export const useLookupsStore = create((set) => ({
   setLoaiTaiKhoan: (loaiTaiKhoan) => set({ loaiTaiKhoan }),
 
   /**
+   * Set loại thành tích
+   */
+  setLoaiThanhTich: (loaithanhtich) => set({ loaithanhtich }),
+
+  /**
    * Set loading state
    */
   setLoading: (isLoading) => set({ isLoading }),
@@ -87,7 +93,23 @@ export const useLookupsStore = create((set) => ({
       ngheNghiep: lookups.ngheNghiep || [],
       cayGiaPha: lookups.cayGiaPha || [],
       loaiTaiKhoan: lookups.loaiTaiKhoan || [],
+      loaithanhtich: lookups.loaithanhtich || [],
     }),
+
+  /**
+   * Getter: Lấy tất cả lookups dưới dạng object (dùng cho components)
+   */
+  get allLookups() {
+    const state = get();
+    return {
+      gioiTinh: state.gioiTinh,
+      queQuan: state.queQuan,
+      ngheNghiep: state.ngheNghiep,
+      cayGiaPha: state.cayGiaPha,
+      loaiTaiKhoan: state.loaiTaiKhoan,
+      loaithanhtich: state.loaithanhtich,
+    };
+  },
 
   /**
    * Reset state
@@ -99,6 +121,7 @@ export const useLookupsStore = create((set) => ({
       ngheNghiep: [],
       cayGiaPha: [],
       loaiTaiKhoan: [],
+      loaithanhtich: [],
       isLoading: false,
       error: null,
     }),

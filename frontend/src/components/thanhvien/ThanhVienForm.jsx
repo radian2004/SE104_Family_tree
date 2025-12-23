@@ -16,7 +16,7 @@ export default function ThanhVienForm({ initialData, onSubmit, isLoading }) {
     HoTen: '',
     NgayGioSinh: '',
     DiaChi: '',
-    MaGioiTinh: '',
+    GioiTinh: '',
     MaQueQuan: '',
     MaNgheNghiep: '',
     MaGiaPha: '',
@@ -30,7 +30,7 @@ export default function ThanhVienForm({ initialData, onSubmit, isLoading }) {
         HoTen: initialData.HoTen || '',
         NgayGioSinh: formatDateForInput(initialData.NgayGioSinh) || '',
         DiaChi: initialData.DiaChi || '',
-        MaGioiTinh: initialData.MaGioiTinh || '',
+        GioiTinh: initialData.GioiTinh || '',
         MaQueQuan: initialData.MaQueQuan || '',
         MaNgheNghiep: initialData.MaNgheNghiep || '',
         MaGiaPha: initialData.MaGiaPha || '',
@@ -119,10 +119,10 @@ export default function ThanhVienForm({ initialData, onSubmit, isLoading }) {
         <div className="form-group">
           <label className="form-label">Giới tính *</label>
           <select
-            name="MaGioiTinh"
-            value={formData.MaGioiTinh}
+            name="GioiTinh"
+            value={formData.GioiTinh}
             onChange={handleChange}
-            className={`select-field ${formErrors.MaGioiTinh ? 'input-field-error' : ''}`}
+            className={`select-field ${formErrors.GioiTinh ? 'input-field-error' : ''}`}
             disabled={isLoading}
           >
             <option value="">-- Chọn giới tính --</option>
@@ -132,8 +132,8 @@ export default function ThanhVienForm({ initialData, onSubmit, isLoading }) {
               </option>
             ))}
           </select>
-          {formErrors.MaGioiTinh && (
-            <p className="form-error">{formErrors.MaGioiTinh}</p>
+          {formErrors.GioiTinh && (
+            <p className="form-error">{formErrors.GioiTinh}</p>
           )}
         </div>
 

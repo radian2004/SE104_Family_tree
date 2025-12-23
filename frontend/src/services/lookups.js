@@ -52,12 +52,12 @@ class LookupsService {
 
   /**
    * Lấy danh sách gia phả
-   * GET /caygiaphat
+   * GET /caygiapha
    * @returns {Promise<Array>} Danh sách gia phả
    */
   async getCayGiaPha() {
     try {
-      const response = await apiClient.get('/caygiaphat');
+      const response = await apiClient.get('/caygiapha');
       return response.data.result || response.data;
     } catch (error) {
       throw error;
@@ -66,13 +66,13 @@ class LookupsService {
 
   /**
    * Lấy chi tiết gia phả
-   * GET /caygiaphat/:MaGiaPha
+   * GET /caygiapha/:MaGiaPha
    * @param {string} MaGiaPha - Mã gia phả
    * @returns {Promise<Object>} Chi tiết gia phả
    */
   async getGiaPhDetail(MaGiaPha) {
     try {
-      const response = await apiClient.get(`/caygiaphat/${MaGiaPha}`);
+      const response = await apiClient.get(`/caygiapha/${MaGiaPha}`);
       return response.data.result || response.data;
     } catch (error) {
       throw error;
@@ -94,18 +94,33 @@ class LookupsService {
   }
 
   /**
+   * Lấy danh sách loại thành tích
+   * GET /loaithanhtich
+   * @returns {Promise<Array>} Danh sách loại thành tích
+   */
+  async getLoaiThanhTich() {
+    try {
+      const response = await apiClient.get('/loaithanhtich');
+      return response.data.result || response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
    * Lấy tất cả lookup data cùng một lúc
-   * @returns {Promise<Object>} { gioiTinh, queQuan, ngheNghiep, cayGiaPha, loaiTaiKhoan }
+   * @returns {Promise<Object>} { gioiTinh, queQuan, ngheNghiep, cayGiaPha, loaiTaiKhoan, loaithanhtich }
    */
   async getAll() {
     try {
-      const [gioiTinh, queQuan, ngheNghiep, cayGiaPha, loaiTaiKhoan] =
+      const [gioiTinh, queQuan, ngheNghiep, cayGiaPha, loaiTaiKhoan, loaithanhtich] =
         await Promise.all([
           this.getGioiTinh(),
           this.getQueQuan(),
           this.getNgheNghiep(),
           this.getCayGiaPha(),
           this.getLoaiTaiKhoan(),
+          this.getLoaiThanhTich(),
         ]);
 
       return {
@@ -114,6 +129,7 @@ class LookupsService {
         ngheNghiep,
         cayGiaPha,
         loaiTaiKhoan,
+        loaithanhtich,
       };
     } catch (error) {
       console.error('Error loading all lookups:', error);

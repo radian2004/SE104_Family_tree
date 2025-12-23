@@ -43,14 +43,15 @@ class ThanhVienService {
 
   /**
    * Tạo thành viên mới
-   * POST /thanhvien
+   * POST /thanhvien/register
    * @param {Object} payload - Thông tin thành viên
    * @returns {Promise<Object>} Thành viên vừa tạo
    */
   async create(payload) {
     try {
-      const response = await apiClient.post('/thanhvien', payload);
-      return response.data.result;
+      const response = await apiClient.post('/thanhvien/register', payload);
+      // Backend returns { message, data } format
+      return response.data.data || response.data.result || response.data;
     } catch (error) {
       throw error;
     }
@@ -66,7 +67,7 @@ class ThanhVienService {
   async update(MaTV, payload) {
     try {
       const response = await apiClient.put(`/thanhvien/${MaTV}`, payload);
-      return response.data.result;
+      return response.data.data || response.data.result || response.data;
     } catch (error) {
       throw error;
     }
