@@ -120,108 +120,95 @@ export const loginValidator = validate(
 
 /**
  * Middleware validate access token
+ * ✅ Ưu tiên đọc từ cookies, sau đó mới từ header (backward compatible)
  */
-export const accessTokenValidator = validate(
-  checkSchema(
-    {
-      Authorization: {
-        trim: true,
-        custom: {
-          options: async (value: string, { req }) => {
-            // Kiểm tra có gửi access token không
-            if (!value) {
-              throw new ErrorWithStatus({
-                message: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED,
-                status: HTTP_STATUS.UNAUTHORIZED
-              });
-            }
+export const accessTokenValidator = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // ✅ ĐỌC TỪ COOKIES TRƯỚC
+    let access_token = req.cookies?.access_token;
 
-            // Lấy token từ "Bearer <token>"
-            const access_token = value.split(' ')[1];
-
-            if (!access_token) {
-              throw new ErrorWithStatus({
-                message: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED,
-                status: HTTP_STATUS.UNAUTHORIZED
-              });
-            }
-
-            try {
-              // Verify token
-              const decoded_authorization = await verifyToken(
-                access_token,
-                process.env.JWT_SECRET_ACCESS_TOKEN as string
-              );
-
-              // Gán vào req để controller sử dụng
-              (req as Request).decoded_authorization = decoded_authorization;
-            } catch (error) {
-              throw new ErrorWithStatus({
-                message: (error as JsonWebTokenError).message,
-                status: HTTP_STATUS.UNAUTHORIZED
-              });
-            }
-
-            return true;
-          }
-        }
+    // ✅ NẾU KHÔNG CÓ, ĐỌC TỪ HEADER
+    if (!access_token) {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        access_token = authHeader.substring(7);
       }
-    },
-    ['headers']
-  )
-);
+    }
+
+    // ✅ KIỂM TRA TOKEN
+    if (!access_token) {
+      return res.status(401).json({
+        message: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED
+      });
+    }
+
+    // ✅ VERIFY TOKEN
+    const decoded = await verifyToken(
+      access_token,
+      process.env.JWT_SECRET_ACCESS_TOKEN as string
+    );
+
+    // ✅ GẮN VÀO REQUEST
+    (req as any).decoded_authorization = decoded;
+
+    next();
+  } catch (error) {
+    return res.status(401).json({
+      message: (error as any).message || 'Invalid token'
+    });
+  }
+};
 
 /**
  * Middleware validate refresh token
+ * ✅ Ưu tiên đọc từ cookies, sau đó mới từ body (backward compatible)
  */
-export const refreshTokenValidator = validate(
-  checkSchema(
-    {
-      refresh_token: {
-        trim: true,
-        custom: {
-          options: async (value: string, { req }) => {
-            // Kiểm tra có gửi refresh token không
-            if (!value) {
-              throw new ErrorWithStatus({
-                message: USERS_MESSAGES.REFRESH_TOKEN_IS_REQUIRED,
-                status: HTTP_STATUS.UNAUTHORIZED
-              });
-            }
+export const refreshTokenValidator = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // 1. ĐỌC TỪ COOKIES TRƯỚC
+    let refresh_token = req.cookies?.refresh_token;
 
-            try {
-              // Verify token
-              const decoded_refresh_token = await verifyToken(
-                value,
-                process.env.JWT_SECRET_REFRESH_TOKEN as string
-              );
+    // 2. NẾU KHÔNG CÓ, ĐỌC TỪ BODY
+    if (!refresh_token) {
+      refresh_token = req.body.refresh_token;
+    }
 
-              // Kiểm tra refresh token có trong database không
-              const isExist = await usersService.checkRefreshTokenExist(value);
-              if (!isExist) {
-                throw new ErrorWithStatus({
-                  message: USERS_MESSAGES.REFRESH_TOKEN_NOT_EXIST,
-                  status: HTTP_STATUS.UNAUTHORIZED
-                });
-              }
+    // 3. KIỂM TRA
+    if (!refresh_token) {
+      return res.status(401).json({
+        message: USERS_MESSAGES.REFRESH_TOKEN_IS_REQUIRED
+      });
+    }
 
-              // Gán vào req
-              (req as Request).decoded_refresh_token = decoded_refresh_token;
-            } catch (error) {
-              if (error instanceof ErrorWithStatus) {
-                throw error;
-              }
-              throw new ErrorWithStatus({
-                message: (error as JsonWebTokenError).message,
-                status: HTTP_STATUS.UNAUTHORIZED
-              });
-            }
+    // 4. VERIFY TOKEN
+    const decoded = await verifyToken(
+      refresh_token,
+      process.env.JWT_SECRET_REFRESH_TOKEN as string
+    );
 
-            return true;
-          }
-        }
-      }
-    },
-    ['body']
-  )
-);
+    // 5. KIỂM TRA TOKEN CÓ TRONG DATABASE KHÔNG
+    const isExist = await usersService.checkRefreshTokenExist(refresh_token);
+    if (!isExist) {
+      return res.status(401).json({
+        message: USERS_MESSAGES.REFRESH_TOKEN_NOT_EXIST
+      });
+    }
+
+    // 6. GẮN VÀO REQUEST
+    (req as any).decoded_refresh_token = decoded;
+
+    next();
+  } catch (error) {
+    return res.status(401).json({
+      message: (error as any).message || 'Invalid refresh token'
+    });
+  }
+};

@@ -118,7 +118,12 @@ async register(payload: RegisterReqBody) {
 
   return {
     access_token,
-    refresh_token
+    refresh_token,
+    user: {
+      TenDangNhap: email,
+      MaTV: MaTV,
+      MaLoaiTK: 'LTK03'
+    }
   };
 }
 

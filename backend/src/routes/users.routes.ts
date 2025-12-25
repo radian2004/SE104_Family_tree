@@ -11,6 +11,9 @@ import {
   refreshTokenValidator
 } from '~/middlewares/users.middlewares';
 import { wrapAsync } from '~/utils/handlers';
+import thanhvienRouter from './thanhvien.routes';
+import thanhTichRouter from './thanhtich.routes';
+import ketthucRouter from './ketthuc.routes';
 
 const usersRouter = Router();
 
@@ -37,5 +40,17 @@ usersRouter.post('/login', loginValidator, wrapAsync(loginController));
  * Body: { refresh_token: string }
  */
 usersRouter.post('/logout', accessTokenValidator, refreshTokenValidator, wrapAsync(logoutController));
+
+// 🔍 DEBUG: Log khi route được đăng ký
+console.log('✅ Đang đăng ký nested routes...');
+console.log('  - /thanhvien');
+console.log('  - /thanhtich');
+console.log('  - /ketthuc');
+
+usersRouter.use('/thanhvien', accessTokenValidator, thanhvienRouter);
+usersRouter.use('/thanhtich', accessTokenValidator, thanhTichRouter);
+usersRouter.use('/ketthuc', accessTokenValidator, ketthucRouter);
+
+console.log('✅ Đã đăng ký xong nested routes!');
 
 export default usersRouter;
