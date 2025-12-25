@@ -13,6 +13,7 @@ import { useLookupsStore } from '../store/lookupsStore.js';
 import thanhvienService from '../services/thanhvien.js';
 import ThanhTichList from '../components/thanhvien/ThanhTichList.jsx';
 import KetThucSection from '../components/thanhvien/KetThucSection.jsx';
+import QuanHeSection from '../components/thanhvien/QuanHeSection.jsx';
 
 export default function ThanhVienDetailPage() {
   const navigate = useNavigate();
@@ -305,6 +306,15 @@ export default function ThanhVienDetailPage() {
               MaTV={MaTV}
               onStatusChange={reloadThanhVien}
             />
+
+            {/* Quan hệ gia đình Section */}
+            <div className="mt-6">
+              <QuanHeSection
+                MaTV={MaTV}
+                memberName={thanhvien?.HoTen}
+                memberGender={thanhvien?.GioiTinh}
+              />
+            </div>
 
             {/* Thành tích Section */}
             <ThanhTichList MaTV={MaTV} />

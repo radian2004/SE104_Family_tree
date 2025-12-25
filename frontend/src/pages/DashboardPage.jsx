@@ -36,12 +36,12 @@ export default function DashboardPage() {
       count: '5',
     },
     {
-      title: 'Thống kê',
+      title: 'Báo cáo',
       description: 'Báo cáo và phân tích dữ liệu gia phả',
       icon: <FiPieChart className="w-8 h-8" />,
       color: 'from-violet-400 to-violet-600',
       shadowColor: 'rgba(167, 139, 250, 0.4)',
-      path: '/thongke',
+      path: '/baocao',
       count: '',
     },
   ];
@@ -49,8 +49,9 @@ export default function DashboardPage() {
   const quickActions = [
     { title: 'Thêm thành viên', icon: <FiUsers />, path: '/thanhvien/create', color: 'text-orange-500' },
     { title: 'Ghi nhận thành tích', icon: <FiAward />, path: '/thanhvien', color: 'text-yellow-500' },
-    { title: 'Quan hệ gia đình', icon: <FiHeart />, path: '/thanhvien', color: 'text-pink-500' },
-    { title: 'Xuất báo cáo', icon: <FiBarChart2 />, path: '/thongke', color: 'text-blue-500' },
+    { title: 'Tạo quan hệ hôn nhân', icon: <FiHeart />, path: '/quanhe/honnhan', color: 'text-pink-500' },
+    { title: 'Tạo quan hệ con cái', icon: <FiUsers />, path: '/quanhe/concai', color: 'text-emerald-500' },
+    { title: 'Xuất báo cáo', icon: <FiBarChart2 />, path: '/baocao', color: 'text-blue-500' },
   ];
 
   return (

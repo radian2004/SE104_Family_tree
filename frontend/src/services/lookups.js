@@ -109,11 +109,11 @@ class LookupsService {
 
   /**
    * Lấy tất cả lookup data cùng một lúc
-   * @returns {Promise<Object>} { gioiTinh, queQuan, ngheNghiep, cayGiaPha, loaiTaiKhoan, loaithanhtich }
+   * @returns {Promise<Object>} { gioiTinh, queQuan, ngheNghiep, cayGiaPha, loaiTaiKhoan, loaithanhtich, nguyenNhanMat, diaDiemMaiTang }
    */
   async getAll() {
     try {
-      const [gioiTinh, queQuan, ngheNghiep, cayGiaPha, loaiTaiKhoan, loaithanhtich] =
+      const [gioiTinh, queQuan, ngheNghiep, cayGiaPha, loaiTaiKhoan, loaithanhtich, nguyenNhanMat, diaDiemMaiTang] =
         await Promise.all([
           this.getGioiTinh(),
           this.getQueQuan(),
@@ -121,6 +121,8 @@ class LookupsService {
           this.getCayGiaPha(),
           this.getLoaiTaiKhoan(),
           this.getLoaiThanhTich(),
+          this.getNguyenNhanMat(),
+          this.getDiaDiemMaiTang(),
         ]);
 
       return {
@@ -130,10 +132,44 @@ class LookupsService {
         cayGiaPha,
         loaiTaiKhoan,
         loaithanhtich,
+        nguyenNhanMat,
+        diaDiemMaiTang,
       };
     } catch (error) {
       console.error('Error loading all lookups:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Lấy danh sách nguyên nhân mất
+   * GET /nguyennhanmat
+   * @returns {Promise<Array>} Danh sách nguyên nhân mất
+   */
+  async getNguyenNhanMat() {
+    try {
+      const response = await apiClient.get('/nguyennhanmat');
+      return response.data.result || response.data;
+    } catch (error) {
+      // Trả về mảng rỗng nếu API chưa có
+      console.warn('API nguyennhanmat chưa có, trả về mảng rỗng');
+      return [];
+    }
+  }
+
+  /**
+   * Lấy danh sách địa điểm mai táng
+   * GET /diadiemmaitang
+   * @returns {Promise<Array>} Danh sách địa điểm mai táng
+   */
+  async getDiaDiemMaiTang() {
+    try {
+      const response = await apiClient.get('/diadiemmaitang');
+      return response.data.result || response.data;
+    } catch (error) {
+      // Trả về mảng rỗng nếu API chưa có
+      console.warn('API diadiemmaitang chưa có, trả về mảng rỗng');
+      return [];
     }
   }
 }

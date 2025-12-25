@@ -2,6 +2,7 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import databaseService from '~/services/database.services';
 import usersRouter from '~/routes/users.routes';
+import lookupsRouter from '~/routes/lookups.routes';
 import { defaultErrorHandler } from '~/middlewares/error.middlewares';
 
 
@@ -29,6 +30,9 @@ app.use(cookieParser());
 
 // Routes
 app.use('/users', usersRouter);
+
+// Lookups routes - không cần auth (public data)
+app.use('/', lookupsRouter);
 
 // Default error handler (đặt sau tất cả routes)
 app.use(defaultErrorHandler);

@@ -14,6 +14,7 @@ import { wrapAsync } from '~/utils/handlers';
 import thanhvienRouter from './thanhvien.routes';
 import thanhTichRouter from './thanhtich.routes';
 import ketthucRouter from './ketthuc.routes';
+import quanheRouter from './quanhe.routes';
 
 const usersRouter = Router();
 
@@ -46,10 +47,12 @@ console.log('✅ Đang đăng ký nested routes...');
 console.log('  - /thanhvien');
 console.log('  - /thanhtich');
 console.log('  - /ketthuc');
+console.log('  - /quanhe');
 
 usersRouter.use('/thanhvien', accessTokenValidator, thanhvienRouter);
 usersRouter.use('/thanhtich', accessTokenValidator, thanhTichRouter);
 usersRouter.use('/ketthuc', accessTokenValidator, ketthucRouter);
+usersRouter.use('/quanhe', accessTokenValidator, quanheRouter);
 
 console.log('✅ Đã đăng ký xong nested routes!');
 

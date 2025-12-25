@@ -574,8 +574,8 @@ UPDATE THANHVIEN SET MaGiaPha = 'GP02' WHERE MaTV IN ('TV02','TV03','TV04','TV05
 UPDATE THANHVIEN SET MaGiaPha = 'GP01' WHERE MaTV = 'TV01';
 
 INSERT INTO HONNHAN (MaTV, MaTVVC, NgayBatDau, NgayKetThuc) VALUES
-('TV02', 'TV03', '1970-06-15', NULL), -- Long - Lan
-('TV04', 'TV05', '1997-05-20', NULL); -- Hùng - Hồng
+('TV02', 'TV03', '1970-06-15', NULL), -- Long (TV02) kết hôn Lan (TV03)
+('TV04', 'TV05', '1997-05-20', NULL); -- Hùng (TV04) kết hôn Hồng (TV05)
 
 DELETE FROM QUANHECON; -- Xóa hết dữ liệu cũ nếu có
 INSERT INTO QUANHECON (MaTV, MaTVCha, MaTVMe, NgayPhatSinh) VALUES
@@ -611,7 +611,6 @@ ON DUPLICATE KEY UPDATE TenLoaiTK = VALUES(TenLoaiTK);
 
 SELECT * FROM TAIKHOAN;
 SELECT * FROM REFRESH_TOKENS;
--- DROP TABLE REFRESH_TOKENS;
 SELECT * FROM THANHVIEN; -- Kiểm tra dữ liệu thành viên
 SELECT * FROM GHINHANTHANHTICH; -- Kiểm tra dữ liệu thành tích
 SELECT * FROM BAOCAOTHANHTICH; -- Kiểm tra dữ liệu báo cáo thành tích
@@ -625,3 +624,4 @@ SELECT * FROM QUEQUAN; -- Kiểm tra dữ liệu quê quán
 -- Insert tài khoản (Đã có LoạiTK ở trên)
 INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, MaLoaiTK) VALUES 
 ('test@example.com', SHA2(CONCAT('Test@123', 'secret'), 256), 'LTK01');
+

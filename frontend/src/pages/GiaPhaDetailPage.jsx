@@ -5,18 +5,19 @@
  */
 
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { FiArrowLeft, FiUsers, FiCalendar, FiUser, FiMapPin } from 'react-icons/fi';
+import { useParams, Link } from 'react-router-dom';
+import { FiArrowLeft, FiUsers, FiCalendar } from 'react-icons/fi';
 import giaPhaService from '../services/giapha.js';
 import { useLookupsStore } from '../store/lookupsStore.js';
+import FamilyTreeView from '../components/giapha/FamilyTreeView.jsx';
 
 export default function GiaPhaDetailPage() {
-    const navigate = useNavigate();
     const { MaGiaPha } = useParams();
     const { cayGiaPha } = useLookupsStore();
 
     const [giaPha, setGiaPha] = useState(null);
     const [thanhVienList, setThanhVienList] = useState([]);
+    const [relationships, setRelationships] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -32,9 +33,10 @@ export default function GiaPhaDetailPage() {
                     setGiaPha(found);
                 }
 
-                // Get members of this gia pha
-                const members = await giaPhaService.getThanhVienByGiaPha(MaGiaPha);
-                setThanhVienList(Array.isArray(members) ? members : []);
+                // Get tree data (members + relationships)
+                const treeData = await giaPhaService.getTreeData(MaGiaPha);
+                setThanhVienList(treeData.members);
+                setRelationships(treeData.relationships);
             } catch (err) {
                 setError(err.response?.data?.message || 'Lỗi tải thông tin gia phả');
                 console.error('Error loading gia pha detail:', err);
@@ -157,74 +159,11 @@ export default function GiaPhaDetailPage() {
                             </div>
                         </div>
 
-                        {/* Members List */}
-                        <div className="glass-card overflow-hidden">
-                            <div className="px-6 py-4 border-b border-neutral-100">
-                                <h2 className="text-xl font-bold text-neutral-800" style={{ fontFamily: 'Playfair Display, serif' }}>
-                                    Danh sách thành viên
-                                </h2>
-                            </div>
-
-                            {thanhVienList.length === 0 ? (
-                                <div className="p-12 text-center">
-                                    <div className="text-5xl mb-4">👤</div>
-                                    <p className="text-neutral-500">Chưa có thành viên nào trong gia phả này</p>
-                                </div>
-                            ) : (
-                                <div className="overflow-x-auto">
-                                    <table className="w-full">
-                                        <thead>
-                                            <tr className="bg-neutral-50 border-b border-neutral-100">
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-600">Họ tên</th>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-600">Giới tính</th>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-600">Ngày sinh</th>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-600">Đời</th>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-600">Trạng thái</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {thanhVienList.map((tv) => (
-                                                <tr
-                                                    key={tv.MaTV}
-                                                    className="border-b border-neutral-100 hover:bg-neutral-50 cursor-pointer transition-colors"
-                                                    onClick={() => navigate(`/thanhvien/${tv.MaTV}`)}
-                                                >
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${tv.GioiTinh === 'Nữ'
-                                                                    ? 'bg-pink-100 text-pink-600'
-                                                                    : 'bg-blue-100 text-blue-600'
-                                                                }`}>
-                                                                {tv.GioiTinh === 'Nữ' ? '👩' : '👨'}
-                                                            </div>
-                                                            <span className="font-medium text-neutral-800">{tv.HoTen}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 text-sm text-neutral-600">{tv.GioiTinh}</td>
-                                                    <td className="px-6 py-4 text-sm text-neutral-600">
-                                                        {tv.NgayGioSinh
-                                                            ? new Date(tv.NgayGioSinh).toLocaleDateString('vi-VN')
-                                                            : '-'}
-                                                    </td>
-                                                    <td className="px-6 py-4 text-sm text-neutral-600">{tv.DOI || '-'}</td>
-                                                    <td className="px-6 py-4">
-                                                        {isDeceased(tv) ? (
-                                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-neutral-100 text-neutral-600">
-                                                                Đã mất
-                                                            </span>
-                                                        ) : (
-                                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
-                                                                Còn sống
-                                                            </span>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-                        </div>
+                        {/* Family Tree View Component */}
+                        <FamilyTreeView
+                            members={thanhVienList}
+                            relationships={relationships}
+                        />
                     </div>
                 )}
             </main>

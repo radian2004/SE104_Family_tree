@@ -122,4 +122,43 @@ lookupsRouter.get('/loaithanhtich', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * GET /nguyennhanmat - Lấy danh sách nguyên nhân mất
+ */
+lookupsRouter.get('/nguyennhanmat', async (req: Request, res: Response) => {
+  try {
+    const sql = 'SELECT * FROM NGUYENNHANMAT ORDER BY TenNguyenNhanMat';
+    const result = await databaseService.query(sql);
+    return res.json({
+      message: 'Lấy danh sách nguyên nhân mất thành công',
+      result
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      message: error.message || 'Lỗi lấy danh sách nguyên nhân mất',
+      error
+    });
+  }
+});
+
+/**
+ * GET /diadiemmaitang - Lấy danh sách địa điểm mai táng
+ */
+lookupsRouter.get('/diadiemmaitang', async (req: Request, res: Response) => {
+  try {
+    const sql = 'SELECT * FROM DIADIEMMAITANG ORDER BY TenDiaDiem';
+    const result = await databaseService.query(sql);
+    return res.json({
+      message: 'Lấy danh sách địa điểm mai táng thành công',
+      result
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      message: error.message || 'Lỗi lấy danh sách địa điểm mai táng',
+      error
+    });
+  }
+});
+
 export default lookupsRouter;
+

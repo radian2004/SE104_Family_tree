@@ -10,12 +10,12 @@ import apiClient from '../api/client';
 class KetThucService {
     /**
      * Ghi nhận kết thúc (báo tử)
-     * POST /ketthuc/ghinhan
+     * POST /users/ketthuc/ghinhan
      * @param {Object} payload - { MaTV, NgayGioMat, MaNguyenNhanMat, MaDiaDiem }
      */
     async ghiNhan(payload) {
         try {
-            const response = await apiClient.post('/ketthuc/ghinhan', payload);
+            const response = await apiClient.post('/users/ketthuc/ghinhan', payload);
             return response.data;
         } catch (error) {
             throw error;
@@ -24,11 +24,11 @@ class KetThucService {
 
     /**
      * Tra cứu thông tin kết thúc
-     * GET /ketthuc/tracuu
+     * GET /users/ketthuc/tracuu
      */
     async traCuu(params) {
         try {
-            const response = await apiClient.get('/ketthuc/tracuu', { params });
+            const response = await apiClient.get('/users/ketthuc/tracuu', { params });
             return response.data;
         } catch (error) {
             throw error;
@@ -37,11 +37,11 @@ class KetThucService {
 
     /**
      * Xem chi tiết kết thúc theo MaTV
-     * GET /ketthuc/:MaTV
+     * GET /users/ketthuc/:MaTV
      */
     async getDetail(MaTV) {
         try {
-            const response = await apiClient.get(`/ketthuc/${MaTV}`);
+            const response = await apiClient.get(`/users/ketthuc/${MaTV}`);
             return response.data.result || response.data;
         } catch (error) {
             throw error;
@@ -50,11 +50,11 @@ class KetThucService {
 
     /**
      * Cập nhật thông tin kết thúc
-     * PUT /ketthuc/:MaTV
+     * PUT /users/ketthuc/:MaTV
      */
     async update(MaTV, payload) {
         try {
-            const response = await apiClient.put(`/ketthuc/${MaTV}`, payload);
+            const response = await apiClient.put(`/users/ketthuc/${MaTV}`, payload);
             return response.data;
         } catch (error) {
             throw error;
@@ -63,11 +63,11 @@ class KetThucService {
 
     /**
      * Xóa thông tin kết thúc (Hồi sinh)
-     * DELETE /ketthuc/:MaTV
+     * DELETE /users/ketthuc/:MaTV
      */
     async delete(MaTV) {
         try {
-            const response = await apiClient.delete(`/ketthuc/${MaTV}`);
+            const response = await apiClient.delete(`/users/ketthuc/${MaTV}`);
             return response.data;
         } catch (error) {
             throw error;

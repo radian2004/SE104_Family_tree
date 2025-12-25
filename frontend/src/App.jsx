@@ -20,6 +20,9 @@ import ThanhVienCreatePage from './pages/ThanhVienCreatePage';
 import ThanhVienEditPage from './pages/ThanhVienEditPage';
 import GiaPhaPage from './pages/GiaPhaPage';
 import GiaPhaDetailPage from './pages/GiaPhaDetailPage';
+import BaoCaoPage from './pages/BaoCaoPage';
+import QuanHeHonNhanPage from './pages/QuanHeHonNhanPage';
+import QuanHeConCaiPage from './pages/QuanHeConCaiPage';
 
 export default function App() {
   const checkAuth = useAuthStore((state) => state.checkAuth);
@@ -98,6 +101,34 @@ export default function App() {
           }
         />
 
+        {/* Báo cáo route */}
+        <Route
+          path="/baocao"
+          element={
+            <ProtectedRoute>
+              <BaoCaoPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Quan hệ routes */}
+        <Route
+          path="/quanhe/honnhan"
+          element={
+            <ProtectedRoute>
+              <QuanHeHonNhanPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/quanhe/concai"
+          element={
+            <ProtectedRoute>
+              <QuanHeConCaiPage />
+            </ProtectedRoute>
+          }
+        />
+
         {/* ==================== DEFAULT & 404 ==================== */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/404" element={<NotFoundPage />} />
@@ -106,3 +137,4 @@ export default function App() {
     </Router>
   );
 }
+
