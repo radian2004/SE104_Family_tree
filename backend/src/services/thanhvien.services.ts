@@ -806,6 +806,156 @@ async updateThanhVien(MaTV: string, payload: Partial<ThanhVien>) {
       throw error;
     }
   }
+
+  async getThanhVienGiaPhaInfo(MaTV: string) {
+    const sql = `
+      SELECT 
+        tv.MaTV,
+        tv.HoTen,
+        tv.MaGiaPha,
+        gp.TenGiaPha,
+        gp.TruongToc,
+        tv_tt.HoTen as TenTruongToc
+      FROM THANHVIEN tv
+      LEFT JOIN CAYGIAPHA gp ON tv.MaGiaPha = gp.MaGiaPha
+      LEFT JOIN THANHVIEN tv_tt ON gp.TruongToc = tv_tt.MaTV
+      WHERE tv.MaTV = ?
+    `;
+    
+    interface GiaPhaInfoRow extends RowDataPacket {
+      MaTV: string;
+      HoTen: string;
+      MaGiaPha: string | null;
+      TenGiaPha: string | null;
+      TruongToc: string | null;
+      TenTruongToc: string | null;
+    }
+    
+    const rows = await databaseService.query<GiaPhaInfoRow[]>(sql, [MaTV]);
+    
+    if (!rows || rows.length === 0) {
+      throw new Error('Không tìm thấy thành viên');
+    }
+    
+    return rows[0];
+  }
+
+  /**
+   * Kiểm tra mã gia phả có tồn tại không
+   */
+  async checkGiaPhaExists(MaGiaPha: string): Promise<boolean> {
+    const sql = 'SELECT MaGiaPha FROM CAYGIAPHA WHERE MaGiaPha = ?';
+    const rows = await databaseService.query<RowDataPacket[]>(sql, [MaGiaPha]);
+    return rows && rows.length > 0;
+  }
+
+  /**
+   * Xóa mã gia phả của thành viên (set NULL)
+   */
+  async xoaMaGiaPhaThanhVien(MaTV: string) {
+    // Kiểm tra thành viên tồn tại và lấy thông tin hiện tại
+    const thanhVienInfo = await this.getThanhVienGiaPhaInfo(MaTV);
+    
+    if (!thanhVienInfo.MaGiaPha) {
+      throw new Error('Thành viên chưa có mã gia phả để xóa');
+    }
+    
+    const MaGiaPhaCu = thanhVienInfo.MaGiaPha;
+    
+    // Cập nhật MaGiaPha = NULL
+    const updateSql = 'UPDATE THANHVIEN SET MaGiaPha = NULL WHERE MaTV = ?';
+    const result = await databaseService.query<ResultSetHeader>(updateSql, [MaTV]);
+    
+    if (result.affectedRows === 0) {
+      throw new Error('Không thể xóa mã gia phả');
+    }
+    
+    return {
+      message: 'Xóa mã gia phả thành công',
+      data: {
+        MaTV: thanhVienInfo.MaTV,
+        HoTen: thanhVienInfo.HoTen,
+        MaGiaPhaCu: MaGiaPhaCu,
+        MaGiaPhaHienTai: null
+      }
+    };
+  }
+
+  /**
+   * Cập nhật mã gia phả của thành viên
+   */
+  async capNhatMaGiaPhaThanhVien(MaTV: string, MaGiaPha: string) {
+    // Kiểm tra thành viên tồn tại và lấy thông tin hiện tại
+    const thanhVienInfo = await this.getThanhVienGiaPhaInfo(MaTV);
+    
+    // Kiểm tra mã gia phả mới có giống mã cũ không
+    if (thanhVienInfo.MaGiaPha === MaGiaPha) {
+      throw new Error('Mã gia phả mới giống với mã gia phả hiện tại');
+    }
+    
+    // Kiểm tra mã gia phả đích có tồn tại không
+    const giaPhaExists = await this.checkGiaPhaExists(MaGiaPha);
+    if (!giaPhaExists) {
+      throw new Error(`Không tìm thấy gia phả với mã: ${MaGiaPha}`);
+    }
+    
+    const MaGiaPhaCu = thanhVienInfo.MaGiaPha;
+    
+    // Cập nhật MaGiaPha mới
+    const updateSql = 'UPDATE THANHVIEN SET MaGiaPha = ? WHERE MaTV = ?';
+    const result = await databaseService.query<ResultSetHeader>(updateSql, [MaGiaPha, MaTV]);
+    
+    if (result.affectedRows === 0) {
+      throw new Error('Không thể cập nhật mã gia phả');
+    }
+    
+    // Lấy thông tin gia phả mới
+    const newGiaPhaInfo = await this.getThanhVienGiaPhaInfo(MaTV);
+    
+    return {
+      message: 'Cập nhật mã gia phả thành công',
+      data: {
+        MaTV: newGiaPhaInfo.MaTV,
+        HoTen: newGiaPhaInfo.HoTen,
+        MaGiaPhaCu: MaGiaPhaCu,
+        MaGiaPhaHienTai: newGiaPhaInfo.MaGiaPha,
+        TenGiaPhaHienTai: newGiaPhaInfo.TenGiaPha
+      }
+    };
+  }
+
+  /**
+   * Lấy danh sách tất cả các gia phả (để chọn khi cập nhật)
+   */
+  async getAllGiaPha() {
+    const sql = `
+      SELECT 
+        gp.MaGiaPha,
+        gp.TenGiaPha,
+        gp.TruongToc,
+        tv.HoTen as TenTruongToc,
+        gp.TGLap,
+        COUNT(tv_member.MaTV) as SoLuongThanhVien
+      FROM CAYGIAPHA gp
+      LEFT JOIN THANHVIEN tv ON gp.TruongToc = tv.MaTV
+      LEFT JOIN THANHVIEN tv_member ON tv_member.MaGiaPha = gp.MaGiaPha
+      GROUP BY gp.MaGiaPha, gp.TenGiaPha, gp.TruongToc, tv.HoTen, gp.TGLap
+      ORDER BY gp.TGLap DESC
+    `;
+    
+    interface GiaPhaRow extends RowDataPacket {
+      MaGiaPha: string;
+      TenGiaPha: string;
+      TruongToc: string;
+      TenTruongToc: string;
+      TGLap: Date;
+      SoLuongThanhVien: number;
+    }
+    
+    const rows = await databaseService.query<GiaPhaRow[]>(sql);
+    return rows;
+  }
+
 }
 const thanhvienService = new ThanhVienService();
 export default thanhvienService;

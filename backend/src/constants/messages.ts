@@ -1,5 +1,8 @@
 export const USERS_MESSAGES = {
   VALIDATION_ERROR: 'Validation error',
+
+  REFRESH_TOKEN_SUCCESS: 'Làm mới token thành công',
+  USED_REFRESH_TOKEN_OR_NOT_EXIST: 'Refresh token không tồn tại hoặc đã được sử dụng',
   
   // Register
   NAME_IS_REQUIRED: 'Tên không được để trống',
@@ -16,10 +19,20 @@ export const USERS_MESSAGES = {
   CONFIRM_PASSWORD_IS_REQUIRED: 'Xác nhận mật khẩu không được để trống',
   CONFIRM_PASSWORD_NOT_MATCH: 'Xác nhận mật khẩu không khớp',
   
+  // Gia phả messages
+  GIAPHA_EXIST_IS_REQUIRED: 'Thông tin gia phả là bắt buộc',
+  GIAPHA_EXIST_MUST_BE_BOOLEAN: 'Trường exist phải là boolean (true/false)',
+  GIAPHA_NAME_IS_REQUIRED: 'Tên gia phả là bắt buộc',
+  GIAPHA_NAME_MUST_BE_STRING: 'Tên gia phả phải là chuỗi',
+  GIAPHA_NAME_LENGTH_MUST_BE_FROM_1_TO_35: 'Tên gia phả phải từ 1 đến 35 ký tự',
+  GIAPHA_NOT_FOUND: 'Gia phả không tồn tại',
+  GIAPHA_CREATED: 'Tạo gia phả mới thành công. Bạn là người lập và trưởng tộc.',
+  GIAPHA_JOINED: 'Gia nhập gia phả thành công.',
+
   // Login
   EMAIL_OR_PASSWORD_INCORRECT: 'Email hoặc mật khẩu không đúng',
-  LOGIN_SUCCESS: 'Đăng nhập thành công',
-  
+  LOGIN_SUCCESS: 'Đăng nhập thành công',  
+
   // Logout
   ACCESS_TOKEN_IS_REQUIRED: 'Access token không được để trống',
   ACCESS_TOKEN_IS_INVALID: 'Access token không hợp lệ',

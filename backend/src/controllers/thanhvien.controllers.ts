@@ -293,3 +293,144 @@ export const traCuuThanhVienController = async (req: Request, res: Response) => 
     });
   }
 };
+
+export const xoaMaGiaPhaController = async (req: Request, res: Response) => {
+  const { MaTV } = req.params;
+  
+  try {
+    const result = await thanhvienService.xoaMaGiaPhaThanhVien(MaTV);
+    
+    return res.status(200).json(result);
+    
+  } catch (error: any) {
+    console.error('Lỗi xoaMaGiaPha:', error);
+    
+    // Xử lý lỗi cụ thể
+    if (error.message === 'Không tìm thấy thành viên') {
+      return res.status(404).json({
+        message: 'Không tìm thấy thành viên',
+        error: error.message
+      });
+    }
+    
+    if (error.message === 'Thành viên chưa có mã gia phả để xóa') {
+      return res.status(400).json({
+        message: 'Thành viên chưa có mã gia phả',
+        error: error.message
+      });
+    }
+    
+    return res.status(500).json({
+      message: 'Xóa mã gia phả thất bại',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Controller cập nhật mã gia phả của thành viên
+ * PATCH /api/thanhvien/:MaTV/gia-pha
+ */
+export const capNhatMaGiaPhaController = async (req: Request, res: Response) => {
+  const { MaTV } = req.params;
+  const { MaGiaPha } = req.body;
+  
+  try {
+    // Validate input
+    if (!MaGiaPha) {
+      return res.status(400).json({
+        message: 'Thiếu thông tin',
+        error: 'Trường MaGiaPha là bắt buộc'
+      });
+    }
+    
+    const result = await thanhvienService.capNhatMaGiaPhaThanhVien(MaTV, MaGiaPha);
+    
+    return res.status(200).json(result);
+    
+  } catch (error: any) {
+    console.error('Lỗi capNhatMaGiaPha:', error);
+    
+    // Xử lý lỗi cụ thể
+    if (error.message === 'Không tìm thấy thành viên') {
+      return res.status(404).json({
+        message: 'Không tìm thấy thành viên',
+        error: error.message
+      });
+    }
+    
+    if (error.message.includes('Không tìm thấy gia phả với mã')) {
+      return res.status(404).json({
+        message: 'Không tìm thấy gia phả',
+        error: error.message
+      });
+    }
+    
+    if (error.message === 'Mã gia phả mới giống với mã gia phả hiện tại') {
+      return res.status(400).json({
+        message: 'Mã gia phả không thay đổi',
+        error: error.message
+      });
+    }
+    
+    return res.status(500).json({
+      message: 'Cập nhật mã gia phả thất bại',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Controller lấy thông tin gia phả của thành viên
+ * GET /api/thanhvien/:MaTV/gia-pha
+ */
+export const getGiaPhaThanhVienController = async (req: Request, res: Response) => {
+  const { MaTV } = req.params;
+  
+  try {
+    const result = await thanhvienService.getThanhVienGiaPhaInfo(MaTV);
+    
+    return res.status(200).json({
+      message: 'Lấy thông tin gia phả thành công',
+      data: result
+    });
+    
+  } catch (error: any) {
+    console.error('Lỗi getGiaPhaThanhVien:', error);
+    
+    if (error.message === 'Không tìm thấy thành viên') {
+      return res.status(404).json({
+        message: 'Không tìm thấy thành viên',
+        error: error.message
+      });
+    }
+    
+    return res.status(500).json({
+      message: 'Lấy thông tin gia phả thất bại',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Controller lấy danh sách tất cả các gia phả
+ * GET /api/thanhvien/gia-pha/danh-sach
+ */
+export const getAllGiaPhaController = async (req: Request, res: Response) => {
+  try {
+    const result = await thanhvienService.getAllGiaPha();
+    
+    return res.status(200).json({
+      message: 'Lấy danh sách gia phả thành công',
+      data: result
+    });
+    
+  } catch (error: any) {
+    console.error('Lỗi getAllGiaPha:', error);
+    
+    return res.status(500).json({
+      message: 'Lấy danh sách gia phả thất bại',
+      error: error.message
+    });
+  }
+};

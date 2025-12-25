@@ -10,9 +10,13 @@ import {
   updateThanhVienController,
   deleteThanhVienController,
   getBaoCaoTangGiamController,
-  ghiNhanThanhVienController,          // THÊM MỚI
-  getAvailableRelationsController,       // THÊM MỚI
-  traCuuThanhVienController  // ✅ THÊM MỚI
+  ghiNhanThanhVienController,
+  getAvailableRelationsController,       
+  traCuuThanhVienController,
+  xoaMaGiaPhaController,
+  capNhatMaGiaPhaController,
+  getGiaPhaThanhVienController,
+  getAllGiaPhaController
 } from '~/controllers/thanhvien.controllers';
 import { wrapAsync } from '~/utils/handlers';
 
@@ -52,5 +56,21 @@ thanhvienRouter.put('/:MaTV', wrapAsync(updateThanhVienController));
 
 // DELETE /thanhvien/:MaTV
 thanhvienRouter.delete('/:MaTV', wrapAsync(deleteThanhVienController));
+
+// GET /thanhvien/gia-pha/danh-sach - Lấy danh sách tất cả gia phả
+thanhvienRouter.get('/gia-pha/danh-sach', wrapAsync(getAllGiaPhaController));
+
+// ========================================
+// THÊM SAU ROUTES HIỆN TẠI CỦA /:MaTV
+// ========================================
+
+// GET /thanhvien/:MaTV/gia-pha - Lấy thông tin gia phả của thành viên
+thanhvienRouter.get('/:MaTV/gia-pha', wrapAsync(getGiaPhaThanhVienController));
+
+// PATCH /thanhvien/:MaTV/gia-pha - Cập nhật mã gia phả của thành viên
+thanhvienRouter.patch('/:MaTV/gia-pha', wrapAsync(capNhatMaGiaPhaController));
+
+// DELETE /thanhvien/:MaTV/gia-pha - Xóa mã gia phả của thành viên
+thanhvienRouter.delete('/:MaTV/gia-pha', wrapAsync(xoaMaGiaPhaController));
 
 export default thanhvienRouter;

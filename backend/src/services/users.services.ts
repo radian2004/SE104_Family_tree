@@ -4,8 +4,12 @@ import { RegisterReqBody } from '~/models/requests/User.requests';
 import { hashPassword } from '~/utils/crypto';
 import { signToken } from '~/utils/jwt';
 import { TokenType } from '~/constants/enums';
-import TaiKhoan from '~/models/schemas/TaiKhoan.schema';
-import RefreshToken from '~/models/schemas/RefreshToken.schema';
+import dotenv from 'dotenv';
+import { USERS_MESSAGES } from '~/constants/messages';
+import HTTP_STATUS from '~/constants/httpStatus';
+import { ErrorWithStatus } from '~/models/Errors';
+
+dotenv.config();
 
 interface TaiKhoanRow extends RowDataPacket {
   TenDangNhap: string;
@@ -79,53 +83,114 @@ private signRefreshToken(user_id: string) {
   /**
    * Đăng ký tài khoản mới
    */
-async register(payload: RegisterReqBody) {
-  const { name, email, password } = payload;
+  async register(payload: RegisterReqBody) {
+    const { name, email, password, giapha } = payload
+    const hashedPassword = hashPassword(password)
+    let MaGiaPha: string
+    let giapha_message: string
 
-  // 1. Tạo thành viên mới với GioiTinh thay vì MaGioiTinh
-  const insertThanhVienSql = `
-    INSERT INTO THANHVIEN (HoTen, GioiTinh) 
-    VALUES (?, 'Nam')
-  `;
-  await databaseService.query(insertThanhVienSql, [name]);
-
-  // 2. Lấy MaTV vừa tạo (trigger tự sinh)
-  const [thanhVien] = await databaseService.query<RowDataPacket[]>(
-    'SELECT MaTV FROM THANHVIEN ORDER BY TGTaoMoi DESC LIMIT 1'
-  );
-  const MaTV = thanhVien.MaTV;
-
-  // 3. Hash password và tạo tài khoản
-  const hashedPassword = hashPassword(password);
-  const insertTaiKhoanSql = `
-    INSERT INTO TAIKHOAN (TenDangNhap, MaTV, MatKhau, MaLoaiTK) 
-    VALUES (?, ?, ?, 'LTK03')
-  `;
-  await databaseService.query(insertTaiKhoanSql, [email, MaTV, hashedPassword]);
-
-  // 4. Tạo access token và refresh token
-  const [access_token, refresh_token] = await this.signAccessAndRefreshToken(email);
-
-  // 5. Lưu refresh token vào database
-  const expDate = new Date();
-  expDate.setDate(expDate.getDate() + 7);
-
-  const insertRefreshTokenSql = `
-    INSERT INTO REFRESH_TOKENS (token, TenDangNhap, NgayHetHan) 
-    VALUES (?, ?, ?)
-  `;
-  await databaseService.query(insertRefreshTokenSql, [refresh_token, email, expDate]);
-
-  return {
-    access_token,
-    refresh_token,
-    user: {
-      TenDangNhap: email,
-      MaTV: MaTV,
-      MaLoaiTK: 'LTK03'
+    // Trường hợp 1: Tạo gia phả mới (exist = false)
+    if (giapha.exist === false) {
+      // Tạo gia phả mới - Trigger sẽ tự động sinh MaGiaPha
+      const [insertGiaPhaResult] = await databaseService.getPool().execute<ResultSetHeader>(
+        'INSERT INTO CAYGIAPHA (TenGiaPha) VALUES (?)',
+        [giapha.name]
+      )
+      
+      // Lấy MaGiaPha vừa được tạo
+      const [rows] = await databaseService.getPool().execute<RowDataPacket[]>(
+        'SELECT MaGiaPha FROM CAYGIAPHA WHERE TenGiaPha = ? ORDER BY MaGiaPha DESC LIMIT 1',
+        [giapha.name]
+      )
+      MaGiaPha = rows[0].MaGiaPha
+      giapha_message = USERS_MESSAGES.GIAPHA_CREATED
+      
+      // Tạo thành viên (sẽ được set làm NguoiLap và TruongToc)
+      const [insertMemberResult] = await databaseService.getPool().execute<ResultSetHeader>(
+        'INSERT INTO THANHVIEN (MaGiaPha, HoTen) VALUES (?, ?)',
+        [MaGiaPha, name]
+      )
+      
+      // Lấy MaTV vừa tạo
+      const [memberRows] = await databaseService.getPool().execute<RowDataPacket[]>(
+        'SELECT MaTV FROM THANHVIEN WHERE MaGiaPha = ? AND HoTen = ? ORDER BY MaTV DESC LIMIT 1',
+        [MaGiaPha, name]
+      )
+      const MaTV = memberRows[0].MaTV
+      
+      // Cập nhật NguoiLap và TruongToc cho gia phả
+      await databaseService.getPool().execute(
+        'UPDATE CAYGIAPHA SET NguoiLap = ?, TruongToc = ? WHERE MaGiaPha = ?',
+        [MaTV, MaTV, MaGiaPha]
+      )
+      
+      // Tạo tài khoản
+      await databaseService.getPool().execute<ResultSetHeader>(
+        'INSERT INTO TAIKHOAN (TenDangNhap, MaTV, MatKhau, MaLoaiTK) VALUES (?, ?, ?, ?)',
+        [email, MaTV, hashedPassword, 'LTK03']
+      )
+    } 
+    // Trường hợp 2: Gia nhập gia phả có sẵn (exist = true)
+    else {
+      // Tìm gia phả theo tên
+      const [giaPhaRows] = await databaseService.getPool().execute<RowDataPacket[]>(
+        'SELECT MaGiaPha, TenGiaPha FROM CAYGIAPHA WHERE TenGiaPha = ?',
+        [giapha.name]
+      )
+      
+      // Nếu không tìm thấy gia phả
+      if (giaPhaRows.length === 0) {
+        throw new ErrorWithStatus({
+          message: USERS_MESSAGES.GIAPHA_NOT_FOUND,
+          status: HTTP_STATUS.NOT_FOUND
+        })
+      }
+      
+      MaGiaPha = giaPhaRows[0].MaGiaPha
+      giapha_message = `${USERS_MESSAGES.GIAPHA_JOINED} Gia phả: '${giaPhaRows[0].TenGiaPha}'.`
+      
+      // Tạo thành viên mới trong gia phả đã tồn tại
+      const [insertMemberResult] = await databaseService.getPool().execute<ResultSetHeader>(
+        'INSERT INTO THANHVIEN (MaGiaPha, HoTen) VALUES (?, ?)',
+        [MaGiaPha, name]
+      )
+      
+      // Lấy MaTV vừa tạo
+      const [memberRows] = await databaseService.getPool().execute<RowDataPacket[]>(
+        'SELECT MaTV FROM THANHVIEN WHERE MaGiaPha = ? AND HoTen = ? ORDER BY MaTV DESC LIMIT 1',
+        [MaGiaPha, name]
+      )
+      const MaTV = memberRows[0].MaTV
+      
+      // Tạo tài khoản
+      await databaseService.getPool().execute<ResultSetHeader>(
+        'INSERT INTO TAIKHOAN (TenDangNhap, MaTV, MatKhau, MaLoaiTK) VALUES (?, ?, ?, ?)',
+        [email, MaTV, hashedPassword, 'LTK03']
+      )
     }
-  };
-}
+
+    // Tạo tokens
+    const [access_token, refresh_token] = await Promise.all([
+      this.signAccessToken(email),
+      this.signRefreshToken(email)
+    ])
+
+    // Lưu refresh token
+    const expDate = new Date()
+    expDate.setDate(expDate.getDate() + 7) // Hết hạn sau 7 ngày
+
+    await databaseService.getPool().execute(
+      'INSERT INTO REFRESH_TOKENS (token, TenDangNhap, NgayHetHan) VALUES (?, ?, ?)',
+      [refresh_token, email, expDate]
+    )
+
+    return {
+      access_token,
+      refresh_token,
+      MaGiaPha,
+      giapha_message
+    }
+  }
 
   /**
    * Đăng nhập
@@ -163,11 +228,6 @@ async register(payload: RegisterReqBody) {
     return {
       access_token,
       refresh_token,
-      user: {
-        TenDangNhap: user.TenDangNhap,
-        MaTV: user.MaTV,
-        MaLoaiTK: user.MaLoaiTK
-      }
     };
   }
 
@@ -192,6 +252,36 @@ async register(payload: RegisterReqBody) {
     const rows = await databaseService.query<RefreshTokenRow[]>(sql, [refresh_token]);
     return rows.length > 0;
   }
+
+  /**
+   * Làm mới access token và refresh token
+   * @param old_refresh_token - Refresh token cũ
+   * @param user_id - ID người dùng (email)
+   */
+  async refreshToken(old_refresh_token: string, user_id: string) {
+    // 1. Xóa refresh token cũ khỏi database
+    const deleteSql = 'DELETE FROM REFRESH_TOKENS WHERE token = ?';
+    await databaseService.query(deleteSql, [old_refresh_token]);
+
+    // 2. Tạo cặp token mới
+    const [access_token, refresh_token] = await this.signAccessAndRefreshToken(user_id);
+
+    // 3. Lưu refresh token mới vào database
+    const expDate = new Date();
+    expDate.setDate(expDate.getDate() + 7);
+
+    const insertRefreshTokenSql = `
+      INSERT INTO REFRESH_TOKENS (token, TenDangNhap, NgayHetHan) 
+      VALUES (?, ?, ?)
+    `;
+    await databaseService.query(insertRefreshTokenSql, [refresh_token, user_id, expDate]);
+
+    return {
+      access_token,
+      refresh_token
+    };
+  }
+
 }
 
 const usersService = new UsersService();

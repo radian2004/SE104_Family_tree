@@ -2,7 +2,8 @@ import { Router } from 'express';
 import {
   registerController,
   loginController,
-  logoutController
+  logoutController,
+  refreshTokenController
 } from '~/controllers/users.controllers';
 import {
   registerValidator,
@@ -14,8 +15,8 @@ import { wrapAsync } from '~/utils/handlers';
 import thanhvienRouter from './thanhvien.routes';
 import thanhTichRouter from './thanhtich.routes';
 import ketthucRouter from './ketthuc.routes';
-import honNhanRouter from './honnhan.routes';  // ✅ THÊM DÒNG NÀY
-import quanHeConRouter from './quanhecon.routes';      // ✅ THÊM DÒNG NÀY
+import honNhanRouter from './honnhan.routes';
+import quanHeConRouter from './quanhecon.routes';
 
 const usersRouter = Router();
 
@@ -43,9 +44,17 @@ usersRouter.post('/login', loginValidator, wrapAsync(loginController));
  */
 usersRouter.post('/logout', accessTokenValidator, refreshTokenValidator, wrapAsync(logoutController));
 
+/**
+ * Description: Làm mới access token và refresh token
+ * Path: /users/refresh-token
+ * Method: POST
+ * Body: { refresh_token: string }
+ */
+usersRouter.post('/refresh-token', refreshTokenValidator, wrapAsync(refreshTokenController));
+
 usersRouter.use('/thanhvien', accessTokenValidator, thanhvienRouter);
 usersRouter.use('/thanhtich', accessTokenValidator, thanhTichRouter);
 usersRouter.use('/ketthuc', accessTokenValidator, ketthucRouter);
-usersRouter.use('/honnhan', accessTokenValidator, honNhanRouter);  // ✅ THÊM DÒNG NÀY
+usersRouter.use('/honnhan', accessTokenValidator, honNhanRouter);
 usersRouter.use('/quanhecon', accessTokenValidator, quanHeConRouter);
 export default usersRouter;
