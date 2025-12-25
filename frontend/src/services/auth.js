@@ -2,6 +2,7 @@
  * ============================================
  * AUTH SERVICE
  * Xử lý tất cả các API call liên quan đến authentication
+ * Backend dùng HTTP-only cookies cho tokens
  * ============================================
  */
 
@@ -11,13 +12,13 @@ class AuthService {
   /**
    * Đăng ký tài khoản mới
    * POST /users/register
-   * @param {Object} payload - { name, email, password, confirm_password }
-   * @returns {Promise<Object>} User info và tokens
+   * Backend trả về: { message, user } + set cookies
    */
   async register(payload) {
     try {
       const response = await apiClient.post('/users/register', payload);
-      return response.data.result;
+      // Backend trả về { message, user } - không có .result
+      return response.data.user;
     } catch (error) {
       throw error;
     }
@@ -26,13 +27,13 @@ class AuthService {
   /**
    * Đăng nhập
    * POST /users/login
-   * @param {Object} payload - { email, password }
-   * @returns {Promise<Object>} User info và tokens
+   * Backend trả về: { message, user } + set cookies
    */
   async login(payload) {
     try {
       const response = await apiClient.post('/users/login', payload);
-      return response.data.result;
+      // Backend trả về { message, user } - không có .result
+      return response.data.user;
     } catch (error) {
       throw error;
     }
@@ -41,14 +42,11 @@ class AuthService {
   /**
    * Đăng xuất
    * POST /users/logout
-   * @param {string} refresh_token - Refresh token
-   * @returns {Promise<Object>} Logout result
+   * Backend lấy refresh_token từ cookies, không cần gửi trong body
    */
-  async logout(refresh_token) {
+  async logout() {
     try {
-      const response = await apiClient.post('/users/logout', {
-        refresh_token,
-      });
+      const response = await apiClient.post('/users/logout');
       return response.data;
     } catch (error) {
       throw error;
@@ -58,15 +56,12 @@ class AuthService {
   /**
    * Refresh token
    * POST /users/refresh-token
-   * @param {string} refresh_token - Refresh token
-   * @returns {Promise<Object>} New tokens
+   * Backend dùng cookies nên không cần gửi refresh_token
    */
-  async refreshToken(refresh_token) {
+  async refreshToken() {
     try {
-      const response = await apiClient.post('/users/refresh-token', {
-        refresh_token,
-      });
-      return response.data.result;
+      const response = await apiClient.post('/users/refresh-token');
+      return response.data;
     } catch (error) {
       throw error;
     }
@@ -75,12 +70,11 @@ class AuthService {
   /**
    * Lấy thông tin profile của user
    * GET /users/profile
-   * @returns {Promise<Object>} User info
    */
   async getProfile() {
     try {
       const response = await apiClient.get('/users/profile');
-      return response.data.result;
+      return response.data.user || response.data.result;
     } catch (error) {
       throw error;
     }

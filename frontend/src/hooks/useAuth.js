@@ -76,13 +76,11 @@ export const useAuth = () => {
 
   /**
    * Handle logout
+   * Backend lấy refresh_token từ cookies
    */
   const handleLogout = useCallback(async () => {
     try {
-      const refreshToken = localStorage.getItem('refresh_token');
-      if (refreshToken) {
-        await authService.logout(refreshToken);
-      }
+      await authService.logout();
     } catch (error) {
       console.error('Logout error:', error);
     } finally {

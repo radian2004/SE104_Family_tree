@@ -205,6 +205,8 @@ CREATE TABLE REFRESH_TOKENS (
     INDEX idx_ngayhethan (NgayHetHan)
 );
 -- ----------TRIGGER--------------
+DELIMITER $$
+
 -- 1. Generate ID cho THANHVIEN
 CREATE TRIGGER TRG_GEN_ID_THANHVIEN
 BEFORE INSERT ON THANHVIEN
@@ -217,7 +219,7 @@ BEGIN
     FROM THANHVIEN;
 
     SET NEW.MaTV = CONCAT('TV', LPAD(max_id, 2, '0'));
-END;
+END$$
 
 -- 2. Generate ID cho CAYGIAPHA
 CREATE TRIGGER TRG_GEN_ID_CAYGIAPHA
@@ -231,9 +233,8 @@ BEGIN
     INTO max_id
     FROM CAYGIAPHA;
 
-    -- Gán MaGiaPha mới với prefix 'GP' và 2 chữ số
     SET NEW.MaGiaPha = CONCAT('GP', LPAD(max_id, 2, '0'));
-END;
+END$$
 
 -- 3. Generate ID cho PHIEUCHIQUY (Sửa: ID -> MaPhieuChi)
 CREATE TRIGGER TRG_GEN_ID_CHIQUY
@@ -247,7 +248,7 @@ BEGIN
     FROM PHIEUCHIQUY;
 
     SET NEW.MaPhieuChi = CONCAT('CQ', LPAD(max_id, 2, '0'));
-END;
+END$$
 
 -- 4. Generate ID cho PHIEUTHUQUY (Sửa: ID -> MaPhieuThu)
 CREATE TRIGGER TRG_GEN_ID_THUQUY
@@ -261,7 +262,7 @@ BEGIN
     FROM PHIEUTHUQUY;
 
     SET NEW.MaPhieuThu = CONCAT('TQ', LPAD(max_id, 2, '0'));
-END;
+END$$
 
 -- 5. Đời con bằng đời cha/mẹ + 1
 CREATE TRIGGER TRG_INSERT_DOI_THANHVIEN_QUANHECON
@@ -281,7 +282,7 @@ BEGIN
         SET DOI = parent_gen + 1
         WHERE MaTV = NEW.MaTV;
     END IF;
-END;
+END$$
 	
 -- 6. Đời vợ/chồng = đời chồng/vợ
 CREATE TRIGGER TRG_INSERT_DOI_THANHVIEN_HONNHAN
@@ -301,7 +302,7 @@ BEGIN
         SET DOI = partner_gen
         WHERE MaTV = NEW.MaTVVC;
     END IF;
-END;
+END$$
 
 -- 7. Ngày kết hôn phải sau ngày sinh
 CREATE TRIGGER TRG_CHECK_NGAY_KET_HON_HONNHAN
@@ -325,7 +326,7 @@ BEGIN
         SIGNAL SQLSTATE '45010'
         SET MESSAGE_TEXT = 'Ngày kết hôn phải sau ngày sinh thành viên!';
     END IF;
-END;
+END$$
 
 -- TV mới có quan hệ hôn nhân hoặc con cái với thành viên cũ sẽ thuộc cùng cây gia phả
 -- 8. Bảng con cái - tự động gán gia phả
@@ -352,7 +353,7 @@ BEGIN
         SET MaGiaPha = parent_family_id
         WHERE MaTV = NEW.MaTV;
     END IF;
-END;
+END$$
 
 -- 9. TV trong MaCha có giới tính Nam, trong MaMe có giới tính Nữ
 CREATE TRIGGER TRG_CHECK_CHA_ME_QUANHECON
@@ -383,7 +384,7 @@ BEGIN
         SIGNAL SQLSTATE '45004'
         SET MESSAGE_TEXT = N'Giới tính của mẹ phải là Nữ!';
     END IF;
-END;
+END$$
 
 -- 10. Bảng hôn nhân - tự động gán gia phả
 CREATE TRIGGER TRG_INSERT_MaGP_THANHVIEN_HONNHAN
@@ -403,7 +404,7 @@ BEGIN
         SET MaGiaPha = partner_gen
         WHERE MaTV = NEW.MaTVVC;
     END IF;
-END;
+END$$
 
 
 -- 11. quan hệ con: ngày sinh con phải hợp lệ với cha/mẹ
@@ -441,7 +442,7 @@ BEGIN
         SIGNAL SQLSTATE '45001'
         SET MESSAGE_TEXT = N'Ngày sinh của con phải sau ngày sinh của mẹ!';
     END IF;
-END;
+END$$
 
 -- 12. Ngày đạt thành tích phải sau ngày sinh thành viên
 CREATE TRIGGER TRG_CHECK_NGAY_THANHTICH
@@ -460,7 +461,7 @@ BEGIN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Ngày đạt thành tích phải sau ngày sinh thành viên!';
     END IF;
-END;
+END$$
 
 -- 13. Khi cập nhật MaNguyenNhanMat --> trạng thái tv chuyển sang 'Mất'
 CREATE TRIGGER TRG_UPDATE_TRANGTHAI_THANHVIEN_MaNguyenNhanMat
@@ -470,7 +471,7 @@ BEGIN
     IF NEW.MaNguyenNhanMat IS NOT NULL AND OLD.MaNguyenNhanMat IS NULL THEN
         SET NEW.TrangThai = 'Mất';
     END IF;
-END; 
+END$$
 
 -- 14. Sau khi insert GHINHANTHANHTICH --> CẬP NHẬT BẢNG BAOCAOTHANHTICH
 CREATE TRIGGER TRG_UPDATE_BAOCAOTHANHTICH_AFTER_INSERT
@@ -497,7 +498,9 @@ BEGIN
         INSERT INTO BAOCAOTHANHTICH (Nam, MaLTT, SoLuong)
         VALUES (current_year, NEW.MaLTT, 1);
     END IF;
-END;
+END$$
+
+DELIMITER ;
 
 -- ----------INSERT VALUE----------
 -- 4 quê quán
@@ -608,7 +611,7 @@ ON DUPLICATE KEY UPDATE TenLoaiTK = VALUES(TenLoaiTK);
 
 SELECT * FROM TAIKHOAN;
 SELECT * FROM REFRESH_TOKENS;
-DROP TABLE REFRESH_TOKENS;
+-- DROP TABLE REFRESH_TOKENS;
 SELECT * FROM THANHVIEN; -- Kiểm tra dữ liệu thành viên
 SELECT * FROM GHINHANTHANHTICH; -- Kiểm tra dữ liệu thành tích
 SELECT * FROM BAOCAOTHANHTICH; -- Kiểm tra dữ liệu báo cáo thành tích
@@ -618,3 +621,7 @@ SELECT * FROM QUANHECON; -- Kiểm tra dữ liệu quan hệ con cái
 SELECT * FROM LOAITAIKHOAN; -- Kiểm tra dữ liệu loại tài khoản
 SELECT * FROM NGHENGHIEP; -- Kiểm tra dữ liệu nghề nghiệp
 SELECT * FROM QUEQUAN; -- Kiểm tra dữ liệu quê quán
+
+-- Insert tài khoản (Đã có LoạiTK ở trên)
+INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, MaLoaiTK) VALUES 
+('test@example.com', SHA2(CONCAT('Test@123', 'secret'), 256), 'LTK01');
