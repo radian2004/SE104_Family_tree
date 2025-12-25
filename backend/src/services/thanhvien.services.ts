@@ -38,7 +38,7 @@ interface QuanHeConRow extends RowDataPacket {
   NgayPhatSinh: Date;
 }
 
-interface QuanHeVoChongRow extends RowDataPacket {
+interface HonNhanRow extends RowDataPacket {
   MaTV: string;
   MaTVVC: string;
   NgayBatDau: Date;
@@ -304,7 +304,7 @@ class ThanhVienService {
   async checkExistingSpouse(MaTV: string): Promise<boolean> {
     const sql = `
       SELECT COUNT(*) as count
-      FROM QUANHEVOCHONG
+      FROM HONNHAN
       WHERE (MaTV = ? OR MaTVVC = ?) AND NgayKetThuc IS NULL
     `;
     const rows = await databaseService.query<any[]>(sql, [MaTV, MaTV]);
@@ -507,12 +507,12 @@ class ThanhVienService {
         // Xác định ai là MaTV (trong gia phả) và ai là MaTVVC (vợ/chồng)
         // Thường MaTV là người ĐÃ có trong gia phả (thành viên cũ)
         // MaTVVC là người mới vào (thành viên mới)
-        const insertQuanHeVoChongSql = `
-          INSERT INTO QUANHEVOCHONG (MaTV, MaTVVC, NgayBatDau, NgayKetThuc)
+        const insertHONNHANSql = `
+          INSERT INTO HONNHAN (MaTV, MaTVVC, NgayBatDau, NgayKetThuc)
           VALUES (?, ?, ?, NULL)
         `;
 
-        await connection.execute(insertQuanHeVoChongSql, [
+        await connection.execute(insertHONNHANSql, [
           payload.MaTVCu,     // Thành viên cũ (trong gia phả)
           newMember.MaTV,     // Thành viên mới (vợ/chồng từ ngoài)
           payload.NgayPhatSinh // Ngày kết hôn
@@ -589,7 +589,7 @@ class ThanhVienService {
   ): Promise<boolean> {
     const sql = `
       SELECT COUNT(*) as count
-      FROM QUANHEVOCHONG
+      FROM HONNHAN
       WHERE (MaTV = ? OR MaTVVC = ?) AND NgayKetThuc IS NULL
     `;
     const [rows] = await connection.query<any[]>(sql, [MaTV, MaTV]);

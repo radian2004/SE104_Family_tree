@@ -6,6 +6,7 @@ import lookupsRouter from '~/routes/lookups.routes';
 import { defaultErrorHandler } from '~/middlewares/error.middlewares';
 
 
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 

@@ -206,7 +206,6 @@ CREATE TABLE REFRESH_TOKENS (
 );
 -- ----------TRIGGER--------------
 DELIMITER $$
-
 -- 1. Generate ID cho THANHVIEN
 CREATE TRIGGER TRG_GEN_ID_THANHVIEN
 BEFORE INSERT ON THANHVIEN
@@ -473,7 +472,25 @@ BEGIN
     END IF;
 END$$
 
--- 14. Sau khi insert GHINHANTHANHTICH --> CẬP NHẬT BẢNG BAOCAOTHANHTICH
+-- 14. Trong bảng QUANHECON, nếu cha có quan hệ hôn nhân thì vợ cha là mẹ mã thành viên
+CREATE TRIGGER TRG_INSERT_MaTVMe_QUANHECON_HONNHAN
+BEFORE INSERT ON QUANHECON
+FOR EACH ROW
+BEGIN
+    DECLARE spouse_id VARCHAR(5);
+
+    -- Lấy mã vợ của cha từ bảng HONNHAN
+    SELECT MaTVVC INTO spouse_id
+    FROM HONNHAN
+    WHERE MaTV = NEW.MaTVCha AND NgayKetThuc IS NULL;
+
+    -- Nếu có vợ thì gán làm mẹ
+    IF spouse_id IS NOT NULL THEN
+        SET NEW.MaTVMe = spouse_id;
+    END IF;
+END$$
+
+-- 15. Sau khi insert GHINHANTHANHTICH --> CẬP NHẬT BẢNG BAOCAOTHANHTICH
 CREATE TRIGGER TRG_UPDATE_BAOCAOTHANHTICH_AFTER_INSERT
 AFTER INSERT ON GHINHANTHANHTICH
 FOR EACH ROW
@@ -499,7 +516,6 @@ BEGIN
         VALUES (current_year, NEW.MaLTT, 1);
     END IF;
 END$$
-
 DELIMITER ;
 
 -- ----------INSERT VALUE----------
@@ -574,15 +590,14 @@ UPDATE THANHVIEN SET MaGiaPha = 'GP02' WHERE MaTV IN ('TV02','TV03','TV04','TV05
 UPDATE THANHVIEN SET MaGiaPha = 'GP01' WHERE MaTV = 'TV01';
 
 INSERT INTO HONNHAN (MaTV, MaTVVC, NgayBatDau, NgayKetThuc) VALUES
-('TV02', 'TV03', '1970-06-15', NULL), -- Long (TV02) kết hôn Lan (TV03)
-('TV04', 'TV05', '1997-05-20', NULL); -- Hùng (TV04) kết hôn Hồng (TV05)
+('TV02', 'TV03', '1970-06-15', NULL), -- Long - Lan
+('TV04', 'TV05', '1997-05-20', NULL); -- Hùng - Hồng
 
-DELETE FROM QUANHECON; -- Xóa hết dữ liệu cũ nếu có
 INSERT INTO QUANHECON (MaTV, MaTVCha, MaTVMe, NgayPhatSinh) VALUES
 ('TV04', 'TV01', 'TV03', '1990-03-20 10:30:00'), -- Long là con của Tổ
-('TV05', 'TV01', 'TV03', '1972-08-10 09:15:00'), -- Hùng là con của Long & Lan
+('TV05', 'TV02', NULL, '1972-08-10 09:15:00'), -- Hùng là con của Long & Lan
 ('TV06', 'TV01', 'TV03', '1998-04-05 07:45:00'), -- Nam là con của Hùng & Hồng
-('TV07', 'TV01', 'TV05', '2002-01-18 16:30:00'); -- Ngọc Anh là con của Hùng & Hồng
+('TV07', 'TV04', NULL, '2002-01-18 16:30:00'); -- Ngọc Anh là con của Hùng & Hồng
 
 -- Ghi nhận thành tích
 INSERT INTO GHINHANTHANHTICH (MaLTT, MaTV, NgayPhatSinh) VALUES -- GHINHAN THANH TICH trong 10 năm qua
@@ -624,4 +639,3 @@ SELECT * FROM QUEQUAN; -- Kiểm tra dữ liệu quê quán
 -- Insert tài khoản (Đã có LoạiTK ở trên)
 INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, MaLoaiTK) VALUES 
 ('test@example.com', SHA2(CONCAT('Test@123', 'secret'), 256), 'LTK01');
-
