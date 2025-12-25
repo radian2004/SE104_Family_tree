@@ -53,8 +53,9 @@ apiClient.interceptors.response.use(
         // Retry request gốc
         return apiClient(originalRequest);
       } catch (refreshError) {
-        // Refresh token thất bại, redirect về login
-        window.location.href = '/login';
+        // Refresh token thất bại - KHÔNG redirect tự động
+        // Để component tự xử lý
+        console.error('[API] Refresh token failed:', refreshError);
         return Promise.reject(refreshError);
       }
     }

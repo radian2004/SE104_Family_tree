@@ -26,31 +26,48 @@ export default function BaoCaoPage() {
 
     // Load báo cáo
     const loadBaoCao = async () => {
+        console.log('[BaoCaoPage] Starting loadBaoCao...');
+        console.log('[BaoCaoPage] activeTab:', activeTab);
+        console.log('[BaoCaoPage] namBatDau:', namBatDau, 'namKetThuc:', namKetThuc);
+
         setIsLoading(true);
         setError(null);
         try {
             if (activeTab === 'thanhvien') {
+                console.log('[BaoCaoPage] Calling thanhvienService.getBaoCao...');
                 const response = await thanhvienService.getBaoCao({
                     NamBatDau: namBatDau,
                     NamKetThuc: namKetThuc
                 });
-                setBaoCaoThanhVien(response.result || response || []);
+                console.log('[BaoCaoPage] thanhvien response:', response);
+                // Backend returns { result: { DanhSach: [...], TongSinh, TongMat, ... } }
+                const data = response?.result?.DanhSach || [];
+                console.log('[BaoCaoPage] Setting baoCaoThanhVien:', data);
+                setBaoCaoThanhVien(Array.isArray(data) ? data : []);
             } else {
+                console.log('[BaoCaoPage] Calling thanhtichService.getBaoCao...');
                 const response = await thanhtichService.getBaoCao({
                     NamBatDau: namBatDau,
                     NamKetThuc: namKetThuc
                 });
-                setBaoCaoThanhTich(response.result || response || []);
+                console.log('[BaoCaoPage] thanhtich response:', response);
+                // Backend may return { result: [...] } or { result: { DanhSach: [...] } }
+                const data = response?.result?.DanhSach || response?.result || [];
+                console.log('[BaoCaoPage] Setting baoCaoThanhTich:', data);
+                setBaoCaoThanhTich(Array.isArray(data) ? data : []);
             }
         } catch (err) {
-            setError(err.response?.data?.message || 'Lỗi tải báo cáo');
-            console.error('Error loading report:', err);
+            console.error('[BaoCaoPage] Error:', err);
+            console.error('[BaoCaoPage] Error response:', err.response);
+            setError(err.response?.data?.message || err.message || 'Lỗi tải báo cáo');
         } finally {
             setIsLoading(false);
+            console.log('[BaoCaoPage] loadBaoCao finished');
         }
     };
 
     useEffect(() => {
+        console.log('[BaoCaoPage] useEffect triggered, activeTab:', activeTab);
         loadBaoCao();
     }, [activeTab]);
 

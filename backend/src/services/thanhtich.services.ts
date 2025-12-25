@@ -62,7 +62,7 @@ class ThanhTichService {
 
     try {
       const result = await databaseService.query<ResultSetHeader>(sql, params);
-      
+
       return {
         message: 'Ghi nhận thành tích thành công',
         data: {
@@ -177,8 +177,8 @@ class ThanhTichService {
     `;
 
     const result = await databaseService.query<ResultSetHeader>(sql, [
-      payload.MaTV, 
-      payload.MaLTT, 
+      payload.MaTV,
+      payload.MaLTT,
       payload.NgayPhatSinh
     ]);
 
@@ -201,7 +201,7 @@ class ThanhTichService {
       FROM GHINHANTHANHTICH 
       WHERE MaTV = ? AND MaLTT = ? AND DATE(NgayPhatSinh) = DATE(?)
     `;
-    
+
     const [result] = await databaseService.query<RowDataPacket[]>(sql, [MaTV, MaLTT, NgayPhatSinh]);
     return result.count > 0;
   }
@@ -253,10 +253,10 @@ class ThanhTichService {
     };
   }
 
- /**
-   * ✅ MỚI: Cập nhật loại thành tích
-   * Do MaLTT là primary key nên phải dùng DELETE + INSERT trong transaction
-   */
+  /**
+    * ✅ MỚI: Cập nhật loại thành tích
+    * Do MaLTT là primary key nên phải dùng DELETE + INSERT trong transaction
+    */
   async capNhatThanhTich(payload: {
     MaTV: string;
     MaLTT_Cu: string;

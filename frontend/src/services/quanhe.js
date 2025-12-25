@@ -17,7 +17,7 @@ class QuanHeService {
    */
   async getHonNhan(MaTV) {
     try {
-      const response = await apiClient.get(`/users/quanhe/honnhan/${MaTV}`);
+      const response = await apiClient.get(`/users/honnhan/${MaTV}`);
       return response.data.result || response.data;
     } catch (error) {
       throw error;
@@ -32,7 +32,7 @@ class QuanHeService {
    */
   async createHonNhan(payload) {
     try {
-      const response = await apiClient.post('/users/quanhe/honnhan', payload);
+      const response = await apiClient.post('/users/honnhan/thietlap', payload);
       return response.data;
     } catch (error) {
       throw error;
@@ -47,7 +47,7 @@ class QuanHeService {
    */
   async updateHonNhan(payload) {
     try {
-      const response = await apiClient.put('/users/quanhe/honnhan', payload);
+      const response = await apiClient.put('/users/honnhan/ketthuc', payload);
       return response.data;
     } catch (error) {
       throw error;
@@ -62,7 +62,7 @@ class QuanHeService {
    */
   async deleteHonNhan(payload) {
     try {
-      const response = await apiClient.delete('/users/quanhe/honnhan', { data: payload });
+      const response = await apiClient.delete('/users/honnhan', { data: payload });
       return response.data;
     } catch (error) {
       throw error;
@@ -78,7 +78,7 @@ class QuanHeService {
    */
   async getConCai(MaTV) {
     try {
-      const response = await apiClient.get(`/users/quanhe/concai/${MaTV}`);
+      const response = await apiClient.get(`/users/quanhecon/con/${MaTV}`);
       return response.data.result || response.data;
     } catch (error) {
       throw error;
@@ -93,7 +93,7 @@ class QuanHeService {
    */
   async getChaMe(MaTV) {
     try {
-      const response = await apiClient.get(`/users/quanhe/chame/${MaTV}`);
+      const response = await apiClient.get(`/users/quanhecon/chame/${MaTV}`);
       return response.data.result || response.data;
     } catch (error) {
       throw error;
@@ -108,7 +108,7 @@ class QuanHeService {
    */
   async createQuanHeCon(payload) {
     try {
-      const response = await apiClient.post('/users/quanhe/concai', payload);
+      const response = await apiClient.post('/users/quanhecon/thietlap', payload);
       return response.data;
     } catch (error) {
       throw error;
@@ -123,7 +123,7 @@ class QuanHeService {
    */
   async deleteQuanHeCon(MaTV) {
     try {
-      const response = await apiClient.delete(`/users/quanhe/concai/${MaTV}`);
+      const response = await apiClient.delete(`/users/quanhecon/${MaTV}`);
       return response.data;
     } catch (error) {
       throw error;

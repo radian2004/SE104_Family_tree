@@ -42,7 +42,8 @@ class KetThucService {
     async getDetail(MaTV) {
         try {
             const response = await apiClient.get(`/users/ketthuc/${MaTV}`);
-            return response.data.result || response.data;
+            // Backend returns { message, data: {...} }
+            return response.data.data || response.data;
         } catch (error) {
             throw error;
         }

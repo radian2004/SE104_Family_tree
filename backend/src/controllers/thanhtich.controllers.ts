@@ -48,7 +48,7 @@ export const ghiNhanThanhTichController = async (req: Request, res: Response) =>
     return res.status(HTTP_STATUS.CREATED).json(result);
   } catch (error: any) {
     console.error('Lỗi ghiNhanThanhTich:', error);
-    
+
     // Xử lý lỗi từ trigger
     if (error.message.includes('ngày sinh')) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
@@ -146,15 +146,15 @@ export const xoaThanhTichController = async (req: Request, res: Response) => {
     }
 
     const result = await thanhTichService.xoaThanhTich({
-      MaTV, 
-      MaLTT, 
+      MaTV,
+      MaLTT,
       NgayPhatSinh: new Date(NgayPhatSinh)
     });
 
     return res.status(HTTP_STATUS.OK).json(result);
   } catch (error: any) {
     console.error('Lỗi xoaThanhTich:', error);
-    
+
     if (error.message.includes('Không tìm thấy')) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({
         message: error.message
@@ -208,14 +208,14 @@ export const capNhatThanhTichController = async (req: Request, res: Response) =>
     return res.status(HTTP_STATUS.OK).json(result);
   } catch (error: any) {
     console.error('Lỗi capNhatThanhTich:', error);
-    
+
     // Xử lý lỗi cụ thể
     if (error.message.includes('Không tìm thấy')) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({
         message: error.message
       });
     }
-    
+
     if (error.message.includes('không tồn tại') || error.message.includes('đã có')) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         message: error.message
@@ -276,7 +276,7 @@ export const getBaoCaoThanhTichController = async (req: Request, res: Response) 
     });
   } catch (error: any) {
     console.error('Lỗi getBaoCaoThanhTich:', error);
-    
+
     // Xử lý lỗi validation từ service
     if (error.message.includes('Năm') || error.message.includes('năm')) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({

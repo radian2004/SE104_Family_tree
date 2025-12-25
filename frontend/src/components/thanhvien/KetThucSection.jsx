@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import { FiHeart, FiAlertCircle, FiEdit2, FiX, FiCheck, FiCalendar, FiMapPin } from 'react-icons/fi';
 import ketThucService from '../../services/ketthuc';
+import lookupsService from '../../services/lookups';
 
 export default function KetThucSection({ MaTV, onStatusChange }) {
     const [ketThucInfo, setKetThucInfo] = useState(null);
@@ -20,6 +21,10 @@ export default function KetThucSection({ MaTV, onStatusChange }) {
         MaNguyenNhanMat: '',
         MaDiaDiem: ''
     });
+
+    // Lookup data
+    const [nguyenNhanList, setNguyenNhanList] = useState([]);
+    const [diaDiemList, setDiaDiemList] = useState([]);
 
     const loadKetThucInfo = async () => {
         try {
@@ -48,22 +53,41 @@ export default function KetThucSection({ MaTV, onStatusChange }) {
         if (MaTV) {
             loadKetThucInfo();
         }
+        // Load lookup data
+        const loadLookups = async () => {
+            try {
+                const [nguyenNhan, diaDiem] = await Promise.all([
+                    lookupsService.getNguyenNhanMat(),
+                    lookupsService.getDiaDiemMaiTang()
+                ]);
+                setNguyenNhanList(nguyenNhan || []);
+                setDiaDiemList(diaDiem || []);
+            } catch (err) {
+                console.error('Error loading lookups:', err);
+            }
+        };
+        loadLookups();
     }, [MaTV]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log('[KetThucSection] Submitting form data:', formData);
+        console.log('[KetThucSection] ketThucInfo:', ketThucInfo);
         try {
             setIsLoading(true);
             setError(null);
             if (ketThucInfo) {
+                console.log('[KetThucSection] Calling update...');
                 await ketThucService.update(MaTV, formData);
             } else {
+                console.log('[KetThucSection] Calling ghiNhan...');
                 await ketThucService.ghiNhan({ ...formData, MaTV });
             }
             setIsEditing(false);
             loadKetThucInfo();
             onStatusChange && onStatusChange();
         } catch (err) {
+            console.error('[KetThucSection] Error:', err);
             setError(err.response?.data?.message || err.response?.data?.error || 'Có lỗi xảy ra');
         } finally {
             setIsLoading(false);
@@ -194,7 +218,7 @@ export default function KetThucSection({ MaTV, onStatusChange }) {
                             Nguyên nhân
                         </div>
                         <p className="font-semibold text-neutral-800">
-                            {ketThucInfo.TenNguyenNhan || ketThucInfo.MaNguyenNhanMat || 'Không rõ'}
+                            {ketThucInfo.TenNguyenNhanMat || ketThucInfo.MaNguyenNhanMat || 'Không rõ'}
                         </p>
                     </div>
                     <div className="p-4 bg-neutral-50 rounded-xl">
@@ -251,6 +275,7 @@ export default function KetThucSection({ MaTV, onStatusChange }) {
                             className="input-field"
                             value={formData.NgayGioMat}
                             onChange={e => setFormData({ ...formData, NgayGioMat: e.target.value })}
+                            max={new Date().toISOString().slice(0, 16)}
                             required
                         />
                     </div>
@@ -260,27 +285,37 @@ export default function KetThucSection({ MaTV, onStatusChange }) {
                             <FiAlertCircle className="inline w-4 h-4 mr-1" />
                             Nguyên nhân
                         </label>
-                        <input
-                            type="text"
+                        <select
                             className="input-field"
-                            placeholder="Nhập mã nguyên nhân"
                             value={formData.MaNguyenNhanMat}
                             onChange={e => setFormData({ ...formData, MaNguyenNhanMat: e.target.value })}
-                        />
+                        >
+                            <option value="">-- Chọn nguyên nhân --</option>
+                            {nguyenNhanList.map(item => (
+                                <option key={item.MaNguyenNhanMat} value={item.MaNguyenNhanMat}>
+                                    {item.TenNguyenNhanMat}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     <div>
                         <label className="form-label">
                             <FiMapPin className="inline w-4 h-4 mr-1" />
-                            Địa điểm
+                            Địa điểm mai táng
                         </label>
-                        <input
-                            type="text"
+                        <select
                             className="input-field"
-                            placeholder="Nhập mã địa điểm"
                             value={formData.MaDiaDiem}
                             onChange={e => setFormData({ ...formData, MaDiaDiem: e.target.value })}
-                        />
+                        >
+                            <option value="">-- Chọn địa điểm --</option>
+                            {diaDiemList.map(item => (
+                                <option key={item.MaDiaDiem} value={item.MaDiaDiem}>
+                                    {item.TenDiaDiem}
+                                </option>
+                            ))}
+                        </select>
                     </div>
                 </div>
 
