@@ -16,9 +16,29 @@ export const registerController = async (
 ) => {
   const result = await usersService.register(req.body);
 
+  // ✅ SET COOKIES THAY VÌ TRẢ VỀ JSON
+  res.cookie('access_token', result.access_token, {
+    httpOnly: true,        // Không thể truy cập qua JavaScript (chống XSS)
+    secure: process.env.NODE_ENV === 'production',  // Chỉ gửi qua HTTPS trong production
+    sameSite: 'strict',    // Chống CSRF attacks
+    maxAge: 15 * 60 * 1000 // 15 phút (giống access token expiry)
+  });
+
+  res.cookie('refresh_token', result.refresh_token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 7 * 24 * 60 * 60 * 1000  // 7 ngày (giống refresh token expiry)
+  });
+
+  // ✅ Chỉ trả về message và user info (KHÔNG trả tokens)
   return res.status(HTTP_STATUS.CREATED).json({
     message: USERS_MESSAGES.REGISTER_SUCCESS,
-    result
+    user: {
+      TenDangNhap: result.user?.TenDangNhap,
+      MaTV: result.user?.MaTV,
+      MaLoaiTK: result.user?.MaLoaiTK
+    }
   });
 };
 
@@ -26,12 +46,14 @@ export const registerController = async (
  * Controller đăng nhập
  * POST /users/login
  */
-export const loginController = async (req: Request<ParamsDictionary, any, LoginReqBody>, res: Response) => {
+export const loginController = async (
+  req: Request<ParamsDictionary, any, LoginReqBody>,
+  res: Response
+) => {
   const { email, password } = req.body;
 
   const result = await usersService.login(email, password);
 
-  // Nếu không tìm thấy hoặc sai password
   if (!result) {
     throw new ErrorWithStatus({
       message: USERS_MESSAGES.EMAIL_OR_PASSWORD_INCORRECT,
@@ -39,22 +61,57 @@ export const loginController = async (req: Request<ParamsDictionary, any, LoginR
     });
   }
 
+  // ✅ SET COOKIES
+  res.cookie('access_token', result.access_token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 15 * 60 * 1000  // 15 phút
+  });
+
+  res.cookie('refresh_token', result.refresh_token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 7 * 24 * 60 * 60 * 1000  // 7 ngày
+  });
+
   return res.status(HTTP_STATUS.OK).json({
     message: USERS_MESSAGES.LOGIN_SUCCESS,
-    result
+    user: result.user
   });
 };
 
 /**
  * Controller đăng xuất
  * POST /users/logout
- * Headers: { Authorization: Bearer <access_token> }
- * Body: { refresh_token: string }
+ * ✅ KHÔNG CẦN refresh_token trong body nữa, lấy từ cookies
  */
-export const logoutController = async (req: Request<ParamsDictionary, any, LogoutReqBody>, res: Response) => {
-  const { refresh_token } = req.body;
+export const logoutController = async (
+  req: Request<ParamsDictionary, any, LogoutReqBody>,
+  res: Response
+) => {
+  // ✅ Lấy refresh_token từ cookies
+  const refresh_token = req.cookies.refresh_token;
 
-  const result = await usersService.logout(refresh_token);
+  if (refresh_token) {
+    await usersService.logout(refresh_token);
+  }
 
-  return res.status(HTTP_STATUS.OK).json(result);
+  // ✅ XÓA COOKIES - ĐÂY LÀ CÁCH BACKEND "XÓA LOCALSTORAGE"
+  res.clearCookie('access_token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict'
+  });
+
+  res.clearCookie('refresh_token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict'
+  });
+
+  return res.status(HTTP_STATUS.OK).json({
+    message: 'Đăng xuất thành công'
+  });
 };

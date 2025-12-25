@@ -167,3 +167,126 @@ export const xoaThanhTichController = async (req: Request, res: Response) => {
     });
   }
 };
+
+/**
+ * ✅ MỚI: Controller cập nhật thành tích
+ * PUT /thanhtich/capnhat
+ * Body: { 
+ *   MaTV: string, 
+ *   MaLTT_Cu: string, 
+ *   MaLTT_Moi: string, 
+ *   NgayPhatSinh: string (YYYY-MM-DD) 
+ * }
+ * 
+ * Response: { message, data }
+ */
+export const capNhatThanhTichController = async (req: Request, res: Response) => {
+  const { MaTV, MaLTT_Cu, MaLTT_Moi, NgayPhatSinh } = req.body;
+
+  try {
+    // Validate input
+    if (!MaTV || !MaLTT_Cu || !MaLTT_Moi || !NgayPhatSinh) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        message: 'Thiếu thông tin bắt buộc: MaTV, MaLTT_Cu, MaLTT_Moi, NgayPhatSinh'
+      });
+    }
+
+    // Validate không được trùng loại
+    if (MaLTT_Cu === MaLTT_Moi) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        message: 'Loại thành tích mới phải khác loại thành tích cũ'
+      });
+    }
+
+    const result = await thanhTichService.capNhatThanhTich({
+      MaTV,
+      MaLTT_Cu,
+      MaLTT_Moi,
+      NgayPhatSinh: new Date(NgayPhatSinh)
+    });
+
+    return res.status(HTTP_STATUS.OK).json(result);
+  } catch (error: any) {
+    console.error('Lỗi capNhatThanhTich:', error);
+    
+    // Xử lý lỗi cụ thể
+    if (error.message.includes('Không tìm thấy')) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({
+        message: error.message
+      });
+    }
+    
+    if (error.message.includes('không tồn tại') || error.message.includes('đã có')) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        message: error.message
+      });
+    }
+
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      message: 'Cập nhật thành tích thất bại',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * ✅ MỚI: Controller lấy báo cáo thành tích theo khoảng năm
+ * GET /thanhtich/baocao
+ * Query params: 
+ * - NamBatDau: Năm bắt đầu (required)
+ * - NamKetThuc: Năm kết thúc (required)
+ * 
+ * Response: {
+ *   message: string,
+ *   result: {
+ *     NamBatDau: number,
+ *     NamKetThuc: number,
+ *     TongLoaiThanhTich: number,
+ *     TongSoLuong: number,
+ *     DanhSach: [{ STT, LoaiThanhTich, SoLuong }]
+ *   }
+ * }
+ */
+export const getBaoCaoThanhTichController = async (req: Request, res: Response) => {
+  try {
+    const { NamBatDau, NamKetThuc } = req.query;
+
+    // Validate input
+    if (!NamBatDau || !NamKetThuc) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        message: 'Thiếu thông tin: NamBatDau và NamKetThuc là bắt buộc'
+      });
+    }
+
+    const namBatDau = parseInt(NamBatDau as string);
+    const namKetThuc = parseInt(NamKetThuc as string);
+
+    // Validate số hợp lệ
+    if (isNaN(namBatDau) || isNaN(namKetThuc)) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        message: 'NamBatDau và NamKetThuc phải là số nguyên hợp lệ'
+      });
+    }
+
+    const result = await thanhTichService.getBaoCaoThanhTich(namBatDau, namKetThuc);
+
+    return res.status(HTTP_STATUS.OK).json({
+      message: 'Lấy báo cáo thành tích thành công',
+      result
+    });
+  } catch (error: any) {
+    console.error('Lỗi getBaoCaoThanhTich:', error);
+    
+    // Xử lý lỗi validation từ service
+    if (error.message.includes('Năm') || error.message.includes('năm')) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        message: error.message
+      });
+    }
+
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      message: 'Lỗi lấy báo cáo thành tích',
+      error: error.message
+    });
+  }
+};

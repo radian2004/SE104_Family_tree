@@ -1,12 +1,10 @@
 import express from 'express';
+import cookieParser from 'cookie-parser';  // ✅ Import
 import cors from 'cors';
 import databaseService from '~/services/database.services';
 import usersRouter from '~/routes/users.routes';
-import thanhvienRouter from '~/routes/thanhvien.routes';
-import lookupsRouter from '~/routes/lookups.routes';
-import thanhTichRouter from '~/routes/thanhtich.routes';
-import ketthucRouter from './routes/ketthuc.routes'
 import { defaultErrorHandler } from '~/middlewares/error.middlewares';
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -21,13 +19,24 @@ app.use(cors({
 
 // Middleware parse JSON
 app.use(express.json());
+app.use(cookieParser());  // ✅ Thêm middleware này
+
+// CORS - QUAN TRỌNG: Phải cho phép credentials
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'http://localhost:3000'); // URL của client
+  res.header('Access-Control-Allow-Credentials', 'true');  // ✅ CHO PHÉP GỬI COOKIES
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 // Routes
 app.use('/users', usersRouter);
-app.use('/thanhvien', thanhvienRouter);
-app.use('/', lookupsRouter);
-app.use('/thanhtich', thanhTichRouter);
-app.use('/ketthuc', ketthucRouter)
+
 // Default error handler (đặt sau tất cả routes)
 app.use(defaultErrorHandler);
 

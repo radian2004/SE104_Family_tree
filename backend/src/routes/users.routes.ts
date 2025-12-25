@@ -11,6 +11,11 @@ import {
   refreshTokenValidator
 } from '~/middlewares/users.middlewares';
 import { wrapAsync } from '~/utils/handlers';
+import thanhvienRouter from './thanhvien.routes';
+import thanhTichRouter from './thanhtich.routes';
+import ketthucRouter from './ketthuc.routes';
+import honNhanRouter from './honnhan.routes';  // ✅ THÊM DÒNG NÀY
+import quanHeConRouter from './quanhecon.routes';      // ✅ THÊM DÒNG NÀY
 
 const usersRouter = Router();
 
@@ -38,4 +43,9 @@ usersRouter.post('/login', loginValidator, wrapAsync(loginController));
  */
 usersRouter.post('/logout', accessTokenValidator, refreshTokenValidator, wrapAsync(logoutController));
 
+usersRouter.use('/thanhvien', accessTokenValidator, thanhvienRouter);
+usersRouter.use('/thanhtich', accessTokenValidator, thanhTichRouter);
+usersRouter.use('/ketthuc', accessTokenValidator, ketthucRouter);
+usersRouter.use('/honnhan', accessTokenValidator, honNhanRouter);  // ✅ THÊM DÒNG NÀY
+usersRouter.use('/quanhecon', accessTokenValidator, quanHeConRouter);
 export default usersRouter;

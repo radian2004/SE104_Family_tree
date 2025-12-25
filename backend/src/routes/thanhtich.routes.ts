@@ -5,8 +5,12 @@ import {
   ghiNhanThanhTichController,
   traCuuThanhTichController,
   getThanhTichByHoTenController,
-  xoaThanhTichController
+  xoaThanhTichController,
+  capNhatThanhTichController,
+  getBaoCaoThanhTichController // ✅ THÊM DÒNG NÀY
 } from '~/controllers/thanhtich.controllers';
+import { wrapAsync } from '~/utils/handlers';
+
 
 const thanhTichRouter = Router();
 
@@ -14,14 +18,14 @@ const thanhTichRouter = Router();
  * GET /thanhtich/loai - Lấy danh sách loại thành tích
  * Response: [{ MaLTT, TenLTT }]
  */
-thanhTichRouter.get('/loai', getLoaiThanhTichController);
+thanhTichRouter.get('/loai', wrapAsync(getLoaiThanhTichController));
 
 /**
  * POST /thanhtich/ghinhan - Ghi nhận thành tích mới
  * Body: { MaTV, MaLTT, NgayPhatSinh? }
  * Response: { message, data }
  */
-thanhTichRouter.post('/ghinhan', ghiNhanThanhTichController);
+thanhTichRouter.post('/ghinhan', wrapAsync(ghiNhanThanhTichController));
 
 /**
  * ✅ MỚI: GET /thanhtich/tracuu - Tra cứu thành tích linh hoạt
@@ -33,7 +37,7 @@ thanhTichRouter.post('/ghinhan', ghiNhanThanhTichController);
  * 
  * Response: { message, total, result: [{ STT, HoTen, ThanhTich, NgayPhatSinh }] }
  */
-thanhTichRouter.get('/tracuu', traCuuThanhTichController);
+thanhTichRouter.get('/tracuu', wrapAsync(traCuuThanhTichController));
 
 /**
  * ✅ MỚI: GET /thanhtich/thanhvien - Lấy thành tích của thành viên theo TÊN
@@ -42,7 +46,7 @@ thanhTichRouter.get('/tracuu', traCuuThanhTichController);
  * 
  * Response: { message, HoTen, total, result: [{ HoTen, ThanhTich, NgayPhatSinh }] }
  */
-thanhTichRouter.get('/thanhvien', getThanhTichByHoTenController);
+thanhTichRouter.get('/thanhvien', wrapAsync(getThanhTichByHoTenController));
 
 /**
  * ✅ MỚI: DELETE /thanhtich/xoa - Xóa thành tích (Đơn giản hóa)
@@ -51,6 +55,11 @@ thanhTichRouter.get('/thanhvien', getThanhTichByHoTenController);
  * 
  * Lưu ý: MaTV và MaLTT là mã nội bộ, frontend cần lưu trữ để gửi khi xóa
  */
-thanhTichRouter.delete('/xoa', xoaThanhTichController);
+thanhTichRouter.delete('/xoa', wrapAsync(xoaThanhTichController));
+
+// ✅ MỚI: PUT /thanhtich/capnhat - Cập nhật loại thành tích
+thanhTichRouter.put('/capnhat', wrapAsync(capNhatThanhTichController));
+
+thanhTichRouter.get('/baocao', wrapAsync(getBaoCaoThanhTichController));
 
 export default thanhTichRouter;
