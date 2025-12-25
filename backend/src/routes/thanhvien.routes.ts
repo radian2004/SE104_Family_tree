@@ -1,28 +1,56 @@
-// src/routes/thanhvien.routes.ts
+// ========================================
+// THAY THẾ TOÀN BỘ NỘI DUNG FILE: src/routes/thanhvien.routes.ts
+// ========================================
+
 import { Router } from 'express';
 import {
   registerController,
   getAllThanhVienController,
   getThanhVienByMaTVController,
   updateThanhVienController,
-  deleteThanhVienController
+  deleteThanhVienController,
+  getBaoCaoTangGiamController,
+  ghiNhanThanhVienController,          // THÊM MỚI
+  getAvailableRelationsController,       // THÊM MỚI
+  traCuuThanhVienController  // ✅ THÊM MỚI
 } from '~/controllers/thanhvien.controllers';
+import { wrapAsync } from '~/utils/handlers';
 
 const thanhvienRouter = Router();
 
-// POST /thanhvien/register - Đăng ký thành viên mới
-thanhvienRouter.post('/register', registerController);
+// ========================================
+// ROUTES CỤ THỂ (đặt trước routes có param)
+// ========================================
 
-// GET /thanhvien - Lấy tất cả thành viên
-thanhvienRouter.get('/', getAllThanhVienController);
+// POST /thanhvien/register
+thanhvienRouter.post('/register', wrapAsync(registerController));
 
-// GET /thanhvien/:MaTV - Lấy thành viên theo MaTV
-thanhvienRouter.get('/:MaTV', getThanhVienByMaTVController);
+// POST /thanhvien/ghi-nhan
+thanhvienRouter.post('/ghi-nhan', wrapAsync(ghiNhanThanhVienController));
 
-// PUT /thanhvien/:MaTV - Cập nhật thành viên
-thanhvienRouter.put('/:MaTV', updateThanhVienController);
+// GET /thanhvien/available-relations
+thanhvienRouter.get('/available-relations', wrapAsync(getAvailableRelationsController));
 
-// DELETE /thanhvien/:MaTV - Xóa thành viên
-thanhvienRouter.delete('/:MaTV', deleteThanhVienController);
+// ✅ THÊM MỚI: GET /thanhvien/tra-cuu
+thanhvienRouter.get('/tra-cuu', wrapAsync(traCuuThanhVienController));
+
+// ========================================
+// ROUTES CHUNG (đặt sau)
+// ========================================
+
+// GET /thanhvien
+thanhvienRouter.get('/', wrapAsync(getAllThanhVienController));
+
+// ✅ MỚI: GET /thanhvien/baocao/tanggiam - Báo cáo tăng giảm thành viên theo năm
+thanhvienRouter.get('/baocao', wrapAsync(getBaoCaoTangGiamController));
+
+// GET /thanhvien/:MaTV
+thanhvienRouter.get('/:MaTV', wrapAsync(getThanhVienByMaTVController));
+
+// PUT /thanhvien/:MaTV
+thanhvienRouter.put('/:MaTV', wrapAsync(updateThanhVienController));
+
+// DELETE /thanhvien/:MaTV
+thanhvienRouter.delete('/:MaTV', wrapAsync(deleteThanhVienController));
 
 export default thanhvienRouter;

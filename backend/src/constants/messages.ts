@@ -31,3 +31,34 @@ export const USERS_MESSAGES = {
   // Register success
   REGISTER_SUCCESS: 'Đăng ký tài khoản thành công'
 } as const;
+
+// ========================================
+// THÊM VÀO FILE: src/constants/messages.ts
+// ========================================
+
+export const THANHVIEN_MESSAGES = {
+  // Ghi nhận thành viên
+  GHI_NHAN_SUCCESS: 'Ghi nhận thành viên thành công',
+  GHI_NHAN_FAILED: 'Ghi nhận thành viên thất bại',
+  
+  // Validation
+  MISSING_REQUIRED_FIELDS: 'Thiếu thông tin bắt buộc',
+  INVALID_GENDER: 'Giới tính không hợp lệ. Phải là "Nam" hoặc "Nữ"',
+  INVALID_RELATION_TYPE: 'Loại quan hệ không hợp lệ. Phải là "Con cái" hoặc "Vợ/Chồng"',
+  
+  // Errors
+  MEMBER_NOT_FOUND: 'Không tìm thấy thành viên',
+  OLD_MEMBER_NOT_FOUND: 'Không tìm thấy thành viên cũ',
+  ALREADY_HAS_SPOUSE: 'Thành viên cũ đã có vợ/chồng hiện tại',
+  INVALID_BIRTH_DATE: 'Ngày sinh của con phải sau ngày sinh của cha/mẹ',
+  FATHER_MUST_BE_MALE: 'Giới tính của cha phải là Nam',
+  MOTHER_MUST_BE_FEMALE: 'Giới tính của mẹ phải là Nữ',
+  
+  // Duplicate validation
+  DUPLICATE_CHILD: 'Đã tồn tại con cùng tên và ngày sinh của thành viên này',
+  DUPLICATE_PERSON: 'Người này đã tồn tại trong hệ thống',
+  USE_RELATION_FEATURE: 'Hãy sử dụng chức năng "Thêm quan hệ" thay vì ghi nhận lại',
+
+  // Success
+  GET_AVAILABLE_RELATIONS_SUCCESS: 'Lấy danh sách thành viên thành công',
+} as const;

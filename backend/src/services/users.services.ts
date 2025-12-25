@@ -79,48 +79,53 @@ private signRefreshToken(user_id: string) {
   /**
    * Đăng ký tài khoản mới
    */
-  async register(payload: RegisterReqBody) {
-    const { name, email, password } = payload;
+async register(payload: RegisterReqBody) {
+  const { name, email, password } = payload;
 
-    // 1. Tạo thành viên mới
-    const insertThanhVienSql = `
-      INSERT INTO THANHVIEN (HoTen, MaGioiTinh) 
-      VALUES (?, 'GT00')
-    `;
-    await databaseService.query(insertThanhVienSql, [name]);
+  // 1. Tạo thành viên mới với GioiTinh thay vì MaGioiTinh
+  const insertThanhVienSql = `
+    INSERT INTO THANHVIEN (HoTen, GioiTinh) 
+    VALUES (?, 'Nam')
+  `;
+  await databaseService.query(insertThanhVienSql, [name]);
 
-    // 2. Lấy MaTV vừa tạo (trigger tự sinh)
-    const [thanhVien] = await databaseService.query<RowDataPacket[]>(
-      'SELECT MaTV FROM THANHVIEN ORDER BY TGTaoMoi DESC LIMIT 1'
-    );
-    const MaTV = thanhVien.MaTV;
+  // 2. Lấy MaTV vừa tạo (trigger tự sinh)
+  const [thanhVien] = await databaseService.query<RowDataPacket[]>(
+    'SELECT MaTV FROM THANHVIEN ORDER BY TGTaoMoi DESC LIMIT 1'
+  );
+  const MaTV = thanhVien.MaTV;
 
-    // 3. Hash password và tạo tài khoản
-    const hashedPassword = hashPassword(password);
-    const insertTaiKhoanSql = `
-      INSERT INTO TAIKHOAN (TenDangNhap, MaTV, MatKhau, MaLoaiTK) 
-      VALUES (?, ?, ?, 'LTK02')
-    `;
-    await databaseService.query(insertTaiKhoanSql, [email, MaTV, hashedPassword]);
+  // 3. Hash password và tạo tài khoản
+  const hashedPassword = hashPassword(password);
+  const insertTaiKhoanSql = `
+    INSERT INTO TAIKHOAN (TenDangNhap, MaTV, MatKhau, MaLoaiTK) 
+    VALUES (?, ?, ?, 'LTK03')
+  `;
+  await databaseService.query(insertTaiKhoanSql, [email, MaTV, hashedPassword]);
 
-    // 4. Tạo access token và refresh token
-    const [access_token, refresh_token] = await this.signAccessAndRefreshToken(email);
+  // 4. Tạo access token và refresh token
+  const [access_token, refresh_token] = await this.signAccessAndRefreshToken(email);
 
-    // 5. Lưu refresh token vào database
-    const expDate = new Date();
-    expDate.setDate(expDate.getDate() + 7); // 7 ngày
+  // 5. Lưu refresh token vào database
+  const expDate = new Date();
+  expDate.setDate(expDate.getDate() + 7);
 
-    const insertRefreshTokenSql = `
-      INSERT INTO REFRESH_TOKENS (token, TenDangNhap, NgayHetHan) 
-      VALUES (?, ?, ?)
-    `;
-    await databaseService.query(insertRefreshTokenSql, [refresh_token, email, expDate]);
+  const insertRefreshTokenSql = `
+    INSERT INTO REFRESH_TOKENS (token, TenDangNhap, NgayHetHan) 
+    VALUES (?, ?, ?)
+  `;
+  await databaseService.query(insertRefreshTokenSql, [refresh_token, email, expDate]);
 
-    return {
-      access_token,
-      refresh_token
-    };
-  }
+  return {
+    access_token,
+    refresh_token,
+    user: {
+      TenDangNhap: email,
+      MaTV: MaTV,
+      MaLoaiTK: 'LTK03'
+    }
+  };
+}
 
   /**
    * Đăng nhập
