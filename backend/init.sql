@@ -206,7 +206,6 @@ CREATE TABLE REFRESH_TOKENS (
 );
 -- ----------TRIGGER--------------
 DELIMITER $$
-
 -- 1. Generate ID cho THANHVIEN
 CREATE TRIGGER TRG_GEN_ID_THANHVIEN
 BEFORE INSERT ON THANHVIEN
@@ -306,20 +305,14 @@ BEGIN
 END$$
 
 -- 7. Ngày kết hôn phải sau ngày sinh
--- XÓA trigger cũ
-DROP TRIGGER IF EXISTS TRG_CHECK_NGAY_KET_HON_HONNHAN;
-
--- TẠO LẠI trigger mới với logic đầy đủ
 CREATE TRIGGER TRG_CHECK_NGAY_KET_HON_HONNHAN
 BEFORE INSERT ON HONNHAN
 FOR EACH ROW
 BEGIN
     DECLARE birth_date_1 DATE;
     DECLARE birth_date_2 DATE;
-    DECLARE age_1 INT;
-    DECLARE age_2 INT;
 
-    -- Lấy ngày sinh của hai thành viên
+    -- Lấy ngày sinh của thành viên
     SELECT DATE(NgayGioSinh) INTO birth_date_1
     FROM THANHVIEN
     WHERE MaTV = NEW.MaTV;
@@ -332,21 +325,6 @@ BEGIN
     IF NEW.NgayBatDau <= birth_date_1 OR NEW.NgayBatDau <= birth_date_2 THEN
         SIGNAL SQLSTATE '45010'
         SET MESSAGE_TEXT = 'Ngày kết hôn phải sau ngày sinh thành viên!';
-    END IF;
-
-    -- ✅ THÊM MỚI: Tính tuổi tại ngày kết hôn
-    SET age_1 = TIMESTAMPDIFF(YEAR, birth_date_1, NEW.NgayBatDau);
-    SET age_2 = TIMESTAMPDIFF(YEAR, birth_date_2, NEW.NgayBatDau);
-
-    -- ✅ THÊM MỚI: Kiểm tra cả hai phải trên 14 tuổi
-    IF age_1 < 14 THEN
-        SIGNAL SQLSTATE '45011'
-        SET MESSAGE_TEXT = 'Thành viên phải đủ 14 tuổi trở lên mới được kết hôn!';
-    END IF;
-
-    IF age_2 < 14 THEN
-        SIGNAL SQLSTATE '45012'
-        SET MESSAGE_TEXT = 'Thành viên vợ/chồng phải đủ 14 tuổi trở lên mới được kết hôn!';
     END IF;
 END$$
 
@@ -493,9 +471,27 @@ BEGIN
     IF NEW.MaNguyenNhanMat IS NOT NULL AND OLD.MaNguyenNhanMat IS NULL THEN
         SET NEW.TrangThai = 'Mất';
     END IF;
-END$$ 
+END$$
 
--- 14. Sau khi insert GHINHANTHANHTICH --> CẬP NHẬT BẢNG BAOCAOTHANHTICH
+-- 14. Trong bảng QUANHECON, nếu cha có quan hệ hôn nhân thì vợ cha là mẹ mã thành viên
+CREATE TRIGGER TRG_INSERT_MaTVMe_QUANHECON_HONNHAN
+BEFORE INSERT ON QUANHECON
+FOR EACH ROW
+BEGIN
+    DECLARE spouse_id VARCHAR(5);
+
+    -- Lấy mã vợ của cha từ bảng HONNHAN
+    SELECT MaTVVC INTO spouse_id
+    FROM HONNHAN
+    WHERE MaTV = NEW.MaTVCha AND NgayKetThuc IS NULL;
+
+    -- Nếu có vợ thì gán làm mẹ
+    IF spouse_id IS NOT NULL THEN
+        SET NEW.MaTVMe = spouse_id;
+    END IF;
+END$$
+
+-- 15. Sau khi insert GHINHANTHANHTICH --> CẬP NHẬT BẢNG BAOCAOTHANHTICH
 CREATE TRIGGER TRG_UPDATE_BAOCAOTHANHTICH_AFTER_INSERT
 AFTER INSERT ON GHINHANTHANHTICH
 FOR EACH ROW
@@ -521,110 +517,6 @@ BEGIN
         VALUES (current_year, NEW.MaLTT, 1);
     END IF;
 END$$
---15. Tự động set mẹ là vợ hiện tại của cha
-CREATE TRIGGER TRG_UPDATE_ME_QUANHECON
-BEFORE INSERT ON QUANHECON
-FOR EACH ROW
-BEGIN
-    DECLARE wife_id VARCHAR(5);
-    
-    -- Lấy vợ hiện tại của cha
-    SELECT MaTVVC INTO wife_id
-    FROM HONNHAN
-    WHERE MaTV = NEW.MaTVCha;
-
-    -- Nếu cha có vợ thì set mẹ = vợ của cha
-    IF wife_id IS NOT NULL THEN
-        SET NEW.MaTVMe = wife_id;
-    ELSE
-        -- Nếu cha không có vợ thì để mẹ là NULL
-        SET NEW.MaTVMe = NULL;
-    END IF;
-END$$
---16. Kiểm tra một thành viên chỉ được có 1 vợ/chồng tại một thời điểm và tái hôn hợp lệ
-CREATE TRIGGER TRG_CHECK_HONNHAN_HOPLE
-BEFORE INSERT ON HONNHAN
-FOR EACH ROW
-BEGIN
-    DECLARE existing_marriage_count INT;
-    DECLARE last_end_date DATE;
-
-    -- ✅ Kiểm tra MaTV có đang trong hôn nhân nào không (NgayKetThuc IS NULL)
-    SELECT COUNT(*) INTO existing_marriage_count
-    FROM HONNHAN
-    WHERE (MaTV = NEW.MaTV OR MaTVVC = NEW.MaTV)
-      AND NgayKetThuc IS NULL;
-
-    IF existing_marriage_count > 0 THEN
-        SIGNAL SQLSTATE '45013'
-        SET MESSAGE_TEXT = 'Thành viên đang có hôn nhân hiện tại. Vui lòng kết thúc hôn nhân cũ trước khi kết hôn mới!';
-    END IF;
-
-    -- ✅ Kiểm tra MaTVVC có đang trong hôn nhân nào không
-    SELECT COUNT(*) INTO existing_marriage_count
-    FROM HONNHAN
-    WHERE (MaTV = NEW.MaTVVC OR MaTVVC = NEW.MaTVVC)
-      AND NgayKetThuc IS NULL;
-
-    IF existing_marriage_count > 0 THEN
-        SIGNAL SQLSTATE '45014'
-        SET MESSAGE_TEXT = 'Vợ/Chồng đang có hôn nhân hiện tại. Vui lòng kết thúc hôn nhân cũ trước khi kết hôn mới!';
-    END IF;
-
-    -- ✅ Kiểm tra tái hôn: Ngày bắt đầu hôn nhân mới phải sau ngày kết thúc hôn nhân cũ
-    -- Kiểm tra cho MaTV
-    SELECT MAX(NgayKetThuc) INTO last_end_date
-    FROM HONNHAN
-    WHERE (MaTV = NEW.MaTV OR MaTVVC = NEW.MaTV)
-      AND NgayKetThuc IS NOT NULL;
-
-    IF last_end_date IS NOT NULL AND NEW.NgayBatDau <= last_end_date THEN
-        SIGNAL SQLSTATE '45015'
-        SET MESSAGE_TEXT = 'Ngày bắt đầu hôn nhân mới phải sau ngày kết thúc hôn nhân cũ!';
-    END IF;
-
-    -- Kiểm tra cho MaTVVC
-    SELECT MAX(NgayKetThuc) INTO last_end_date
-    FROM HONNHAN
-    WHERE (MaTV = NEW.MaTVVC OR MaTVVC = NEW.MaTVVC)
-      AND NgayKetThuc IS NOT NULL;
-
-    IF last_end_date IS NOT NULL AND NEW.NgayBatDau <= last_end_date THEN
-        SIGNAL SQLSTATE '45016'
-        SET MESSAGE_TEXT = 'Ngày bắt đầu hôn nhân mới của vợ/chồng phải sau ngày kết thúc hôn nhân cũ!';
-    END IF;
-END$$
---17. Kiểm tra ngày mất của thành viên phải sau ngày bắt đầu hôn nhân
-CREATE TRIGGER TRG_CHECK_THANHVIEN_CONGSONG_HONNHAN
-BEFORE INSERT ON HONNHAN
-FOR EACH ROW
-BEGIN
-    DECLARE death_date_1 DATETIME;
-    DECLARE death_date_2 DATETIME;
-
-    -- Lấy ngày mất của thành viên thứ nhất (MaTV)
-    SELECT NgayGioMat INTO death_date_1
-    FROM THANHVIEN
-    WHERE MaTV = NEW.MaTV;
-
-    -- Lấy ngày mất của thành viên thứ hai (MaTVVC)
-    SELECT NgayGioMat INTO death_date_2
-    FROM THANHVIEN
-    WHERE MaTV = NEW.MaTVVC;
-
-    -- Kiểm tra thành viên thứ nhất phải còn sống tại ngày kết hôn
-    IF death_date_1 IS NOT NULL AND DATE(death_date_1) <= NEW.NgayBatDau THEN
-        SIGNAL SQLSTATE '45018'
-        SET MESSAGE_TEXT = 'Không thể thiết lập quan hệ hôn nhân với người đã mất!';
-    END IF;
-
-    -- Kiểm tra thành viên thứ hai phải còn sống tại ngày kết hôn
-    IF death_date_2 IS NOT NULL AND DATE(death_date_2) <= NEW.NgayBatDau THEN
-        SIGNAL SQLSTATE '45019'
-        SET MESSAGE_TEXT = 'Không thể thiết lập quan hệ hôn nhân với người đã mất!';
-    END IF;
-END$$
-
 DELIMITER ;
 
 -- ----------INSERT VALUE----------
@@ -702,18 +594,11 @@ INSERT INTO HONNHAN (MaTV, MaTVVC, NgayBatDau, NgayKetThuc) VALUES
 ('TV02', 'TV03', '1970-06-15', NULL), -- Long - Lan
 ('TV04', 'TV05', '1997-05-20', NULL); -- Hùng - Hồng
 
-DELETE FROM QUANHECON; -- Xóa hết dữ liệu cũ nếu có
 INSERT INTO QUANHECON (MaTV, MaTVCha, MaTVMe, NgayPhatSinh) VALUES
 ('TV04', 'TV01', 'TV03', '1990-03-20 10:30:00'), -- Long là con của Tổ
-('TV05', 'TV01', 'TV03', '1972-08-10 09:15:00'), -- Hùng là con của Long & Lan
+('TV05', 'TV02', NULL, '1972-08-10 09:15:00'), -- Hùng là con của Long & Lan
 ('TV06', 'TV01', 'TV03', '1998-04-05 07:45:00'), -- Nam là con của Hùng & Hồng
-('TV07', 'TV01', 'TV05', '2002-01-18 16:30:00'); -- Ngọc Anh là con của Hùng & Hồng
-
--- ('TV02', 'TV01', NULL, '1945-03-20 10:30:00'), -- Long là con Tổ (Mẹ không rõ/hoặc mất nên để NULL)
--- ('TV04', 'TV02', 'TV03', '1972-08-10 09:15:00'), -- Hùng là con ông Long & bà Lan
--- ('TV06', 'TV04', 'TV05', '1998-04-05 07:45:00'), -- Nam là con ông Hùng & bà Hồng
--- ('TV07', 'TV04', 'TV05', '2002-01-18 16:30:00'), -- Ngọc Anh là con ông Hùng & bà Hồng
--- ('TV08', 'TV06', NULL, '2024-06-10 12:00:00'); -- Minh là con của Nam (Mẹ chưa nhập nên để NULL)
+('TV07', 'TV04', NULL, '2002-01-18 16:30:00'); -- Ngọc Anh là con của Hùng & Hồng
 
 -- Ghi nhận thành tích
 INSERT INTO GHINHANTHANHTICH (MaLTT, MaTV, NgayPhatSinh) VALUES -- GHINHAN THANH TICH trong 10 năm qua
