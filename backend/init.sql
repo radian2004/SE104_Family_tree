@@ -606,6 +606,18 @@ INSERT INTO QUANHECON (MaTV, MaTVCha, MaTVMe, NgayPhatSinh) VALUES
 ('TV07', 'TV04', 'TV05', '2002-01-18'), -- Ngọc Anh là con của Hùng & Hồng
 ('TV08', 'TV06', NULL, '2024-06-10');   -- Minh là con của Nam (mẹ chưa trong hệ thống)
 
+-- Cập nhật DOI (đời) cho các thành viên
+-- Đời 1: Thủy tổ
+UPDATE THANHVIEN SET DOI = 1 WHERE MaTV = 'TV01';
+-- Đời 2: Con của thủy tổ và vợ/chồng
+UPDATE THANHVIEN SET DOI = 2 WHERE MaTV IN ('TV02', 'TV03');
+-- Đời 3: Cháu của thủy tổ và vợ/chồng
+UPDATE THANHVIEN SET DOI = 3 WHERE MaTV IN ('TV04', 'TV05');
+-- Đời 4: Chắt của thủy tổ
+UPDATE THANHVIEN SET DOI = 4 WHERE MaTV IN ('TV06', 'TV07');
+-- Đời 5: Chút của thủy tổ
+UPDATE THANHVIEN SET DOI = 5 WHERE MaTV = 'TV08';
+
 -- Ghi nhận thành tích
 INSERT INTO GHINHANTHANHTICH (MaLTT, MaTV, NgayPhatSinh) VALUES -- GHINHAN THANH TICH trong 10 năm qua
 ('LTT01', 'TV01', '2025-01-15'), -- Tổ đạt Huân chương Lao động

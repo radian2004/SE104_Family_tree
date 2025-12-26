@@ -50,7 +50,7 @@ class HonNhanService {
 
     try {
       const result = await databaseService.query<ResultSetHeader>(sql, params);
-      
+
       // Lấy thông tin chi tiết của quan hệ vừa tạo
       const detail = await this.getHonNhanDetail(honNhan.MaTV, honNhan.MaTVVC);
 
@@ -126,14 +126,14 @@ class HonNhanService {
 
   /**
    * Lấy danh sách quan hệ hôn nhân của một thành viên cụ thể
+   * Trả về thông tin của NGƯỜI KIA (vợ/chồng), không phải người đang query
    */
   async getHonNhanByMaTV(MaTV: string) {
     const sql = `
       SELECT 
-        h.MaTV,
-        tv1.HoTen AS HoTenTV,
-        h.MaTVVC,
-        tv2.HoTen AS HoTenVC,
+        CASE WHEN h.MaTV = ? THEN h.MaTVVC ELSE h.MaTV END AS MaTVVC,
+        CASE WHEN h.MaTV = ? THEN tv2.HoTen ELSE tv1.HoTen END AS HoTenVC,
+        CASE WHEN h.MaTV = ? THEN tv2.GioiTinh ELSE tv1.GioiTinh END AS GioiTinh,
         h.NgayBatDau,
         h.NgayKetThuc,
         CASE 
@@ -147,7 +147,7 @@ class HonNhanService {
       ORDER BY h.NgayBatDau DESC
     `;
 
-    const rows = await databaseService.query<HonNhanDetailRow[]>(sql, [MaTV, MaTV]);
+    const rows = await databaseService.query<HonNhanDetailRow[]>(sql, [MaTV, MaTV, MaTV, MaTV, MaTV]);
     return rows;
   }
 
