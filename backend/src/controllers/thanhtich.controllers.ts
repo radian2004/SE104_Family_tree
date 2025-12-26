@@ -74,9 +74,10 @@ export const ghiNhanThanhTichController = async (req: Request, res: Response) =>
  */
 export const traCuuThanhTichController = async (req: Request, res: Response) => {
   try {
-    const { HoTen, TenLoaiThanhTich, TuNgay, DenNgay } = req.query;
+    const { HoTen, TenLoaiThanhTich, TuNgay, DenNgay, MaTV } = req.query;
 
     const filters: any = {};
+    if (MaTV) filters.MaTV = MaTV as string;  // Filter by member ID
     if (HoTen) filters.HoTen = HoTen as string;
     if (TenLoaiThanhTich) filters.TenLoaiThanhTich = TenLoaiThanhTich as string;
     if (TuNgay) filters.TuNgay = new Date(TuNgay as string);

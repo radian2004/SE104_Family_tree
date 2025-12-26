@@ -115,3 +115,51 @@ export const logoutController = async (
     message: 'Đăng xuất thành công'
   });
 };
+
+/**
+ * Controller refresh token
+ * POST /users/refresh-token
+ * ✅ Lấy refresh_token từ cookies
+ */
+export const refreshTokenController = async (
+  req: Request,
+  res: Response
+) => {
+  // Lấy refresh_token từ cookies
+  const refresh_token = req.cookies.refresh_token;
+
+  if (!refresh_token) {
+    return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+      message: 'Không tìm thấy refresh token'
+    });
+  }
+
+  try {
+    const result = await usersService.refreshToken(refresh_token);
+
+    if (!result) {
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+        message: 'Refresh token không hợp lệ hoặc đã hết hạn'
+      });
+    }
+
+    // Set new access token cookie
+    res.cookie('access_token', result.access_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 15 * 60 * 1000  // 15 phút
+    });
+
+    return res.status(HTTP_STATUS.OK).json({
+      message: 'Refresh token thành công',
+      user: result.user
+    });
+  } catch (error: any) {
+    console.error('[refreshTokenController] Error:', error);
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      message: 'Lỗi refresh token',
+      error: error.message
+    });
+  }
+};

@@ -106,10 +106,28 @@ class ThanhVienService {
     return rows;
   }
 
-  // Lấy tất cả thành viên
-  async getAllThanhVien() {
-    const sql = 'SELECT * FROM THANHVIEN ORDER BY DOI, TGTaoMoi';
-    const rows = await databaseService.query<ThanhVienRow[]>(sql);
+  // Lấy tất cả thành viên với filter/sort
+  async getAllThanhVien(filters?: {
+    search?: string;
+    sortBy?: string;
+    sortOrder?: string;
+  }) {
+    let sql = 'SELECT * FROM THANHVIEN WHERE 1=1';
+    const params: any[] = [];
+
+    // Search filter
+    if (filters?.search) {
+      sql += ' AND (HoTen LIKE ? OR DiaChi LIKE ?)';
+      params.push(`%${filters.search}%`, `%${filters.search}%`);
+    }
+
+    // Order by
+    const validSortColumns = ['HoTen', 'NgayGioSinh', 'TGTaoMoi', 'DOI', 'DiaChi'];
+    const sortBy = validSortColumns.includes(filters?.sortBy || '') ? filters?.sortBy : 'HoTen';
+    const sortOrder = filters?.sortOrder === 'desc' ? 'DESC' : 'ASC';
+    sql += ` ORDER BY ${sortBy} ${sortOrder}`;
+
+    const rows = await databaseService.query<ThanhVienRow[]>(sql, params);
     return rows;
   }
 

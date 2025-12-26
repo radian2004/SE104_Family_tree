@@ -88,6 +88,7 @@ class ThanhTichService {
    * - TuNgay, DenNgay: Lọc theo khoảng thời gian
    */
   async traCuuThanhTich(filters?: {
+    MaTV?: string;           // Filter by member ID
     HoTen?: string;
     TenLoaiThanhTich?: string;  // ✅ MỚI: Search theo TÊN loại thành tích
     TuNgay?: Date;
@@ -110,6 +111,12 @@ class ThanhTichService {
 
     // Thêm điều kiện filter
     if (filters) {
+      // ✅ Filter theo MaTV (quan trọng nhất cho per-member query)
+      if (filters.MaTV) {
+        sql += ' AND g.MaTV = ?';
+        params.push(filters.MaTV);
+      }
+
       // ✅ Tìm theo tên thành viên
       if (filters.HoTen) {
         sql += ' AND tv.HoTen LIKE ?';

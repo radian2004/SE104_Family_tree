@@ -71,11 +71,11 @@ export default function BaoCaoPage() {
         loadBaoCao();
     }, [activeTab]);
 
-    // Tính tổng (safely handle empty arrays)
-    const totalSinh = Array.isArray(baoCaoThanhVien) ? baoCaoThanhVien.reduce((sum, row) => sum + (row.SoLuongSinh || 0), 0) : 0;
-    const totalKetHon = Array.isArray(baoCaoThanhVien) ? baoCaoThanhVien.reduce((sum, row) => sum + (row.SoLuongKetHon || 0), 0) : 0;
-    const totalMat = Array.isArray(baoCaoThanhVien) ? baoCaoThanhVien.reduce((sum, row) => sum + (row.SoLuongMat || 0), 0) : 0;
-    const totalThanhTich = Array.isArray(baoCaoThanhTich) ? baoCaoThanhTich.reduce((sum, row) => sum + (row.SoLuong || 0), 0) : 0;
+    // Tính tổng (safely handle empty arrays and parse to numbers)
+    const totalSinh = Array.isArray(baoCaoThanhVien) ? baoCaoThanhVien.reduce((sum, row) => sum + Number(row.SoLuongSinh || 0), 0) : 0;
+    const totalKetHon = Array.isArray(baoCaoThanhVien) ? baoCaoThanhVien.reduce((sum, row) => sum + Number(row.SoLuongKetHon || 0), 0) : 0;
+    const totalMat = Array.isArray(baoCaoThanhVien) ? baoCaoThanhVien.reduce((sum, row) => sum + Number(row.SoLuongMat || 0), 0) : 0;
+    const totalThanhTich = Array.isArray(baoCaoThanhTich) ? baoCaoThanhTich.reduce((sum, row) => sum + Number(row.SoLuong || 0), 0) : 0;
 
     return (
         <div className="min-h-screen">

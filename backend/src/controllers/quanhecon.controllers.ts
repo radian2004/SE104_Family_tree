@@ -12,10 +12,10 @@ export const thietLapQuanHeConController = async (req: Request, res: Response) =
   const { MaTV, MaTVCha, MaTVMe, NgayPhatSinh } = req.body;
 
   try {
-    // Validate dữ liệu đầu vào
-    if (!MaTV || !MaTVCha || !MaTVMe) {
+    // Validate dữ liệu đầu vào - cần ít nhất 1 trong 2 cha/mẹ
+    if (!MaTV || (!MaTVCha && !MaTVMe)) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
-        message: 'Thiếu thông tin bắt buộc: MaTV, MaTVCha, MaTVMe'
+        message: 'Thiếu thông tin bắt buộc: MaTV và ít nhất MaTVCha hoặc MaTVMe'
       });
     }
 
@@ -89,7 +89,7 @@ export const getChaMeController = async (req: Request, res: Response) => {
 
   try {
     const result = await quanHeConService.getChaMe(MaTV);
-    
+
     if (!result) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({
         message: 'Không tìm thấy thông tin cha mẹ'
@@ -164,7 +164,7 @@ export const getQuanHeConDetailController = async (req: Request, res: Response) 
 
   try {
     const result = await quanHeConService.getQuanHeConDetail(MaTV);
-    
+
     if (!result) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({
         message: 'Không tìm thấy thông tin quan hệ con cái'

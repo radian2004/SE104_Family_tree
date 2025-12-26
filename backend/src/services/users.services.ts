@@ -24,41 +24,41 @@ interface RefreshTokenRow extends RowDataPacket {
 
 class UsersService {
 
-private signAccessToken(user_id: string) {
-  const secretKey = process.env.JWT_SECRET_ACCESS_TOKEN as string;
-  if (!secretKey) {
-    throw new Error('JWT_SECRET_ACCESS_TOKEN is not defined in environment variables');
-  }
-  return signToken(
-    {
-      user_id,
-      token_type: TokenType.AccessToken
-    },
-    secretKey,
-    {
-      algorithm: 'HS256',
-      expiresIn: process.env.ACCESS_TOKEN_EXPIRE || '15m' as any
+  private signAccessToken(user_id: string) {
+    const secretKey = process.env.JWT_SECRET_ACCESS_TOKEN as string;
+    if (!secretKey) {
+      throw new Error('JWT_SECRET_ACCESS_TOKEN is not defined in environment variables');
     }
-  );
-}
+    return signToken(
+      {
+        user_id,
+        token_type: TokenType.AccessToken
+      },
+      secretKey,
+      {
+        algorithm: 'HS256',
+        expiresIn: process.env.ACCESS_TOKEN_EXPIRE || '15m' as any
+      }
+    );
+  }
 
-private signRefreshToken(user_id: string) {
-  const secretKey = process.env.JWT_SECRET_REFRESH_TOKEN as string;
-  if (!secretKey) {
-    throw new Error('JWT_SECRET_REFRESH_TOKEN is not defined in environment variables');
-  }
-  return signToken(
-    {
-      user_id,
-      token_type: TokenType.RefreshToken
-    },
-    secretKey,
-    {
-      algorithm: 'HS256',
-      expiresIn: process.env.REFRESH_TOKEN_EXPIRE || '7d' as any
+  private signRefreshToken(user_id: string) {
+    const secretKey = process.env.JWT_SECRET_REFRESH_TOKEN as string;
+    if (!secretKey) {
+      throw new Error('JWT_SECRET_REFRESH_TOKEN is not defined in environment variables');
     }
-  );
-}
+    return signToken(
+      {
+        user_id,
+        token_type: TokenType.RefreshToken
+      },
+      secretKey,
+      {
+        algorithm: 'HS256',
+        expiresIn: process.env.REFRESH_TOKEN_EXPIRE || '7d' as any
+      }
+    );
+  }
 
   /**
    * Ký cả access và refresh token
@@ -79,53 +79,53 @@ private signRefreshToken(user_id: string) {
   /**
    * Đăng ký tài khoản mới
    */
-async register(payload: RegisterReqBody) {
-  const { name, email, password } = payload;
+  async register(payload: RegisterReqBody) {
+    const { name, email, password } = payload;
 
-  // 1. Tạo thành viên mới với GioiTinh thay vì MaGioiTinh
-  const insertThanhVienSql = `
+    // 1. Tạo thành viên mới với GioiTinh thay vì MaGioiTinh
+    const insertThanhVienSql = `
     INSERT INTO THANHVIEN (HoTen, GioiTinh) 
     VALUES (?, 'Nam')
   `;
-  await databaseService.query(insertThanhVienSql, [name]);
+    await databaseService.query(insertThanhVienSql, [name]);
 
-  // 2. Lấy MaTV vừa tạo (trigger tự sinh)
-  const [thanhVien] = await databaseService.query<RowDataPacket[]>(
-    'SELECT MaTV FROM THANHVIEN ORDER BY TGTaoMoi DESC LIMIT 1'
-  );
-  const MaTV = thanhVien.MaTV;
+    // 2. Lấy MaTV vừa tạo (trigger tự sinh)
+    const [thanhVien] = await databaseService.query<RowDataPacket[]>(
+      'SELECT MaTV FROM THANHVIEN ORDER BY TGTaoMoi DESC LIMIT 1'
+    );
+    const MaTV = thanhVien.MaTV;
 
-  // 3. Hash password và tạo tài khoản
-  const hashedPassword = hashPassword(password);
-  const insertTaiKhoanSql = `
+    // 3. Hash password và tạo tài khoản
+    const hashedPassword = hashPassword(password);
+    const insertTaiKhoanSql = `
     INSERT INTO TAIKHOAN (TenDangNhap, MaTV, MatKhau, MaLoaiTK) 
     VALUES (?, ?, ?, 'LTK03')
   `;
-  await databaseService.query(insertTaiKhoanSql, [email, MaTV, hashedPassword]);
+    await databaseService.query(insertTaiKhoanSql, [email, MaTV, hashedPassword]);
 
-  // 4. Tạo access token và refresh token
-  const [access_token, refresh_token] = await this.signAccessAndRefreshToken(email);
+    // 4. Tạo access token và refresh token
+    const [access_token, refresh_token] = await this.signAccessAndRefreshToken(email);
 
-  // 5. Lưu refresh token vào database
-  const expDate = new Date();
-  expDate.setDate(expDate.getDate() + 7);
+    // 5. Lưu refresh token vào database
+    const expDate = new Date();
+    expDate.setDate(expDate.getDate() + 7);
 
-  const insertRefreshTokenSql = `
+    const insertRefreshTokenSql = `
     INSERT INTO REFRESH_TOKENS (token, TenDangNhap, NgayHetHan) 
     VALUES (?, ?, ?)
   `;
-  await databaseService.query(insertRefreshTokenSql, [refresh_token, email, expDate]);
+    await databaseService.query(insertRefreshTokenSql, [refresh_token, email, expDate]);
 
-  return {
-    access_token,
-    refresh_token,
-    user: {
-      TenDangNhap: email,
-      MaTV: MaTV,
-      MaLoaiTK: 'LTK03'
-    }
-  };
-}
+    return {
+      access_token,
+      refresh_token,
+      user: {
+        TenDangNhap: email,
+        MaTV: MaTV,
+        MaLoaiTK: 'LTK03'
+      }
+    };
+  }
 
   /**
    * Đăng nhập
@@ -191,6 +191,37 @@ async register(payload: RegisterReqBody) {
     const sql = 'SELECT token FROM REFRESH_TOKENS WHERE token = ?';
     const rows = await databaseService.query<RefreshTokenRow[]>(sql, [refresh_token]);
     return rows.length > 0;
+  }
+
+  /**
+   * Refresh access token - Tạo access token mới từ refresh token
+   */
+  async refreshToken(refresh_token: string) {
+    // 1. Kiểm tra refresh token có tồn tại trong DB không
+    const sql = 'SELECT * FROM REFRESH_TOKENS WHERE token = ? AND NgayHetHan > NOW()';
+    const rows = await databaseService.query<RefreshTokenRow[]>(sql, [refresh_token]);
+
+    if (rows.length === 0) {
+      return null; // Token không tồn tại hoặc đã hết hạn
+    }
+
+    const tokenData = rows[0];
+
+    // 2. Tạo access token mới
+    const new_access_token = await this.signAccessToken(tokenData.TenDangNhap);
+
+    // 3. Lấy thông tin user
+    const userSql = 'SELECT * FROM TAIKHOAN WHERE TenDangNhap = ?';
+    const userRows = await databaseService.query<TaiKhoanRow[]>(userSql, [tokenData.TenDangNhap]);
+
+    return {
+      access_token: new_access_token,
+      user: userRows.length > 0 ? {
+        TenDangNhap: userRows[0].TenDangNhap,
+        MaTV: userRows[0].MaTV,
+        MaLoaiTK: userRows[0].MaLoaiTK
+      } : null
+    };
   }
 }
 

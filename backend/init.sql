@@ -114,7 +114,7 @@ CREATE TABLE QUANHECON(
 	MaTV VARCHAR(5) PRIMARY KEY,
 	MaTVCha VARCHAR(5),
 	MaTVMe VARCHAR(5),
-	NgayPhatSinh TIMESTAMP DEFAULT CURRENT_TIMESTAMP(), -- Ngày làm giấy khai sinh
+	NgayPhatSinh DATE, -- Ngày ghi nhận quan hệ cha mẹ con
 	FOREIGN KEY(MaTV) REFERENCES THANHVIEN(MaTV),
 	FOREIGN KEY(MaTVCha) REFERENCES THANHVIEN(MaTV),
 	FOREIGN KEY(MaTVMe) REFERENCES THANHVIEN(MaTV)
@@ -590,14 +590,21 @@ UPDATE THANHVIEN SET MaGiaPha = 'GP02' WHERE MaTV IN ('TV02','TV03','TV04','TV05
 UPDATE THANHVIEN SET MaGiaPha = 'GP01' WHERE MaTV = 'TV01';
 
 INSERT INTO HONNHAN (MaTV, MaTVVC, NgayBatDau, NgayKetThuc) VALUES
-('TV02', 'TV03', '1970-06-15', NULL), -- Long - Lan
-('TV04', 'TV05', '1997-05-20', NULL); -- Hùng - Hồng
+('TV02', 'TV03', '1970-06-15', NULL), -- Long (TV02) kết hôn với Lan (TV03) - Đời 2
+('TV04', 'TV05', '1997-05-20', NULL); -- Hùng (TV04) kết hôn với Hồng (TV05) - Đời 3
 
+-- Quan hệ cha mẹ - con cái (cấu trúc cây gia phả đúng)
+-- TV01 là Thủy tổ (không có cha mẹ trong hệ thống)
+-- TV02 (Long) là con của TV01 (Tổ), mẹ không có trong hệ thống
+-- TV04 (Hùng), hoặc các con của Long & Lan
+-- TV06 (Nam), TV07 (Ngọc Anh) là con của Hùng & Hồng
+-- TV08 (Minh) là con của Nam
 INSERT INTO QUANHECON (MaTV, MaTVCha, MaTVMe, NgayPhatSinh) VALUES
-('TV04', 'TV01', 'TV03', '1990-03-20 10:30:00'), -- Long là con của Tổ
-('TV05', 'TV02', NULL, '1972-08-10 09:15:00'), -- Hùng là con của Long & Lan
-('TV06', 'TV01', 'TV03', '1998-04-05 07:45:00'), -- Nam là con của Hùng & Hồng
-('TV07', 'TV04', NULL, '2002-01-18 16:30:00'); -- Ngọc Anh là con của Hùng & Hồng
+('TV02', 'TV01', NULL, '1945-03-20'),  -- Long là con của Tổ (mẹ không có trong hệ thống)
+('TV04', 'TV02', 'TV03', '1972-08-10'), -- Hùng là con của Long & Lan
+('TV06', 'TV04', 'TV05', '1998-04-05'), -- Nam là con của Hùng & Hồng
+('TV07', 'TV04', 'TV05', '2002-01-18'), -- Ngọc Anh là con của Hùng & Hồng
+('TV08', 'TV06', NULL, '2024-06-10');   -- Minh là con của Nam (mẹ chưa trong hệ thống)
 
 -- Ghi nhận thành tích
 INSERT INTO GHINHANTHANHTICH (MaLTT, MaTV, NgayPhatSinh) VALUES -- GHINHAN THANH TICH trong 10 năm qua

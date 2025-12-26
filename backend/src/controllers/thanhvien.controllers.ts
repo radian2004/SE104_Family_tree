@@ -8,6 +8,8 @@ import { TraCuuThanhVienQuery } from '~/models/requests/TraCuuThanhVien.requests
 export const registerController = async (req: Request, res: Response) => {
   const { HoTen, NgayGioSinh, DiaChi, MaQueQuan, MaNgheNghiep, GioiTinh, MaGiaPha } = req.body;  // ✅ ĐÚNG
 
+  console.log('[registerController] Request body:', { HoTen, NgayGioSinh, DiaChi, MaQueQuan, MaNgheNghiep, GioiTinh, MaGiaPha });
+
   try {
     const result = await thanhvienService.register({
       HoTen,
@@ -19,22 +21,35 @@ export const registerController = async (req: Request, res: Response) => {
       MaGiaPha
     });
 
+    console.log('[registerController] Success:', result);
     return res.status(201).json(result);
   } catch (error: any) {
-    console.error('Lỗi register:', error);
+    console.error('[registerController] Error:', error);
+    console.error('[registerController] Error code:', error.code);
+    console.error('[registerController] SQL Message:', error.sqlMessage);
     return res.status(400).json({
       message: 'Đăng ký thất bại',
-      error: error.message
+      error: error.sqlMessage || error.message,
+      code: error.code
     });
   }
 };
 
-// Controller lấy tất cả thành viên
+// Controller lấy tất cả thành viên với filter/sort
 export const getAllThanhVienController = async (req: Request, res: Response) => {
   try {
-    const result = await thanhvienService.getAllThanhVien();
+    const { search, sortBy, sortOrder } = req.query;
+
+    const filters = {
+      search: search as string,
+      sortBy: (sortBy as string) || 'HoTen',
+      sortOrder: (sortOrder as string) || 'asc'
+    };
+
+    const result = await thanhvienService.getAllThanhVien(filters);
     return res.status(200).json({
       message: 'Lấy danh sách thành công',
+      total: result.length,
       result: result
     });
   } catch (error: any) {
@@ -154,7 +169,7 @@ export const getBaoCaoTangGiamController = async (req: Request, res: Response) =
     });
   } catch (error: any) {
     console.error('Lỗi getBaoCaoTangGiam:', error);
-    
+
     // Xử lý lỗi validation từ service
     if (error.message.includes('Năm') || error.message.includes('năm')) {
       return res.status(400).json({
@@ -175,18 +190,18 @@ export const getBaoCaoTangGiamController = async (req: Request, res: Response) =
  */
 export const ghiNhanThanhVienController = async (req: Request, res: Response) => {
   const payload: GhiNhanThanhVienReqBody = req.body;
-  
+
   try {
     // Validate cơ bản
-    if (!payload.HoTen || !payload.NgayGioSinh || !payload.GioiTinh || 
-        !payload.DiaChi || !payload.MaQueQuan || !payload.MaTVCu || 
-        !payload.LoaiQuanHe || !payload.NgayPhatSinh) {
+    if (!payload.HoTen || !payload.NgayGioSinh || !payload.GioiTinh ||
+      !payload.DiaChi || !payload.MaQueQuan || !payload.MaTVCu ||
+      !payload.LoaiQuanHe || !payload.NgayPhatSinh) {
       return res.status(400).json({
         message: 'Thiếu thông tin bắt buộc',
         error: 'Vui lòng điền đầy đủ các trường: HoTen, NgayGioSinh, GioiTinh, DiaChi, MaQueQuan, MaTVCu, LoaiQuanHe, NgayPhatSinh'
       });
     }
-    
+
     // Validate giới tính
     if (payload.GioiTinh !== 'Nam' && payload.GioiTinh !== 'Nữ') {
       return res.status(400).json({
@@ -194,7 +209,7 @@ export const ghiNhanThanhVienController = async (req: Request, res: Response) =>
         error: 'Giới tính phải là "Nam" hoặc "Nữ"'
       });
     }
-    
+
     // Validate loại quan hệ
     if (payload.LoaiQuanHe !== 'Con cái' && payload.LoaiQuanHe !== 'Vợ/Chồng') {
       return res.status(400).json({
@@ -202,15 +217,15 @@ export const ghiNhanThanhVienController = async (req: Request, res: Response) =>
         error: 'Loại quan hệ phải là "Con cái" hoặc "Vợ/Chồng"'
       });
     }
-    
+
     // Gọi service
     const result = await thanhvienService.ghiNhanThanhVien(payload);
-    
+
     return res.status(201).json(result);
-    
+
   } catch (error: any) {
     console.error('Lỗi ghiNhanThanhVien:', error);
-    
+
     // Xử lý lỗi từ trigger MySQL
     if (error.message.includes('Giới tính của cha phải là Nam')) {
       return res.status(400).json({
@@ -218,21 +233,21 @@ export const ghiNhanThanhVienController = async (req: Request, res: Response) =>
         error: 'Giới tính của cha phải là Nam'
       });
     }
-    
+
     if (error.message.includes('Giới tính của mẹ phải là Nữ')) {
       return res.status(400).json({
         message: 'Lỗi nghiệp vụ',
         error: 'Giới tính của mẹ phải là Nữ'
       });
     }
-    
+
     if (error.message.includes('Ngày sinh của con phải sau ngày sinh')) {
       return res.status(400).json({
         message: 'Lỗi nghiệp vụ',
         error: error.message
       });
     }
-    
+
     return res.status(400).json({
       message: 'Ghi nhận thành viên thất bại',
       error: error.message
@@ -247,12 +262,12 @@ export const ghiNhanThanhVienController = async (req: Request, res: Response) =>
 export const getAvailableRelationsController = async (req: Request, res: Response) => {
   try {
     const result = await thanhvienService.getAvailableParents();
-    
+
     return res.status(200).json({
       message: 'Lấy danh sách thành viên thành công',
       result: result
     });
-    
+
   } catch (error: any) {
     console.error('Lỗi getAvailableRelations:', error);
     return res.status(400).json({
@@ -279,12 +294,12 @@ export const traCuuThanhVienController = async (req: Request, res: Response) => 
       page: req.query.page ? parseInt(req.query.page as string) : 1,
       limit: req.query.limit ? parseInt(req.query.limit as string) : 10
     };
-    
+
     // Gọi service
     const result = await thanhvienService.traCuuThanhVien(query);
-    
+
     return res.status(200).json(result);
-    
+
   } catch (error: any) {
     console.error('Lỗi traCuuThanhVien:', error);
     return res.status(500).json({

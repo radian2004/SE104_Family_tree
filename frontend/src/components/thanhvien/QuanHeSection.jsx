@@ -111,7 +111,7 @@ export default function QuanHeSection({ MaTV, memberName, memberGender }) {
                                             </div>
                                             <div>
                                                 <div className="font-medium text-neutral-800">
-                                                    {parents.TenCha || `Thành viên ${parents.MaTVCha}`}
+                                                    {parents.HoTenCha || `Thành viên ${parents.MaTVCha}`}
                                                 </div>
                                                 <div className="text-xs text-blue-600">Cha</div>
                                             </div>
@@ -132,7 +132,7 @@ export default function QuanHeSection({ MaTV, memberName, memberGender }) {
                                             </div>
                                             <div>
                                                 <div className="font-medium text-neutral-800">
-                                                    {parents.TenMe || `Thành viên ${parents.MaTVMe}`}
+                                                    {parents.HoTenMe || `Thành viên ${parents.MaTVMe}`}
                                                 </div>
                                                 <div className="text-xs text-pink-600">Mẹ</div>
                                             </div>
@@ -166,7 +166,7 @@ export default function QuanHeSection({ MaTV, memberName, memberGender }) {
                                             </div>
                                             <div>
                                                 <div className="font-medium text-neutral-800">
-                                                    {sp.TenVoChong || `Thành viên ${sp.MaTVVC}`}
+                                                    {sp.HoTenVC || `Thành viên ${sp.MaTVVC}`}
                                                 </div>
                                                 <div className="text-xs text-rose-600 flex items-center gap-1">
                                                     <FiHeart className="w-3 h-3" />
@@ -208,7 +208,7 @@ export default function QuanHeSection({ MaTV, memberName, memberGender }) {
                                             </div>
                                             <div>
                                                 <div className="font-medium text-neutral-800">
-                                                    {child.HoTen || `Thành viên ${child.MaTV}`}
+                                                    {child.HoTenCon || child.HoTen || `Thành viên ${child.MaTV}`}
                                                 </div>
                                                 <div className="text-xs text-emerald-600">
                                                     {child.GioiTinh === 'Nữ' ? 'Con gái' : 'Con trai'}
@@ -236,10 +236,10 @@ export default function QuanHeSection({ MaTV, memberName, memberGender }) {
                 <div className="mt-6 pt-4 border-t border-neutral-100">
                     <p className="text-sm text-neutral-600 italic">
                         📝 <strong>{memberName}</strong>
-                        {parents && parents.TenCha && ` là con của ${parents.TenCha}`}
-                        {parents && parents.TenMe && parents.TenCha && ` và ${parents.TenMe}`}
-                        {parents && parents.TenMe && !parents.TenCha && ` là con của ${parents.TenMe}`}
-                        {spouse.length > 0 && `, ${memberGender === 'Nữ' ? 'vợ' : 'chồng'} của ${spouse[0].TenVoChong || 'người phối ngẫu'}`}
+                        {parents && parents.HoTenCha && ` là con của ${parents.HoTenCha}`}
+                        {parents && parents.HoTenMe && parents.HoTenCha && ` và ${parents.HoTenMe}`}
+                        {parents && parents.HoTenMe && !parents.HoTenCha && ` là con của ${parents.HoTenMe}`}
+                        {spouse.length > 0 && `, ${memberGender === 'Nữ' ? 'vợ' : 'chồng'} của ${spouse[0].HoTenVC || 'người phối ngẫu'}`}
                         {children.length > 0 && `, có ${children.length} con`}
                         .
                     </p>

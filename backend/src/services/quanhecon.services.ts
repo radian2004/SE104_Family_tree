@@ -30,8 +30,8 @@ class QuanHeConService {
    */
   async thietLapQuanHeCon(payload: {
     MaTV: string;
-    MaTVCha: string;
-    MaTVMe: string;
+    MaTVCha?: string | null;
+    MaTVMe?: string | null;
     NgayPhatSinh?: Date;
   }) {
     const quanHeCon = new QuanHeCon(payload);
@@ -43,14 +43,14 @@ class QuanHeConService {
 
     const params = [
       quanHeCon.MaTV,
-      quanHeCon.MaTVCha,
-      quanHeCon.MaTVMe,
+      quanHeCon.MaTVCha || null,
+      quanHeCon.MaTVMe || null,
       quanHeCon.NgayPhatSinh || new Date()
     ];
 
     try {
       const result = await databaseService.query<ResultSetHeader>(sql, params);
-      
+
       // Lấy thông tin chi tiết của quan hệ vừa tạo
       const detail = await this.getQuanHeConDetail(quanHeCon.MaTV);
 
@@ -178,7 +178,7 @@ class QuanHeConService {
 
     try {
       const result = await databaseService.query<ResultSetHeader>(sql, [MaTV]);
-      
+
       if (result.affectedRows === 0) {
         throw new Error('Không tìm thấy quan hệ con cái để xóa');
       }
@@ -234,7 +234,7 @@ class QuanHeConService {
 
     try {
       const result = await databaseService.query<ResultSetHeader>(sql, params);
-      
+
       if (result.affectedRows === 0) {
         throw new Error('Không tìm thấy quan hệ con cái để cập nhật');
       }

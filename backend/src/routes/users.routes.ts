@@ -2,7 +2,8 @@ import { Router } from 'express';
 import {
   registerController,
   loginController,
-  logoutController
+  logoutController,
+  refreshTokenController
 } from '~/controllers/users.controllers';
 import {
   registerValidator,
@@ -34,6 +35,7 @@ usersRouter.post('/register', registerValidator, wrapAsync(registerController));
  * Body: { email: string, password: string }
  */
 usersRouter.post('/login', loginValidator, wrapAsync(loginController));
+
 /**
  * Description: Đăng xuất
  * Path: /users/logout
@@ -42,6 +44,14 @@ usersRouter.post('/login', loginValidator, wrapAsync(loginController));
  * Body: { refresh_token: string }
  */
 usersRouter.post('/logout', accessTokenValidator, refreshTokenValidator, wrapAsync(logoutController));
+
+/**
+ * Description: Refresh access token
+ * Path: /users/refresh-token
+ * Method: POST
+ * Cookies: refresh_token
+ */
+usersRouter.post('/refresh-token', wrapAsync(refreshTokenController));
 
 // 🔍 DEBUG: Log khi route được đăng ký
 console.log('✅ Đang đăng ký nested routes...');

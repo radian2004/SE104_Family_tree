@@ -104,7 +104,7 @@ export default function QuanHeConCaiPage() {
                 NgayPhatSinh: formData.NgayPhatSinh || new Date().toISOString().split('T')[0]
             };
 
-            await quanheService.createConCai(payload);
+            await quanheService.createQuanHeCon(payload);
 
             setSuccess(true);
 

@@ -62,7 +62,7 @@ class GiaPhaService {
             const relationships = [];
             for (const member of members) {
                 try {
-                    const response = await apiClient.get(`/users/quanhe/chame/${member.MaTV}`);
+                    const response = await apiClient.get(`/users/quanhecon/chame/${member.MaTV}`);
                     if (response.data.result) {
                         relationships.push({
                             MaTV: member.MaTV,
@@ -93,7 +93,7 @@ class GiaPhaService {
 
             for (const member of members) {
                 try {
-                    const response = await apiClient.get(`/users/quanhe/honnhan/${member.MaTV}`);
+                    const response = await apiClient.get(`/users/honnhan/${member.MaTV}`);
                     const spouses = response.data.result || [];
 
                     spouses.forEach(spouse => {
