@@ -1,4 +1,3 @@
-// src/routes/thanhtich.routes.ts
 import { Router } from 'express';
 import {
   getLoaiThanhTichController,
@@ -7,59 +6,75 @@ import {
   getThanhTichByHoTenController,
   xoaThanhTichController,
   capNhatThanhTichController,
-  getBaoCaoThanhTichController // ✅ THÊM DÒNG NÀY
+  getBaoCaoThanhTichController
 } from '~/controllers/thanhtich.controllers';
 import { wrapAsync } from '~/utils/handlers';
-
+import { 
+  checkGhiNhanThanhTichPermission,
+  checkDeleteThanhTichPermission,
+  checkUpdateThanhTichPermission,
+  attachUserInfoMiddleware
+} from '~/middlewares/authorization.middlewares';
 
 const thanhTichRouter = Router();
 
+// ========================================
+// ROUTES CÔNG KHAI (không cần phân quyền đặc biệt)
+// ========================================
+
 /**
  * GET /thanhtich/loai - Lấy danh sách loại thành tích
- * Response: [{ MaLTT, TenLTT }]
+ * Ai cũng có thể xem
  */
 thanhTichRouter.get('/loai', wrapAsync(getLoaiThanhTichController));
 
+// ========================================
+// ROUTES CẦN PHÂN QUYỀN
+// ========================================
+
 /**
  * POST /thanhtich/ghinhan - Ghi nhận thành tích mới
- * Body: { MaTV, MaLTT, NgayPhatSinh? }
- * Response: { message, data }
+ * - Admin: ghi nhận cho mọi thành viên
+ * - Owner: ghi nhận cho thành viên trong gia phả
+ * - User: chỉ ghi nhận cho chính mình
  */
-thanhTichRouter.post('/ghinhan', wrapAsync(ghiNhanThanhTichController));
+thanhTichRouter.post('/ghinhan', checkGhiNhanThanhTichPermission, wrapAsync(ghiNhanThanhTichController));
 
 /**
- * ✅ MỚI: GET /thanhtich/tracuu - Tra cứu thành tích linh hoạt
- * Query params:
- * - HoTen?: Tên thành viên (LIKE search) - VD: "Nguyễn Văn"
- * - TenLoaiThanhTich?: Tên loại thành tích (LIKE search) - VD: "huân" → tìm tất cả loại có "huân"
- * - TuNgay?: Từ ngày (YYYY-MM-DD)
- * - DenNgay?: Đến ngày (YYYY-MM-DD)
- * 
- * Response: { message, total, result: [{ STT, HoTen, ThanhTich, NgayPhatSinh }] }
+ * GET /thanhtich/tracuu - Tra cứu thành tích
+ * - Admin: tra cứu tất cả
+ * - Owner/User: chỉ tra cứu trong gia phả
  */
-thanhTichRouter.get('/tracuu', wrapAsync(traCuuThanhTichController));
+thanhTichRouter.get('/tracuu', attachUserInfoMiddleware, wrapAsync(traCuuThanhTichController));
 
 /**
- * ✅ MỚI: GET /thanhtich/thanhvien - Lấy thành tích của thành viên theo TÊN
- * Query param: HoTen (LIKE search)
- * VD: /thanhtich/thanhvien?HoTen=Nguyễn Văn
- * 
- * Response: { message, HoTen, total, result: [{ HoTen, ThanhTich, NgayPhatSinh }] }
+ * GET /thanhtich/thanhvien - Lấy thành tích theo tên thành viên
+ * - Admin: xem tất cả
+ * - Owner/User: chỉ xem trong gia phả
  */
-thanhTichRouter.get('/thanhvien', wrapAsync(getThanhTichByHoTenController));
+thanhTichRouter.get('/thanhvien', attachUserInfoMiddleware, wrapAsync(getThanhTichByHoTenController));
 
 /**
- * ✅ MỚI: DELETE /thanhtich/xoa - Xóa thành tích (Đơn giản hóa)
- * Body: { MaTV, MaLTT, NgayPhatSinh }
- * Response: { message, affectedRows }
- * 
- * Lưu ý: MaTV và MaLTT là mã nội bộ, frontend cần lưu trữ để gửi khi xóa
+ * DELETE /thanhtich/xoa - Xóa thành tích
+ * - Admin: xóa được tất cả
+ * - Owner: xóa được trong gia phả
+ * - User: xóa được trong gia phả
  */
-thanhTichRouter.delete('/xoa', wrapAsync(xoaThanhTichController));
+thanhTichRouter.delete('/xoa', checkDeleteThanhTichPermission, wrapAsync(xoaThanhTichController));
 
-// ✅ MỚI: PUT /thanhtich/capnhat - Cập nhật loại thành tích
-thanhTichRouter.put('/capnhat', wrapAsync(capNhatThanhTichController));
+/**
+ * PUT /thanhtich/capnhat - Cập nhật thành tích
+ * - Admin: sửa được tất cả
+ * - Owner: sửa được trong gia phả
+ * - User: sửa được thành tích của chính mình
+ */
+thanhTichRouter.put('/capnhat', checkUpdateThanhTichPermission, wrapAsync(capNhatThanhTichController));
 
-thanhTichRouter.get('/baocao', wrapAsync(getBaoCaoThanhTichController));
+/**
+ * GET /thanhtich/baocao - Báo cáo thành tích theo năm
+ * - Admin: báo cáo tất cả gia phả
+ * - Owner/User: chỉ báo cáo trong gia phả
+ */
+thanhTichRouter.get('/baocao', attachUserInfoMiddleware, wrapAsync(getBaoCaoThanhTichController));
 
 export default thanhTichRouter;

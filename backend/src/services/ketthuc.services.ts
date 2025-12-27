@@ -1,6 +1,9 @@
 import databaseService from './database.services'
 import { KetThucRow, TraCuuKetThucResult, GhiNhanKetThucPayload } from '~/models/schemas/KetThuc.schema'
 import { RowDataPacket, ResultSetHeader } from 'mysql2'
+import { ErrorWithStatus } from '~/models/Errors'
+import HTTP_STATUS from '~/constants/httpStatus'
+import { TaiKhoanInfo } from '~/middlewares/authorization.middlewares'
 
 class KetThucService {
   /**
@@ -8,7 +11,7 @@ class KetThucService {
    * Cập nhật thông tin mất vào bảng THANHVIEN
    * Trigger sẽ tự động chuyển TrangThai → 'Mất'
    */
-  async ghiNhanKetThuc(payload: GhiNhanKetThucPayload) {
+  async ghiNhanKetThuc(payload: GhiNhanKetThucPayload, userInfo?: TaiKhoanInfo) {
     const { MaTV, NgayGioMat, MaNguyenNhanMat, MaDiaDiem } = payload
     
     const query = `
@@ -38,61 +41,69 @@ class KetThucService {
 
  /**
    * 2. Tra cứu danh sách thành viên đã kết thúc
-   * Với STT tự động (sử dụng ROW_NUMBER)
-   * ⭐ V2: Hỗ trợ tìm kiếm linh hoạt theo TÊN (không cần nhớ mã)
    */
   async traCuuKetThuc(filters?: {
     HoTen?: string
-    MaNguyenNhanMat?: string          // Deprecated - Giữ để tương thích ngược
-    TenNguyenNhanMat?: string         // ⭐ MỚI: Tìm theo tên nguyên nhân
-    MaDiaDiem?: string                // Deprecated - Giữ để tương thích ngược
-    TenDiaDiem?: string               // ⭐ MỚI: Tìm theo tên địa điểm
+    MaNguyenNhanMat?: string
+    TenNguyenNhanMat?: string
+    MaDiaDiem?: string
+    TenDiaDiem?: string
     TuNgay?: string
     DenNgay?: string
-  }): Promise<TraCuuKetThucResult[]> {
-    let whereClauses: string[] = ["tv.TrangThai = 'Mất'"]
-    const params: any[] = []
+  }, userInfo?: TaiKhoanInfo): Promise<TraCuuKetThucResult[]> {
+    let whereClauses: string[] = ["tv.TrangThai = 'Mất'"];
+    const params: any[] = [];
+
+    // ⭐ FILTER THEO MaGiaPha (Owner/User chỉ xem trong gia phả)
+    if (userInfo && userInfo.MaLoaiTK !== 'LTK01') {
+      // Không phải Admin → giới hạn theo gia phả
+      if (!userInfo.MaGiaPha) {
+        throw new Error('Bạn chưa thuộc gia phả nào');
+      }
+      whereClauses.push('tv.MaGiaPha = ?');
+      params.push(userInfo.MaGiaPha);
+    }
 
     // Lọc theo họ tên (LIKE search)
     if (filters?.HoTen) {
-      whereClauses.push('tv.HoTen LIKE ?')
-      params.push(`%${filters.HoTen}%`)
+      whereClauses.push('tv.HoTen LIKE ?');
+      params.push(`%${filters.HoTen}%`);
     }
 
-    // ⭐ MỚI: Lọc theo TÊN nguyên nhân mất (LIKE search)
+    // Lọc theo TÊN nguyên nhân mất (LIKE search)
     if (filters?.TenNguyenNhanMat) {
-      whereClauses.push('nnm.TenNguyenNhanMat LIKE ?')
-      params.push(`%${filters.TenNguyenNhanMat}%`)
+      whereClauses.push('nnm.TenNguyenNhanMat LIKE ?');
+      params.push(`%${filters.TenNguyenNhanMat}%`);
     }
-    // Deprecated: Giữ để tương thích ngược với code cũ
+    // Deprecated: Giữ để tương thích ngược
     else if (filters?.MaNguyenNhanMat) {
-      whereClauses.push('tv.MaNguyenNhanMat = ?')
-      params.push(filters.MaNguyenNhanMat)
+      whereClauses.push('tv.MaNguyenNhanMat = ?');
+      params.push(filters.MaNguyenNhanMat);
     }
 
-    // ⭐ MỚI: Lọc theo TÊN địa điểm mai táng (LIKE search)
+    // Lọc theo TÊN địa điểm mai táng (LIKE search)
     if (filters?.TenDiaDiem) {
-      whereClauses.push('dd.TenDiaDiem LIKE ?')
-      params.push(`%${filters.TenDiaDiem}%`)
+      whereClauses.push('dd.TenDiaDiem LIKE ?');
+      params.push(`%${filters.TenDiaDiem}%`);
     }
-    // Deprecated: Giữ để tương thích ngược với code cũ
+    // Deprecated: Giữ để tương thích ngược
     else if (filters?.MaDiaDiem) {
-      whereClauses.push('tv.MaDiaDiem = ?')
-      params.push(filters.MaDiaDiem)
+      whereClauses.push('tv.MaDiaDiem = ?');
+      params.push(filters.MaDiaDiem);
     }
 
     // Lọc theo khoảng thời gian mất
     if (filters?.TuNgay) {
-      whereClauses.push('DATE(tv.NgayGioMat) >= ?')
-      params.push(filters.TuNgay)
+      whereClauses.push('DATE(tv.NgayGioMat) >= ?');
+      params.push(filters.TuNgay);
     }
 
     if (filters?.DenNgay) {
-      whereClauses.push('DATE(tv.NgayGioMat) <= ?')
-      params.push(filters.DenNgay)
+      whereClauses.push('DATE(tv.NgayGioMat) <= ?');
+      params.push(filters.DenNgay);
     }
 
-    const whereClause = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : ''
+    const whereClause = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
 
     const query = `
       SELECT 
@@ -107,17 +118,16 @@ class KetThucService {
       LEFT JOIN DIADIEMMAITANG dd ON tv.MaDiaDiem = dd.MaDiaDiem
       ${whereClause}
       ORDER BY tv.NgayGioMat DESC
-    `
+    `;
 
-    // ✅ SỬA: executeQuery → query, bỏ destructuring
-    const rows = await databaseService.query<RowDataPacket[]>(query, params)
-    return rows as TraCuuKetThucResult[]
+    const rows = await databaseService.query<RowDataPacket[]>(query, params);
+    return rows as TraCuuKetThucResult[];
   }
 
   /**
    * 3. Xem chi tiết thông tin kết thúc của một thành viên
    */
-  async getChiTietKetThuc(MaTV: string): Promise<KetThucRow | null> {
+  async getChiTietKetThuc(MaTV: string, userInfo?: TaiKhoanInfo): Promise<KetThucRow | null> {
     const query = `
       SELECT 
         tv.MaTV,
@@ -128,21 +138,38 @@ class KetThucService {
         tv.MaNguyenNhanMat,
         nnm.TenNguyenNhanMat,
         tv.MaDiaDiem,
-        dd.TenDiaDiem
+        dd.TenDiaDiem,
+        tv.MaGiaPha  -- ⭐ THÊM MaGiaPha để check quyền
       FROM THANHVIEN tv
       LEFT JOIN NGUYENNHANMAT nnm ON tv.MaNguyenNhanMat = nnm.MaNguyenNhanMat
       LEFT JOIN DIADIEMMAITANG dd ON tv.MaDiaDiem = dd.MaDiaDiem
       WHERE tv.MaTV = ? AND tv.TrangThai = 'Mất'
-    `
+    `;
 
-    // ✅ SỬA: executeQuery → query, bỏ destructuring
-    const rows = await databaseService.query<RowDataPacket[]>(query, [MaTV])
+    const rows = await databaseService.query<RowDataPacket[]>(query, [MaTV]);
     
     if (rows.length === 0) {
-      return null
+      return null;
     }
 
-    return rows[0] as KetThucRow
+    const member = rows[0];
+
+    // KIỂM TRA quyền xem (Owner/User chỉ xem trong gia phả)
+    if (userInfo && userInfo.MaLoaiTK !== 'LTK01') {
+      // Không phải Admin → kiểm tra gia phả
+      if (!userInfo.MaGiaPha) {
+        throw new Error('Bạn chưa thuộc gia phả nào');
+      }
+      
+      if (member.MaGiaPha !== userInfo.MaGiaPha) {
+        throw new ErrorWithStatus({
+          message: 'Bạn chỉ có quyền xem thông tin kết thúc của thành viên trong gia phả của mình',
+          status: HTTP_STATUS.FORBIDDEN  // Cần import HTTP_STATUS
+        });
+      }
+    }
+
+    return member as KetThucRow;
   }
 
   /**

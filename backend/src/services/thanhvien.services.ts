@@ -60,11 +60,11 @@ class ThanhVienService {
 
     // INSERT không cần MaTV vì trigger TRG_GEN_ID_THANHVIEN sẽ tự sinh
     const sql = `
-  INSERT INTO THANHVIEN (
-    HoTen, NgayGioSinh, DiaChi, TrangThai, 
-    DOI, MaQueQuan, MaNgheNghiep, GioiTinh, MaGiaPha
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-`;
+    INSERT INTO THANHVIEN (
+      HoTen, NgayGioSinh, DiaChi, TrangThai, 
+      DOI, MaQueQuan, MaNgheNghiep, GioiTinh, MaGiaPha
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
 
     const params = [
       thanhvien.HoTen,
@@ -206,8 +206,12 @@ class ThanhVienService {
    * Thống kê: Số sinh, số kết hôn, số mất theo từng năm
    * CHỈ HIỂN THỊ những năm có ít nhất 1 sự kiện (bỏ qua năm có cả 3 đều = 0)
    */
-  async getBaoCaoTangGiam(NamBatDau: number, NamKetThuc: number) {
-    // Validate input
+  async getBaoCaoTangGiam(
+    NamBatDau: number,
+    NamKetThuc: number,
+    userInfo: { MaLoaiTK: string; MaGiaPha: string | null }
+  ) {
+    // Validate
     if (NamBatDau > NamKetThuc) {
       throw new Error('Năm bắt đầu không được lớn hơn năm kết thúc');
     }
@@ -217,82 +221,85 @@ class ThanhVienService {
       throw new Error(`Năm kết thúc không được vượt quá năm hiện tại (${currentYear})`);
     }
 
-    // Query chỉ lấy những năm có sự kiện (sinh/kết hôn/mất)
-    // Sử dụng UNION để gộp tất cả các năm có sự kiện, sau đó tính tổng
-    const sql = `
-      WITH AllYears AS (
-        -- Lấy tất cả các năm có sinh
-        SELECT DISTINCT YEAR(NgayGioSinh) as Nam
-        FROM THANHVIEN
-        WHERE YEAR(NgayGioSinh) BETWEEN ? AND ?
-        
-        UNION
-        
-        -- Lấy tất cả các năm có kết hôn
-        SELECT DISTINCT YEAR(NgayBatDau) as Nam
-        FROM HONNHAN
-        WHERE YEAR(NgayBatDau) BETWEEN ? AND ?
-        
-        UNION
-        
-        -- Lấy tất cả các năm có mất
-        SELECT DISTINCT YEAR(NgayGioMat) as Nam
-        FROM THANHVIEN
-        WHERE YEAR(NgayGioMat) BETWEEN ? AND ?
-          AND NgayGioMat IS NOT NULL
-      )
-      SELECT 
-        ROW_NUMBER() OVER (ORDER BY ay.Nam) AS STT,
-        ay.Nam,
-        COALESCE(
-          (SELECT COUNT(*) FROM THANHVIEN 
-           WHERE YEAR(NgayGioSinh) = ay.Nam), 0
-        ) AS SoLuongSinh,
-        COALESCE(
-          (SELECT COUNT(*) FROM HONNHAN 
-           WHERE YEAR(NgayBatDau) = ay.Nam AND MaTV < MaTVVC), 0
-        ) AS SoLuongKetHon,
-        COALESCE(
-          (SELECT COUNT(*) FROM THANHVIEN 
-           WHERE YEAR(NgayGioMat) = ay.Nam AND NgayGioMat IS NOT NULL), 0
-        ) AS SoLuongMat
-      FROM AllYears ay
-      ORDER BY ay.Nam
-    `;
+    const conditions: string[] = [];
+    const params: any[] = [];
 
-    interface BaoCaoRow extends RowDataPacket {
-      STT: number;
-      Nam: number;
-      SoLuongSinh: number;
-      SoLuongKetHon: number;
-      SoLuongMat: number;
+    // Phân quyền
+    if (userInfo.MaLoaiTK !== 'LTK01') {
+      if (!userInfo.MaGiaPha) {
+        throw new Error('Bạn chưa thuộc gia phả nào');
+      }
+      conditions.push('tv.MaGiaPha = ?');
+      params.push(userInfo.MaGiaPha);
     }
 
-    const rows = await databaseService.query<BaoCaoRow[]>(sql, [
-      NamBatDau,
-      NamKetThuc,
-      NamBatDau,
-      NamKetThuc,
-      NamBatDau,
-      NamKetThuc
-    ]);
+    const whereClause = conditions.length > 0 ? `AND ${conditions.join(' AND ')}` : '';
 
-    // Tính tổng
-    const tongSinh = rows.reduce((sum, row) => sum + row.SoLuongSinh, 0);
-    const tongKetHon = rows.reduce((sum, row) => sum + row.SoLuongKetHon, 0);
-    const tongMat = rows.reduce((sum, row) => sum + row.SoLuongMat, 0);
-    const tangGiamRong = tongSinh - tongMat;
+    // Query số sinh
+    const sqlSinh = `
+      SELECT YEAR(NgayGioSinh) AS Nam, COUNT(*) AS SoLuong
+      FROM THANHVIEN tv
+      WHERE YEAR(NgayGioSinh) BETWEEN ? AND ?
+      ${whereClause}
+      GROUP BY YEAR(NgayGioSinh)
+    `;
 
-    return {
-      NamBatDau,
-      NamKetThuc,
-      TongSinh: tongSinh,
-      TongKetHon: tongKetHon,
-      TongMat: tongMat,
-      TangGiamRong: tangGiamRong,
-      DanhSach: rows
-    };
+    // Query số kết hôn
+    const sqlKetHon = `
+      SELECT YEAR(hn.NgayBatDau) AS Nam, COUNT(*) AS SoLuong
+      FROM HONNHAN hn
+      INNER JOIN THANHVIEN tv ON hn.MaTV = tv.MaTV
+      WHERE YEAR(hn.NgayBatDau) BETWEEN ? AND ?
+      ${whereClause}
+      GROUP BY YEAR(hn.NgayBatDau)
+    `;
+
+    // Query số mất
+    const sqlMat = `
+      SELECT YEAR(NgayGioMat) AS Nam, COUNT(*) AS SoLuong
+      FROM THANHVIEN tv
+      WHERE NgayGioMat IS NOT NULL 
+      AND YEAR(NgayGioMat) BETWEEN ? AND ?
+      ${whereClause}
+      GROUP BY YEAR(NgayGioMat)
+    `;
+
+    // Execute queries
+    const paramsSinh = [NamBatDau, NamKetThuc, ...params];
+    const paramsKetHon = [NamBatDau, NamKetThuc, ...params];
+    const paramsMat = [NamBatDau, NamKetThuc, ...params];
+
+    const sinhRows = await databaseService.query<RowDataPacket[]>(sqlSinh, paramsSinh);
+    const ketHonRows = await databaseService.query<RowDataPacket[]>(sqlKetHon, paramsKetHon);
+    const matRows = await databaseService.query<RowDataPacket[]>(sqlMat, paramsMat);
+
+    // Tổng hợp kết quả
+    const result: any[] = [];
+    const years = new Set<number>();
+
+    sinhRows.forEach((row: any) => years.add(row.Nam));
+    ketHonRows.forEach((row: any) => years.add(row.Nam));
+    matRows.forEach((row: any) => years.add(row.Nam));
+
+    Array.from(years).sort().forEach((year: number) => {
+      const sinh = sinhRows.find((r: any) => r.Nam === year)?.SoLuong || 0;
+      const ketHon = ketHonRows.find((r: any) => r.Nam === year)?.SoLuong || 0;
+      const mat = matRows.find((r: any) => r.Nam === year)?.SoLuong || 0;
+
+      // Chỉ thêm năm có ít nhất 1 sự kiện
+      if (sinh > 0 || ketHon > 0 || mat > 0) {
+        result.push({
+          Nam: year,
+          SoSinh: sinh,
+          SoKetHon: ketHon,
+          SoMat: mat
+        });
+      }
+    });
+
+    return result;
   }
+
 
   // ========================================
   // METHODS MỚI - GHI NHẬN THÀNH VIÊN
@@ -701,129 +708,312 @@ class ThanhVienService {
  * Tra cứu thành viên với đầy đủ thông tin gia phả
  * Bao gồm: họ tên, ngày sinh, đời, tên cha, tên mẹ
  */
-  async traCuuThanhVien(query: TraCuuThanhVienQuery): Promise<TraCuuThanhVienResponse> {
-    try {
-      // [1] Validation và chuẩn hóa input
-      const page = Math.max(1, parseInt(String(query.page || 1)) || 1);
-      const limit = Math.max(1, Math.min(100, parseInt(String(query.limit || 10)) || 10));
-      const offset = (page - 1) * limit;
+  async traCuuThanhVien(
+    query: TraCuuThanhVienQuery,
+    userInfo: { MaLoaiTK: string; MaGiaPha: string | null }
+  ): Promise<TraCuuThanhVienResponse> {
+    const conditions: string[] = [];
+    const params: any[] = [];
 
-      // [2] Xây dựng base query
-      let whereClauses: string[] = [];
-      let queryParams: any[] = [];
-
-      // Tìm kiếm
-      if (query.search && query.search.trim()) {
-        whereClauses.push('(tv.HoTen LIKE ? OR tv.MaTV LIKE ?)');
-        const searchPattern = `%${query.search.trim()}%`;
-        queryParams.push(searchPattern, searchPattern);
+    // Phân quyền: Nếu không phải Admin, chỉ tra cứu trong gia phả
+    if (userInfo.MaLoaiTK !== 'LTK01') {
+      if (!userInfo.MaGiaPha) {
+        throw new Error('Bạn chưa thuộc gia phả nào');
       }
-
-      // Lọc đời
-      if (query.doi !== undefined && !isNaN(Number(query.doi))) {
-        whereClauses.push('tv.DOI = ?');
-        queryParams.push(Number(query.doi));
-      }
-
-      // Lọc gia phả
-      if (query.maGiaPha && query.maGiaPha.trim()) {
-        whereClauses.push('tv.MaGiaPha = ?');
-        queryParams.push(query.maGiaPha.trim());
-      }
-
-      // Lọc trạng thái
-      if (query.trangThai && query.trangThai.trim()) {
-        whereClauses.push('tv.TrangThai = ?');
-        queryParams.push(query.trangThai.trim());
-      }
-
-      const whereSQL = whereClauses.length > 0 ? whereClauses.join(' AND ') : '1=1';
-
-      // [3] Xây dựng ORDER BY
-      let orderBySQL = 'tv.DOI ASC, tv.TGTaoMoi ASC';
-
-      if (query.sortBy) {
-        const orderDirection = query.order?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
-
-        if (query.sortBy === 'doi') {
-          orderBySQL = `tv.DOI ${orderDirection}`;
-        } else if (query.sortBy === 'ngaySinh') {
-          orderBySQL = `tv.NgayGioSinh ${orderDirection}`;
-        } else if (query.sortBy === 'hoTen') {
-          orderBySQL = `tv.HoTen ${orderDirection}`;
-        }
-      }
-
-      // [4] Đếm tổng số records
-      const countSQL = `SELECT COUNT(*) as total FROM THANHVIEN tv WHERE ${whereSQL}`;
-
-      const countResultRaw = await databaseService.query<any[]>(countSQL, queryParams);
-      // Handle cả 2 trường hợp: [rows, fields] hoặc rows
-      const countData = Array.isArray(countResultRaw[0]) && 'total' in countResultRaw[0][0]
-        ? countResultRaw[0]
-        : countResultRaw;
-
-      const total = Number(countData[0]?.total || 0);
-      const totalPages = Math.ceil(total / limit);
-
-      // [5] Lấy dữ liệu
-      const dataSQL = `
-        SELECT 
-          tv.MaTV,
-          tv.HoTen,
-          tv.NgayGioSinh,
-          tv.DOI,
-          qhc.MaTVCha,
-          qhc.MaTVMe,
-          cha.HoTen AS TenCha,
-          me.HoTen AS TenMe
-        FROM THANHVIEN tv
-        LEFT JOIN QUANHECON qhc ON tv.MaTV = qhc.MaTV
-        LEFT JOIN THANHVIEN cha ON qhc.MaTVCha = cha.MaTV
-        LEFT JOIN THANHVIEN me ON qhc.MaTVMe = me.MaTV
-        WHERE ${whereSQL}
-        ORDER BY ${orderBySQL}
-        LIMIT ${limit} OFFSET ${offset}
-      `;
-
-      // ⚠️ QUAN TRỌNG: Không dùng ? cho LIMIT/OFFSET, dùng template string
-      const dataResultRaw = await databaseService.query<any[]>(dataSQL, queryParams);
-
-      // Handle kết quả
-      const dataRows = Array.isArray(dataResultRaw[0]) && dataResultRaw[0].length > 0 && 'MaTV' in dataResultRaw[0][0]
-        ? dataResultRaw[0]
-        : dataResultRaw;
-
-      // [6] Format kết quả
-      const data: TraCuuThanhVienResult[] = dataRows.map((row: any, index: number) => ({
-        STT: offset + index + 1,
-        MaTV: row.MaTV,
-        HoTen: row.HoTen,
-        NgayGioSinh: row.NgayGioSinh,
-        DOI: row.DOI,
-        TenCha: row.TenCha || null,
-        TenMe: row.TenMe || null,
-        MaCha: row.MaTVCha || null,
-        MaMe: row.MaTVMe || null
-      }));
-
-      // [7] Trả về
-      return {
-        message: data.length > 0 ? 'Tra cứu thành viên thành công' : 'Không tìm thấy thành viên',
-        data,
-        pagination: {
-          total,
-          page,
-          limit,
-          totalPages
-        }
-      };
-
-    } catch (error: any) {
-      console.error('❌ Lỗi traCuuThanhVien:', error);
-      throw error;
+      conditions.push('tv.MaGiaPha = ?');
+      params.push(userInfo.MaGiaPha);
     }
+
+    // Điều kiện tìm kiếm theo search (họ tên hoặc mã TV)
+    if (query.search) {
+      conditions.push('(tv.HoTen LIKE ? OR tv.MaTV LIKE ?)');
+      params.push(`%${query.search}%`, `%${query.search}%`);
+    }
+
+    // Lọc theo đời
+    if (query.doi !== undefined) {
+      conditions.push('tv.DOI = ?');
+      params.push(query.doi);
+    }
+
+    // Lọc theo gia phả (nếu Admin muốn xem gia phả cụ thể)
+    if (query.maGiaPha) {
+      conditions.push('tv.MaGiaPha = ?');
+      params.push(query.maGiaPha);
+    }
+
+    // Lọc theo trạng thái
+    if (query.trangThai) {
+      conditions.push('tv.TrangThai = ?');
+      params.push(query.trangThai);
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    // Xác định sắp xếp
+    let orderBy = 'tv.DOI, tv.HoTen';
+    if (query.sortBy === 'ngaySinh') {
+      orderBy = 'tv.NgayGioSinh';
+    } else if (query.sortBy === 'hoTen') {
+      orderBy = 'tv.HoTen';
+    }
+
+    const orderDirection = query.order === 'desc' ? 'DESC' : 'ASC';
+
+    // Query lấy dữ liệu với quan hệ cha mẹ
+    const sql = `
+      SELECT 
+        tv.MaTV,
+        tv.HoTen,
+        tv.NgayGioSinh,
+        tv.DOI,
+        cha.HoTen AS TenCha,
+        me.HoTen AS TenMe,
+        qhc.MaTVCha AS MaCha,
+        qhc.MaTVMe AS MaMe
+      FROM THANHVIEN tv
+      LEFT JOIN QUANHECON qhc ON tv.MaTV = qhc.MaTV
+      LEFT JOIN THANHVIEN cha ON qhc.MaTVCha = cha.MaTV
+      LEFT JOIN THANHVIEN me ON qhc.MaTVMe = me.MaTV
+      ${whereClause}
+      ORDER BY ${orderBy} ${orderDirection}
+    `;
+
+    const rows = await databaseService.query<RowDataPacket[]>(sql, params);
+
+    // Phân trang
+    const page = query.page || 1;
+    const limit = query.limit || 10;
+    const total = rows.length;
+    const totalPages = Math.ceil(total / limit);
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+
+    // Map data với STT
+    const data: TraCuuThanhVienResult[] = rows.slice(startIndex, endIndex).map((row, index) => ({
+      STT: startIndex + index + 1,
+      MaTV: row.MaTV,
+      HoTen: row.HoTen,
+      NgayGioSinh: row.NgayGioSinh,
+      DOI: row.DOI,
+      TenCha: row.TenCha || null,
+      TenMe: row.TenMe || null,
+      MaCha: row.MaCha || null,
+      MaMe: row.MaMe || null
+    }));
+
+    return {
+      message: 'Tra cứu thành công',
+      data,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages
+      }
+    };
   }
+
+  async getThanhVienGiaPhaInfo(MaTV: string) {
+    const sql = `
+      SELECT 
+        tv.MaTV,
+        tv.HoTen,
+        tv.MaGiaPha,
+        gp.TenGiaPha,
+        gp.TruongToc,
+        tv_tt.HoTen as TenTruongToc
+      FROM THANHVIEN tv
+      LEFT JOIN CAYGIAPHA gp ON tv.MaGiaPha = gp.MaGiaPha
+      LEFT JOIN THANHVIEN tv_tt ON gp.TruongToc = tv_tt.MaTV
+      WHERE tv.MaTV = ?
+    `;
+
+    interface GiaPhaInfoRow extends RowDataPacket {
+      MaTV: string;
+      HoTen: string;
+      MaGiaPha: string | null;
+      TenGiaPha: string | null;
+      TruongToc: string | null;
+      TenTruongToc: string | null;
+    }
+
+    const rows = await databaseService.query<GiaPhaInfoRow[]>(sql, [MaTV]);
+
+    if (!rows || rows.length === 0) {
+      throw new Error('Không tìm thấy thành viên');
+    }
+
+    return rows[0];
+  }
+
+  /**
+   * Kiểm tra mã gia phả có tồn tại không
+   */
+  async checkGiaPhaExists(MaGiaPha: string): Promise<boolean> {
+    const sql = 'SELECT MaGiaPha FROM CAYGIAPHA WHERE MaGiaPha = ?';
+    const rows = await databaseService.query<RowDataPacket[]>(sql, [MaGiaPha]);
+    return rows && rows.length > 0;
+  }
+
+  /**
+   * Xóa mã gia phả của thành viên (set NULL)
+   */
+  async xoaMaGiaPhaThanhVien(MaTV: string) {
+    // Kiểm tra thành viên tồn tại và lấy thông tin hiện tại
+    const thanhVienInfo = await this.getThanhVienGiaPhaInfo(MaTV);
+
+    if (!thanhVienInfo.MaGiaPha) {
+      throw new Error('Thành viên chưa có mã gia phả để xóa');
+    }
+
+    const MaGiaPhaCu = thanhVienInfo.MaGiaPha;
+
+    // Cập nhật MaGiaPha = NULL
+    const updateSql = 'UPDATE THANHVIEN SET MaGiaPha = NULL WHERE MaTV = ?';
+    const result = await databaseService.query<ResultSetHeader>(updateSql, [MaTV]);
+
+    if (result.affectedRows === 0) {
+      throw new Error('Không thể xóa mã gia phả');
+    }
+
+    return {
+      message: 'Xóa mã gia phả thành công',
+      data: {
+        MaTV: thanhVienInfo.MaTV,
+        HoTen: thanhVienInfo.HoTen,
+        MaGiaPhaCu: MaGiaPhaCu,
+        MaGiaPhaHienTai: null
+      }
+    };
+  }
+
+  async capNhatTruongTocGiaPha(MaGiaPha: string, MaTVTruongTocMoi: string) {
+    // Bước 1: Kiểm tra gia phả có tồn tại không
+    const sqlCheckGiaPha = `
+      SELECT MaGiaPha, TenGiaPha, TruongToc 
+      FROM CAYGIAPHA 
+      WHERE MaGiaPha = ?
+    `;
+
+    interface GiaPhaRow extends RowDataPacket {
+      MaGiaPha: string;
+      TenGiaPha: string;
+      TruongToc: string;
+    }
+
+    const giaPhaRows = await databaseService.query<GiaPhaRow[]>(sqlCheckGiaPha, [MaGiaPha]);
+
+    if (!giaPhaRows || giaPhaRows.length === 0) {
+      throw new Error('Không tìm thấy gia phả');
+    }
+
+    const TruongTocCu = giaPhaRows[0].TruongToc;
+    const TenGiaPha = giaPhaRows[0].TenGiaPha;
+
+    // Bước 2: Kiểm tra trưởng tộc mới có tồn tại không
+    const sqlCheckThanhVien = `
+      SELECT MaTV, HoTen, MaGiaPha 
+      FROM THANHVIEN 
+      WHERE MaTV = ?
+    `;
+
+    interface ThanhVienRow extends RowDataPacket {
+      MaTV: string;
+      HoTen: string;
+      MaGiaPha: string | null;
+    }
+
+    const thanhVienRows = await databaseService.query<ThanhVienRow[]>(
+      sqlCheckThanhVien,
+      [MaTVTruongTocMoi]
+    );
+
+    if (!thanhVienRows || thanhVienRows.length === 0) {
+      throw new Error('Không tìm thấy thành viên');
+    }
+
+    const thanhVienMoi = thanhVienRows[0];
+
+    // Bước 3: Kiểm tra thành viên mới có thuộc gia phả này không
+    if (thanhVienMoi.MaGiaPha !== MaGiaPha) {
+      throw new Error('Thành viên không thuộc gia phả này');
+    }
+
+    // Bước 4: Kiểm tra xem có phải đang là trưởng tộc hiện tại không
+    if (TruongTocCu === MaTVTruongTocMoi) {
+      throw new Error('Thành viên này đã là trưởng tộc hiện tại');
+    }
+
+    // Bước 5: Lấy tên trưởng tộc cũ
+    const sqlGetTenCu = 'SELECT HoTen FROM THANHVIEN WHERE MaTV = ?';
+    const tenCuRows = await databaseService.query<ThanhVienRow[]>(sqlGetTenCu, [TruongTocCu]);
+    const TenTruongTocCu = tenCuRows.length > 0 ? tenCuRows[0].HoTen : 'Không rõ';
+
+    // Bước 6: Cập nhật trưởng tộc mới
+    const updateSql = `
+      UPDATE CAYGIAPHA 
+      SET TruongToc = ? 
+      WHERE MaGiaPha = ?
+    `;
+
+    const result = await databaseService.query<ResultSetHeader>(updateSql, [
+      MaTVTruongTocMoi,
+      MaGiaPha
+    ]);
+
+    if (result.affectedRows === 0) {
+      throw new Error('Không thể cập nhật trưởng tộc');
+    }
+
+    // Bước 7: Trả về kết quả
+    // Trigger TRG_UPDATE_TAIKHOAN_LOAITK_GIAPHA sẽ tự động 
+    // cập nhật quyền tài khoản lên LTK02
+    return {
+      message: 'Cập nhật trưởng tộc thành công',
+      data: {
+        MaGiaPha: MaGiaPha,
+        TenGiaPha: TenGiaPha,
+        TruongTocCu: TruongTocCu,
+        TenTruongTocCu: TenTruongTocCu,
+        TruongTocMoi: MaTVTruongTocMoi,
+        TenTruongTocMoi: thanhVienMoi.HoTen
+      }
+    };
+  }
+
+  /**
+   * Lấy danh sách tất cả các gia phả (để chọn khi cập nhật)
+   */
+  async getAllGiaPha() {
+    const sql = `
+      SELECT 
+        gp.MaGiaPha,
+        gp.TenGiaPha,
+        gp.TruongToc,
+        tv.HoTen as TenTruongToc,
+        gp.TGLap,
+        COUNT(tv_member.MaTV) as SoLuongThanhVien
+      FROM CAYGIAPHA gp
+      LEFT JOIN THANHVIEN tv ON gp.TruongToc = tv.MaTV
+      LEFT JOIN THANHVIEN tv_member ON tv_member.MaGiaPha = gp.MaGiaPha
+      GROUP BY gp.MaGiaPha, gp.TenGiaPha, gp.TruongToc, tv.HoTen, gp.TGLap
+      ORDER BY gp.TGLap DESC
+    `;
+
+    interface GiaPhaRow extends RowDataPacket {
+      MaGiaPha: string;
+      TenGiaPha: string;
+      TruongToc: string;
+      TenTruongToc: string;
+      TGLap: Date;
+      SoLuongThanhVien: number;
+    }
+
+    const rows = await databaseService.query<GiaPhaRow[]>(sql);
+    return rows;
+  }
+
 }
 const thanhvienService = new ThanhVienService();
 export default thanhvienService;

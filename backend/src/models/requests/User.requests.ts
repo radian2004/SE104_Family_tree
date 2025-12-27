@@ -2,10 +2,14 @@ import { JwtPayload } from 'jsonwebtoken';
 import { TokenType } from '~/constants/enums';
 
 export interface RegisterReqBody {
-  name: string;
-  email: string;
-  password: string;
-  confirm_password: string;
+  name: string
+  email: string
+  password: string
+  confirm_password: string
+  giapha: {
+    exist: boolean
+    name: string
+  }
 }
 
 export interface LoginReqBody {
@@ -23,3 +27,8 @@ export interface TokenPayload extends JwtPayload {
   iat: number;
   exp: number;
 }
+
+export interface RefreshTokenReqBody {
+  refresh_token: string;
+}
+

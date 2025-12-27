@@ -82,25 +82,27 @@ class ThanhTichService {
   }
 
   /**
-   * ✅ MỚI: Tra cứu thành tích với tìm kiếm linh hoạt theo TÊN
-   * - HoTen: Tìm theo tên thành viên (LIKE)
-   * - TenLoaiThanhTich: Tìm theo tên loại thành tích (LIKE) - VD: "huân" sẽ tìm tất cả loại có chứa "huân"
-   * - TuNgay, DenNgay: Lọc theo khoảng thời gian
+   * Tra cứu thành tích với phân quyền
+   * - Admin: Tra cứu tất cả
+   * - Owner/User: Chỉ tra cứu trong gia phả
    */
-  async traCuuThanhTich(filters?: {
-    MaTV?: string;           // Filter by member ID
-    HoTen?: string;
-    TenLoaiThanhTich?: string;  // ✅ MỚI: Search theo TÊN loại thành tích
-    TuNgay?: Date;
-    DenNgay?: Date;
-  }) {
+  async traCuuThanhTich(
+    filters?: {
+      HoTen?: string;
+      TenLoaiThanhTich?: string;
+      TuNgay?: Date;
+      DenNgay?: Date;
+    },
+    userInfo?: { MaLoaiTK: string; MaGiaPha: string | null }
+  ) {
     let sql = `
       SELECT 
         ROW_NUMBER() OVER (ORDER BY g.NgayPhatSinh DESC) AS STT,
         g.MaTV,
         tv.HoTen,
         ltt.TenLTT AS ThanhTich,
-        g.NgayPhatSinh
+        g.NgayPhatSinh,
+        tv.MaGiaPha
       FROM GHINHANTHANHTICH g
       INNER JOIN THANHVIEN tv ON g.MaTV = tv.MaTV
       INNER JOIN LOAITHANHTICH ltt ON g.MaLTT = ltt.MaLTT
@@ -108,6 +110,15 @@ class ThanhTichService {
     `;
 
     const params: any[] = [];
+
+    // ✅ PHÂN QUYỀN: Nếu không phải Admin, chỉ tra cứu trong gia phả
+    if (userInfo && userInfo.MaLoaiTK !== 'LTK01') {
+      if (!userInfo.MaGiaPha) {
+        throw new Error('Bạn chưa thuộc gia phả nào');
+      }
+      sql += ' AND tv.MaGiaPha = ?';
+      params.push(userInfo.MaGiaPha);
+    }
 
     // Thêm điều kiện filter
     if (filters) {
@@ -123,14 +134,11 @@ class ThanhTichService {
         params.push(`%${filters.HoTen}%`);
       }
 
-      // ✅ MỚI: Tìm theo TÊN loại thành tích (LIKE search)
-      // VD: "huân" → tìm tất cả loại có chứa "huân"
       if (filters.TenLoaiThanhTich) {
         sql += ' AND ltt.TenLTT LIKE ?';
         params.push(`%${filters.TenLoaiThanhTich}%`);
       }
 
-      // ✅ Lọc theo khoảng thời gian
       if (filters.TuNgay) {
         sql += ' AND DATE(g.NgayPhatSinh) >= ?';
         params.push(filters.TuNgay);
@@ -148,24 +156,41 @@ class ThanhTichService {
   }
 
   /**
-   * ✅ MỚI: Lấy thành tích của thành viên theo HỌ TÊN
-   * Thay thế getThanhTichByMaTV
+   * Lấy thành tích theo tên với phân quyền
+   * - Admin: Lấy tất cả
+   * - Owner/User: Chỉ trong gia phả
    */
-  async getThanhTichByHoTen(HoTen: string) {
-    const sql = `
+  async getThanhTichByHoTen(
+    HoTen: string,
+    userInfo?: { MaLoaiTK: string; MaGiaPha: string | null }
+  ) {
+    let sql = `
       SELECT 
         g.MaTV,
         tv.HoTen,
         ltt.TenLTT AS ThanhTich,
-        g.NgayPhatSinh
+        g.NgayPhatSinh,
+        tv.MaGiaPha
       FROM GHINHANTHANHTICH g
       INNER JOIN THANHVIEN tv ON g.MaTV = tv.MaTV
       INNER JOIN LOAITHANHTICH ltt ON g.MaLTT = ltt.MaLTT
       WHERE tv.HoTen LIKE ?
-      ORDER BY g.NgayPhatSinh DESC
     `;
 
-    const rows = await databaseService.query<ThanhTichByNameRow[]>(sql, [`%${HoTen}%`]);
+    const params: any[] = [`%${HoTen}%`];
+
+    // ✅ PHÂN QUYỀN: Nếu không phải Admin, chỉ lấy trong gia phả
+    if (userInfo && userInfo.MaLoaiTK !== 'LTK01') {
+      if (!userInfo.MaGiaPha) {
+        throw new Error('Bạn chưa thuộc gia phả nào');
+      }
+      sql += ' AND tv.MaGiaPha = ?';
+      params.push(userInfo.MaGiaPha);
+    }
+
+    sql += ' ORDER BY g.NgayPhatSinh DESC';
+
+    const rows = await databaseService.query<ThanhTichByNameRow[]>(sql, params);
     return rows;
   }
 
@@ -215,10 +240,15 @@ class ThanhTichService {
 
 
   /**
-   * ✅ MỚI: Lấy báo cáo thành tích theo khoảng năm
-   * Tổng hợp số lượng thành tích từ bảng BAOCAOTHANHTICH
+   * Báo cáo thành tích với phân quyền
+   * - Admin: Báo cáo tất cả gia phả
+   * - Owner/User: Chỉ báo cáo gia phả của mình
    */
-  async getBaoCaoThanhTich(NamBatDau: number, NamKetThuc: number) {
+  async getBaoCaoThanhTich(
+    NamBatDau: number,
+    NamKetThuc: number,
+    userInfo?: { MaLoaiTK: string; MaGiaPha: string | null }
+  ) {
     // Validate input
     if (NamBatDau > NamKetThuc) {
       throw new Error('Năm bắt đầu không được lớn hơn năm kết thúc');
@@ -229,17 +259,37 @@ class ThanhTichService {
       throw new Error(`Năm kết thúc không được vượt quá năm hiện tại (${currentYear})`);
     }
 
-    // Query tổng hợp từ BAOCAOTHANHTICH
-    const sql = `
+    let sql = `
       SELECT 
-        ROW_NUMBER() OVER (ORDER BY SUM(bctc.SoLuong) DESC) AS STT,
+        ROW_NUMBER() OVER (ORDER BY SUM(g.cnt) DESC) AS STT,
         ltt.TenLTT AS LoaiThanhTich,
-        SUM(bctc.SoLuong) AS SoLuong
-      FROM BAOCAOTHANHTICH bctc
-      INNER JOIN LOAITHANHTICH ltt ON bctc.MaLTT = ltt.MaLTT
-      WHERE bctc.Nam BETWEEN ? AND ?
-      GROUP BY bctc.MaLTT, ltt.TenLTT
-      HAVING SUM(bctc.SoLuong) > 0
+        SUM(g.cnt) AS SoLuong
+      FROM (
+        SELECT 
+          g.MaLTT,
+          COUNT(*) as cnt
+        FROM GHINHANTHANHTICH g
+        INNER JOIN THANHVIEN tv ON g.MaTV = tv.MaTV
+        WHERE YEAR(g.NgayPhatSinh) BETWEEN ? AND ?
+    `;
+
+    const params: any[] = [NamBatDau, NamKetThuc];
+
+    // PHÂN QUYỀN: Nếu không phải Admin, chỉ thống kê gia phả của mình
+    if (userInfo && userInfo.MaLoaiTK !== 'LTK01') {
+      if (!userInfo.MaGiaPha) {
+        throw new Error('Bạn chưa thuộc gia phả nào');
+      }
+      sql += ' AND tv.MaGiaPha = ?';
+      params.push(userInfo.MaGiaPha);
+    }
+
+    sql += `
+        GROUP BY g.MaLTT
+      ) g
+      INNER JOIN LOAITHANHTICH ltt ON g.MaLTT = ltt.MaLTT
+      GROUP BY g.MaLTT, ltt.TenLTT
+      HAVING SUM(g.cnt) > 0
       ORDER BY SoLuong DESC
     `;
 
@@ -249,7 +299,7 @@ class ThanhTichService {
       SoLuong: number;
     }
 
-    const rows = await databaseService.query<BaoCaoRow[]>(sql, [NamBatDau, NamKetThuc]);
+    const rows = await databaseService.query<BaoCaoRow[]>(sql, params);
 
     return {
       NamBatDau,
