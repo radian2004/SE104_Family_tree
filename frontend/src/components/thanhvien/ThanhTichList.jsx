@@ -1,11 +1,11 @@
 /**
  * ============================================
- * THÀNH TÍCH LIST - Premium Design
+ * THÀNH TÍCH LIST - Premium Design với Sửa/Xóa
  * ============================================
  */
 
 import { useState, useEffect } from 'react';
-import { FiAward, FiPlus, FiTrash2, FiCalendar } from 'react-icons/fi';
+import { FiAward, FiPlus, FiTrash2, FiCalendar, FiEdit2, FiX, FiCheck } from 'react-icons/fi';
 import thanhTichService from '../../services/thanhtich';
 import { useLookupsStore } from '../../store/lookupsStore';
 
@@ -15,11 +15,18 @@ export default function ThanhTichList({ MaTV }) {
     const [isLoading, setIsLoading] = useState(false);
     const [isAdding, setIsAdding] = useState(false);
     const [error, setError] = useState(null);
+    const [successMsg, setSuccessMsg] = useState(null);
     const [isFormOpen, setIsFormOpen] = useState(false);
 
     // Form state
     const [selectedLoai, setSelectedLoai] = useState('');
     const [ngayPhatSinh, setNgayPhatSinh] = useState('');
+
+    // Edit modal state
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editingItem, setEditingItem] = useState(null);
+    const [editLoai, setEditLoai] = useState('');
+    const [isUpdating, setIsUpdating] = useState(false);
 
     // Load danh sách thành tích
     const loadThanhTich = async () => {
@@ -42,6 +49,14 @@ export default function ThanhTichList({ MaTV }) {
         }
     }, [MaTV]);
 
+    // Clear messages
+    useEffect(() => {
+        if (successMsg) {
+            const timer = setTimeout(() => setSuccessMsg(null), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [successMsg]);
+
     const handleAdd = async (e) => {
         e.preventDefault();
         if (!selectedLoai) {
@@ -58,10 +73,10 @@ export default function ThanhTichList({ MaTV }) {
                 NgayPhatSinh: ngayPhatSinh || undefined
             });
 
-            // Reset form & reload
             setSelectedLoai('');
             setNgayPhatSinh('');
             setIsFormOpen(false);
+            setSuccessMsg('Đã thêm thành tích thành công');
             loadThanhTich();
         } catch (err) {
             const errorMsg = err.response?.data?.message || err.response?.data?.error || 'Có lỗi xảy ra khi thêm thành tích';
@@ -87,9 +102,47 @@ export default function ThanhTichList({ MaTV }) {
                 NgayPhatSinh: item.NgayPhatSinh
             });
             setError(null);
+            setSuccessMsg('Đã xóa thành tích');
             loadThanhTich();
         } catch (err) {
             setError(err.response?.data?.message || err.response?.data?.error || 'Lỗi khi xóa thành tích');
+        }
+    };
+
+    // Open edit modal
+    const openEditModal = (item) => {
+        const loai = loaithanhtich?.find(l => l.TenLTT === item.ThanhTich);
+        setEditingItem(item);
+        setEditLoai(loai?.MaLTT || '');
+        setShowEditModal(true);
+    };
+
+    // Handle update
+    const handleUpdate = async () => {
+        if (!editingItem || !editLoai) return;
+
+        const currentLoai = loaithanhtich?.find(l => l.TenLTT === editingItem.ThanhTich);
+        if (!currentLoai) {
+            setError('Không tìm thấy loại thành tích hiện tại');
+            return;
+        }
+
+        setIsUpdating(true);
+        try {
+            await thanhTichService.capNhat({
+                MaTV,
+                MaLTT: currentLoai.MaLTT,
+                NgayPhatSinh: editingItem.NgayPhatSinh,
+                MaLTTMoi: editLoai
+            });
+            setSuccessMsg('Đã cập nhật thành tích');
+            setShowEditModal(false);
+            setEditingItem(null);
+            loadThanhTich();
+        } catch (err) {
+            setError(err.response?.data?.message || 'Lỗi khi cập nhật thành tích');
+        } finally {
+            setIsUpdating(false);
         }
     };
 
@@ -121,11 +174,17 @@ export default function ThanhTichList({ MaTV }) {
                 </button>
             </div>
 
+            {/* Success Message */}
+            {successMsg && (
+                <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-lg flex items-center gap-2">
+                    <FiCheck /> {successMsg}
+                </div>
+            )}
+
             {/* Error Alert */}
             {error && (
-                <div className="alert alert-danger mb-4">
-                    <span>⚠️</span>
-                    <p>{error}</p>
+                <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg flex items-center gap-2">
+                    <FiX /> {error}
                 </div>
             )}
 
@@ -214,15 +273,69 @@ export default function ThanhTichList({ MaTV }) {
                                     </div>
                                 </div>
                             </div>
-                            <button
-                                onClick={() => handleDelete(t)}
-                                className="opacity-0 group-hover:opacity-100 text-neutral-400 hover:text-red-500 transition-all p-2 rounded-lg hover:bg-red-50"
-                                title="Xóa thành tích"
-                            >
-                                <FiTrash2 className="w-4 h-4" />
-                            </button>
+                            {/* Action buttons */}
+                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                    onClick={() => openEditModal(t)}
+                                    className="text-blue-500 hover:text-blue-600 p-2 rounded-lg hover:bg-blue-50 transition-colors"
+                                    title="Sửa thành tích"
+                                >
+                                    <FiEdit2 className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={() => handleDelete(t)}
+                                    className="text-red-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 transition-colors"
+                                    title="Xóa thành tích"
+                                >
+                                    <FiTrash2 className="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
                     ))}
+                </div>
+            )}
+
+            {/* ==================== EDIT MODAL ==================== */}
+            {showEditModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
+                        <h3 className="text-lg font-bold text-neutral-800 mb-4">
+                            ✏️ Sửa thành tích
+                        </h3>
+                        <p className="text-neutral-600 mb-4">
+                            Thành tích hiện tại: <strong>{editingItem?.ThanhTich}</strong>
+                        </p>
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium text-neutral-700 mb-2">
+                                Đổi sang loại thành tích
+                            </label>
+                            <select
+                                value={editLoai}
+                                onChange={(e) => setEditLoai(e.target.value)}
+                                className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                            >
+                                <option value="">-- Chọn loại thành tích mới --</option>
+                                {loaithanhtich?.map(l => (
+                                    <option key={l.MaLTT} value={l.MaLTT}>{l.TenLTT}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="flex gap-3 justify-end">
+                            <button
+                                onClick={() => { setShowEditModal(false); setEditingItem(null); }}
+                                className="px-4 py-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                onClick={handleUpdate}
+                                disabled={isUpdating || !editLoai}
+                                className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors disabled:opacity-50"
+                            >
+                                {isUpdating ? 'Đang lưu...' : 'Lưu thay đổi'}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
