@@ -31,8 +31,10 @@ export const registerController = async (req: Request, res: Response) => {
 
 // Controller lấy tất cả thành viên
 export const getAllThanhVienController = async (req: Request, res: Response) => {
+  const userInfo = req.userInfo!;
+
   try {
-    const result = await thanhvienService.getAllThanhVien();
+    const result = await thanhvienService.getAllThanhVien(userInfo);
     return res.status(200).json({
       message: 'Lấy danh sách thành công',
       result: result
@@ -126,44 +128,24 @@ export const deleteThanhVienController = async (req: Request, res: Response) => 
  * }
  */
 export const getBaoCaoTangGiamController = async (req: Request, res: Response) => {
+  const userInfo = req.userInfo!;
+  const { NamBatDau, NamKetThuc } = req.query;
+
   try {
-    const { NamBatDau, NamKetThuc } = req.query;
-
-    // Validate input
-    if (!NamBatDau || !NamKetThuc) {
-      return res.status(400).json({
-        message: 'Thiếu thông tin: NamBatDau và NamKetThuc là bắt buộc'
-      });
-    }
-
-    const namBatDau = parseInt(NamBatDau as string);
-    const namKetThuc = parseInt(NamKetThuc as string);
-
-    // Validate số hợp lệ
-    if (isNaN(namBatDau) || isNaN(namKetThuc)) {
-      return res.status(400).json({
-        message: 'NamBatDau và NamKetThuc phải là số nguyên hợp lệ'
-      });
-    }
-
-    const result = await thanhvienService.getBaoCaoTangGiam(namBatDau, namKetThuc);
+    const result = await thanhvienService.getBaoCaoTangGiam(
+      Number(NamBatDau),
+      Number(NamKetThuc),
+      userInfo
+    );
 
     return res.status(200).json({
-      message: 'Lấy báo cáo tăng giảm thành viên thành công',
-      result
+      message: 'Lấy báo cáo thành công',
+      result: result
     });
   } catch (error: any) {
     console.error('Lỗi getBaoCaoTangGiam:', error);
-    
-    // Xử lý lỗi validation từ service
-    if (error.message.includes('Năm') || error.message.includes('năm')) {
-      return res.status(400).json({
-        message: error.message
-      });
-    }
-
-    return res.status(500).json({
-      message: 'Lỗi lấy báo cáo tăng giảm thành viên',
+    return res.status(400).json({
+      message: 'Lấy báo cáo thất bại',
       error: error.message
     });
   }
@@ -267,28 +249,20 @@ export const getAvailableRelationsController = async (req: Request, res: Respons
  * GET /thanhvien/tra-cuu
  */
 export const traCuuThanhVienController = async (req: Request, res: Response) => {
+  const { search, doi, maGiaPha, trangThai } = req.query as unknown as TraCuuThanhVienQuery;
+  const userInfo = req.userInfo!;
+
   try {
-    // Lấy query parameters
-    const query: TraCuuThanhVienQuery = {
-      search: req.query.search as string,
-      doi: req.query.doi ? parseInt(req.query.doi as string) : undefined,
-      maGiaPha: req.query.maGiaPha as string,
-      trangThai: req.query.trangThai as string,
-      sortBy: req.query.sortBy as 'doi' | 'ngaySinh' | 'hoTen',
-      order: req.query.order as 'asc' | 'desc',
-      page: req.query.page ? parseInt(req.query.page as string) : 1,
-      limit: req.query.limit ? parseInt(req.query.limit as string) : 10
-    };
-    
-    // Gọi service
-    const result = await thanhvienService.traCuuThanhVien(query);
-    
-    return res.status(200).json(result);
-    
+    const result = await thanhvienService.traCuuThanhVien(
+      { search, doi, maGiaPha, trangThai },
+      userInfo
+    );
+
+    return res.status(200).json(result);  // result đã có message
   } catch (error: any) {
     console.error('Lỗi traCuuThanhVien:', error);
-    return res.status(500).json({
-      message: 'Tra cứu thành viên thất bại',
+    return res.status(400).json({
+      message: 'Tra cứu thất bại',
       error: error.message
     });
   }
@@ -327,54 +301,59 @@ export const xoaMaGiaPhaController = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * Controller cập nhật mã gia phả của thành viên
- * PATCH /api/thanhvien/:MaTV/gia-pha
- */
-export const capNhatMaGiaPhaController = async (req: Request, res: Response) => {
-  const { MaTV } = req.params;
-  const { MaGiaPha } = req.body;
-  
+export const capNhatTruongTocController = async (req: Request, res: Response) => {
+  const { MaGiaPha, MaTVTruongTocMoi } = req.body;
+
   try {
     // Validate input
-    if (!MaGiaPha) {
+    if (!MaGiaPha || !MaTVTruongTocMoi) {
       return res.status(400).json({
         message: 'Thiếu thông tin',
-        error: 'Trường MaGiaPha là bắt buộc'
+        error: 'Các trường MaGiaPha và MaTVTruongTocMoi là bắt buộc'
       });
     }
-    
-    const result = await thanhvienService.capNhatMaGiaPhaThanhVien(MaTV, MaGiaPha);
-    
+
+    const result = await thanhvienService.capNhatTruongTocGiaPha(
+      MaGiaPha,
+      MaTVTruongTocMoi
+    );
+
     return res.status(200).json(result);
-    
+
   } catch (error: any) {
-    console.error('Lỗi capNhatMaGiaPha:', error);
-    
+    console.error('Lỗi capNhatTruongToc:', error);
+
     // Xử lý lỗi cụ thể
+    if (error.message === 'Không tìm thấy gia phả') {
+      return res.status(404).json({
+        message: 'Không tìm thấy gia phả',
+        error: error.message
+      });
+    }
+
     if (error.message === 'Không tìm thấy thành viên') {
       return res.status(404).json({
         message: 'Không tìm thấy thành viên',
         error: error.message
       });
     }
-    
-    if (error.message.includes('Không tìm thấy gia phả với mã')) {
-      return res.status(404).json({
-        message: 'Không tìm thấy gia phả',
-        error: error.message
-      });
-    }
-    
-    if (error.message === 'Mã gia phả mới giống với mã gia phả hiện tại') {
+
+    if (error.message === 'Thành viên không thuộc gia phả này') {
       return res.status(400).json({
-        message: 'Mã gia phả không thay đổi',
+        message: 'Thành viên không hợp lệ',
         error: error.message
       });
     }
-    
+
+    if (error.message === 'Thành viên này đã là trưởng tộc hiện tại') {
+      return res.status(400).json({
+        message: 'Thành viên đã là trưởng tộc',
+        error: error.message
+      });
+    }
+
     return res.status(500).json({
-      message: 'Cập nhật mã gia phả thất bại',
+      message: 'Cập nhật trưởng tộc thất bại',
       error: error.message
     });
   }

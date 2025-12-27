@@ -64,15 +64,12 @@ export const ghiNhanThanhTichController = async (req: Request, res: Response) =>
 };
 
 /**
- * ✅ MỚI: Controller tra cứu thành tích với tìm kiếm linh hoạt
+ * Controller tra cứu thành tích (CÓ PHÂN QUYỀN)
  * GET /thanhtich/tracuu
- * Query params: 
- * - HoTen?: Tên thành viên (LIKE search)
- * - TenLoaiThanhTich?: Tên loại thành tích (LIKE search) - VD: "huân" → tìm tất cả loại có "huân"
- * - TuNgay?: Từ ngày (YYYY-MM-DD)
- * - DenNgay?: Đến ngày (YYYY-MM-DD)
  */
 export const traCuuThanhTichController = async (req: Request, res: Response) => {
+  const userInfo = req.userInfo!;  // Đã được gán bởi middleware
+  
   try {
     const { HoTen, TenLoaiThanhTich, TuNgay, DenNgay } = req.query;
 
@@ -82,7 +79,8 @@ export const traCuuThanhTichController = async (req: Request, res: Response) => 
     if (TuNgay) filters.TuNgay = new Date(TuNgay as string);
     if (DenNgay) filters.DenNgay = new Date(DenNgay as string);
 
-    const result = await thanhTichService.traCuuThanhTich(filters);
+    // Truyền userInfo vào service để filter theo gia phả
+    const result = await thanhTichService.traCuuThanhTich(filters, userInfo);
 
     return res.status(HTTP_STATUS.OK).json({
       message: 'Tra cứu thành tích thành công',
@@ -99,12 +97,12 @@ export const traCuuThanhTichController = async (req: Request, res: Response) => 
 };
 
 /**
- * ✅ MỚI: Controller lấy thành tích theo HỌ TÊN
- * GET /thanhtich/thanhvien?HoTen=Nguyễn Văn
- * Query param: HoTen (LIKE search)
+ * Controller lấy thành tích theo tên (CÓ PHÂN QUYỀN)
+ * GET /thanhtich/thanhvien
  */
 export const getThanhTichByHoTenController = async (req: Request, res: Response) => {
   const { HoTen } = req.query;
+  const userInfo = req.userInfo!;
 
   try {
     if (!HoTen) {
@@ -113,7 +111,7 @@ export const getThanhTichByHoTenController = async (req: Request, res: Response)
       });
     }
 
-    const result = await thanhTichService.getThanhTichByHoTen(HoTen as string);
+    const result = await thanhTichService.getThanhTichByHoTen(HoTen as string, userInfo);
 
     return res.status(HTTP_STATUS.OK).json({
       message: 'Lấy thành tích thành công',
@@ -230,28 +228,15 @@ export const capNhatThanhTichController = async (req: Request, res: Response) =>
 };
 
 /**
- * ✅ MỚI: Controller lấy báo cáo thành tích theo khoảng năm
+ * Controller báo cáo thành tích (CÓ PHÂN QUYỀN)
  * GET /thanhtich/baocao
- * Query params: 
- * - NamBatDau: Năm bắt đầu (required)
- * - NamKetThuc: Năm kết thúc (required)
- * 
- * Response: {
- *   message: string,
- *   result: {
- *     NamBatDau: number,
- *     NamKetThuc: number,
- *     TongLoaiThanhTich: number,
- *     TongSoLuong: number,
- *     DanhSach: [{ STT, LoaiThanhTich, SoLuong }]
- *   }
- * }
  */
 export const getBaoCaoThanhTichController = async (req: Request, res: Response) => {
+  const userInfo = req.userInfo!;
+  
   try {
     const { NamBatDau, NamKetThuc } = req.query;
 
-    // Validate input
     if (!NamBatDau || !NamKetThuc) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         message: 'Thiếu thông tin: NamBatDau và NamKetThuc là bắt buộc'
@@ -261,14 +246,14 @@ export const getBaoCaoThanhTichController = async (req: Request, res: Response) 
     const namBatDau = parseInt(NamBatDau as string);
     const namKetThuc = parseInt(NamKetThuc as string);
 
-    // Validate số hợp lệ
     if (isNaN(namBatDau) || isNaN(namKetThuc)) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         message: 'NamBatDau và NamKetThuc phải là số nguyên hợp lệ'
       });
     }
 
-    const result = await thanhTichService.getBaoCaoThanhTich(namBatDau, namKetThuc);
+    // Truyền userInfo vào service để filter theo gia phả
+    const result = await thanhTichService.getBaoCaoThanhTich(namBatDau, namKetThuc, userInfo);
 
     return res.status(HTTP_STATUS.OK).json({
       message: 'Lấy báo cáo thành tích thành công',
@@ -277,7 +262,6 @@ export const getBaoCaoThanhTichController = async (req: Request, res: Response) 
   } catch (error: any) {
     console.error('Lỗi getBaoCaoThanhTich:', error);
     
-    // Xử lý lỗi validation từ service
     if (error.message.includes('Năm') || error.message.includes('năm')) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         message: error.message

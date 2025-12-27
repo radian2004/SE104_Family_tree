@@ -3,7 +3,8 @@ import {
   registerController,
   loginController,
   logoutController,
-  refreshTokenController
+  refreshTokenController,
+  getMeController
 } from '~/controllers/users.controllers';
 import {
   registerValidator,
@@ -51,6 +52,14 @@ usersRouter.post('/logout', accessTokenValidator, refreshTokenValidator, wrapAsy
  * Body: { refresh_token: string }
  */
 usersRouter.post('/refresh-token', refreshTokenValidator, wrapAsync(refreshTokenController));
+
+/**
+ * Description: Lấy thông tin cá nhân của tài khoản đang đăng nhập
+ * Path: /users/get-me
+ * Method: GET
+ * Headers: { Authorization: Bearer <access_token> }
+ */
+usersRouter.get('/get-me', accessTokenValidator, wrapAsync(getMeController));
 
 usersRouter.use('/thanhvien', accessTokenValidator, thanhvienRouter);
 usersRouter.use('/thanhtich', accessTokenValidator, thanhTichRouter);

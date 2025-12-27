@@ -1,5 +1,4 @@
 import express from 'express';
-import cookieParser from 'cookie-parser';  // ✅ Import
 import cors from 'cors';
 import databaseService from '~/services/database.services';
 import usersRouter from '~/routes/users.routes';
@@ -19,7 +18,6 @@ app.use(cors({
 
 // Middleware parse JSON
 app.use(express.json());
-app.use(cookieParser());  // ✅ Thêm middleware này
 
 // CORS - QUAN TRỌNG: Phải cho phép credentials
 app.use((req, res, next) => {

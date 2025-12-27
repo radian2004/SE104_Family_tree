@@ -56,14 +56,14 @@ CREATE TABLE DIADIEMMAITANG(
 CREATE TABLE THANHVIEN (
     MaTV VARCHAR(5) PRIMARY KEY,
     HoTen VARCHAR(50),
-    NgayGioSinh DATETIME,
+    NgayGioSinh DATE DEFAULT (CURDATE()),
     DiaChi VARCHAR(50),
     TrangThai VARCHAR(20) DEFAULT 'Còn Sống',
     TGTaoMoi TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
     DOI	INT DEFAULT 0,
     MaQueQuan VARCHAR(5),
     MaNgheNghiep VARCHAR(5),
-    GioiTinh VARCHAR(3), -- Nam/Nữ
+    GioiTinh VARCHAR(3) DEFAULT 'Nam', -- Nam/Nữ
     MaNguyenNhanMat VARCHAR(5),
     NgayGioMat DATETIME,
     MaDiaDiem VARCHAR(5),
@@ -103,8 +103,8 @@ CREATE TABLE GHINHANTHANHTICH(
 CREATE TABLE HONNHAN(
 	MaTV VARCHAR(5),
 	MaTVVC VARCHAR(5),
-	NgayBatDau DATE, -- Ngày đăng ký kết hôn
-	NgayKetThuc DATE,
+	NgayBatDau TIMESTAMP DEFAULT CURRENT_TIMESTAMP(), -- Ngày đăng ký kết hôn
+	NgayKetThuc TIMESTAMP,
 	PRIMARY KEY(MaTV, MaTVVC),
 	FOREIGN KEY(MaTV) REFERENCES THANHVIEN(MaTV),
 	FOREIGN KEY(MaTVVC) REFERENCES THANHVIEN(MaTV)
@@ -124,8 +124,8 @@ CREATE TABLE DANHMUC(
 	MaDM VARCHAR(5) PRIMARY KEY,
 	TenDM VARCHAR(50),
 	NguoiDamNhan VARCHAR(5),
-	TongThu DECIMAL(15,2),
-	TongChi DECIMAL(15,2),
+	TongThu DECIMAL(15,2) DEFAULT 0,
+	TongChi DECIMAL(15,2) DEFAULT 0,
     FOREIGN KEY(NguoiDamNhan) REFERENCES THANHVIEN(MaTV)
 );
 
@@ -133,16 +133,17 @@ CREATE TABLE PHIEUTHUQUY(
 	MaPhieuThu VARCHAR(5) PRIMARY KEY,
 	MaTV VARCHAR(5),
 	NgayThu TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
-	TongThu DECIMAL(15,2),
+	TongThu DECIMAL(15,2) DEFAULT 0,
 	FOREIGN KEY(MaTV) REFERENCES THANHVIEN(MaTV)
 );
 
 CREATE TABLE PHIEUCHIQUY(
 	MaPhieuChi VARCHAR(5) PRIMARY KEY,
-	MaTV VARCHAR(5),
+	MaTV VARCHAR(5), 
 	NgayChi TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
     MaDMC VARCHAR(5),
 	SoTienChi DECIMAL(15,2),
+    LyDoChi VARCHAR(255),
 	FOREIGN KEY(MaTV) REFERENCES THANHVIEN(MaTV),
     FOREIGN KEY(MaDMC) REFERENCES DANHMUC(MaDM)
 );
@@ -150,7 +151,10 @@ CREATE TABLE PHIEUCHIQUY(
 CREATE TABLE CT_PHIEUTHU(
 	MaPhieuThu VARCHAR(5),
 	MaDMT VARCHAR(5),
-	SoTienThu DECIMAL(15,2),
+    SoTienThu DECIMAL(15,2),
+    SoThuTu INT DEFAULT 1,
+    TinhHopLe BOOLEAN DEFAULT FALSE,
+	NgayXacNhan TIMESTAMP NULL,
 	NguoiXacNhan VARCHAR(5),
 	PRIMARY KEY(MaPhieuThu, MaDMT),
     FOREIGN KEY(NguoiXacNhan) REFERENCES THANHVIEN(MaTV),
@@ -165,7 +169,6 @@ CREATE TABLE BAOCAOTHANHTICH (
     PRIMARY KEY (Nam, MaLTT),
     FOREIGN KEY (MaLTT) REFERENCES LOAITHANHTICH(MaLTT)
 );
-
 
 CREATE TABLE QUYEN(
 	MaQuyen VARCHAR(5) PRIMARY KEY,
@@ -221,7 +224,6 @@ BEGIN
 END$$
 
 -- 2. Generate ID cho CAYGIAPHA
-DELIMITER $$
 CREATE TRIGGER TRG_GEN_ID_CAYGIAPHA
 BEFORE INSERT ON CAYGIAPHA
 FOR EACH ROW
@@ -238,7 +240,6 @@ BEGIN
 END$$
 
 -- 3. Generate ID cho PHIEUCHIQUY (Sửa: ID -> MaPhieuChi)
-DELIMITER $$
 CREATE TRIGGER TRG_GEN_ID_CHIQUY
 BEFORE INSERT ON PHIEUCHIQUY
 FOR EACH ROW
@@ -253,7 +254,6 @@ BEGIN
 END$$
 
 -- 4. Generate ID cho PHIEUTHUQUY (Sửa: ID -> MaPhieuThu)
-DELIMITER $$
 CREATE TRIGGER TRG_GEN_ID_THUQUY
 BEFORE INSERT ON PHIEUTHUQUY
 FOR EACH ROW
@@ -268,7 +268,6 @@ BEGIN
 END$$
 
 -- 5. Đời con bằng đời cha/mẹ + 1
-DELIMITER $$
 CREATE TRIGGER TRG_INSERT_DOI_THANHVIEN_QUANHECON
 AFTER INSERT ON QUANHECON
 FOR EACH ROW
@@ -289,7 +288,6 @@ BEGIN
 END$$
 	
 -- 6. Đời vợ/chồng = đời chồng/vợ
-DELIMITER $$
 CREATE TRIGGER TRG_INSERT_DOI_THANHVIEN_HONNHAN
 AFTER INSERT ON HONNHAN
 FOR EACH ROW
@@ -310,7 +308,6 @@ BEGIN
 END$$
 
 -- 7. Ngày kết hôn phải sau ngày sinh
-DELIMITER $$
 CREATE TRIGGER TRG_CHECK_NGAY_KET_HON_HONNHAN
 BEFORE INSERT ON HONNHAN
 FOR EACH ROW
@@ -336,7 +333,6 @@ END$$
 
 -- TV mới có quan hệ hôn nhân hoặc con cái với thành viên cũ sẽ thuộc cùng cây gia phả
 -- 8. Bảng con cái - tự động gán gia phả
-DELIMITER $$
 CREATE TRIGGER TRG_INSERT_MaGP_THANHVIEN_QUANHECON
 AFTER INSERT ON QUANHECON
 FOR EACH ROW
@@ -363,7 +359,6 @@ BEGIN
 END$$
 
 -- 9. TV trong MaCha có giới tính Nam, trong MaMe có giới tính Nữ
-DELIMITER $$
 CREATE TRIGGER TRG_CHECK_CHA_ME_QUANHECON
 BEFORE INSERT ON QUANHECON
 FOR EACH ROW
@@ -395,7 +390,6 @@ BEGIN
 END$$
 
 -- 10. Bảng hôn nhân - tự động gán gia phả
-DELIMITER $$
 CREATE TRIGGER TRG_INSERT_MaGP_THANHVIEN_HONNHAN
 AFTER INSERT ON HONNHAN
 FOR EACH ROW
@@ -415,8 +409,7 @@ BEGIN
     END IF;
 END$$
 
--- 11. quan hệ con: ngày sinh con phải hợp lệ với cha/mẹ
-DELIMITER $$
+-- 11. Quan hệ con: ngày sinh con phải hợp lệ với cha/mẹ
 CREATE TRIGGER TRG_CHECK_NGAY_SINH_CON_QUANHECON
 BEFORE INSERT ON QUANHECON
 FOR EACH ROW
@@ -454,7 +447,6 @@ BEGIN
 END$$
 
 -- 12. Ngày đạt thành tích phải sau ngày sinh thành viên
-DELIMITER $$
 CREATE TRIGGER TRG_CHECK_NGAY_THANHTICH
 BEFORE INSERT ON GHINHANTHANHTICH
 FOR EACH ROW
@@ -474,7 +466,6 @@ BEGIN
 END$$
 
 -- 13. Khi cập nhật MaNguyenNhanMat --> trạng thái tv chuyển sang 'Mất'
-DELIMITER $$
 CREATE TRIGGER TRG_UPDATE_TRANGTHAI_THANHVIEN_MaNguyenNhanMat
 BEFORE UPDATE ON THANHVIEN
 FOR EACH ROW
@@ -485,7 +476,6 @@ BEGIN
 END$$
 
 -- 14. Trong bảng QUANHECON, nếu cha có quan hệ hôn nhân thì vợ cha là mẹ mã thành viên
-DELIMITER $$
 CREATE TRIGGER TRG_INSERT_MaTVMe_QUANHECON_HONNHAN
 BEFORE INSERT ON QUANHECON
 FOR EACH ROW
@@ -504,7 +494,6 @@ BEGIN
 END$$
 
 -- 15. Sau khi insert GHINHANTHANHTICH --> CẬP NHẬT BẢNG BAOCAOTHANHTICH
-DELIMITER $$
 CREATE TRIGGER TRG_UPDATE_BAOCAOTHANHTICH_AFTER_INSERT
 AFTER INSERT ON GHINHANTHANHTICH
 FOR EACH ROW
@@ -529,6 +518,126 @@ BEGIN
         INSERT INTO BAOCAOTHANHTICH (Nam, MaLTT, SoLuong)
         VALUES (current_year, NEW.MaLTT, 1);
     END IF;
+END$$
+
+-- 16. Trong bảng GIAPHA, khi trưởng tộc thay đổi hoặc được tạo, nếu thành viên đó
+-- có tài khoản, thì cập nhật lại tài khoản với quyền LTK02 (TruongToc)
+CREATE TRIGGER TRG_UPDATE_TAIKHOAN_LOAITK_GIAPHA
+AFTER UPDATE ON CAYGIAPHA
+FOR EACH ROW
+BEGIN
+    DECLARE account_count INT;  -- Dùng COUNT thay vì lấy email
+
+    -- Kiểm tra xem thành viên trưởng tộc có tài khoản không
+    SELECT COUNT(*) INTO account_count
+    FROM TAIKHOAN
+    WHERE MaTV = NEW.TruongToc;
+
+    -- Nếu có tài khoản, cập nhật loại tài khoản thành 'LTK02'
+    IF account_count > 0 THEN
+        UPDATE TAIKHOAN
+        SET MaLoaiTK = 'LTK02'
+        WHERE MaTV = NEW.TruongToc;
+    END IF;
+END$$
+
+-- 17. Trigger tự động gán NguoiXacNhan
+CREATE TRIGGER TRG_INSERT_NGUOIXACNHAN_CT_PHIEUTHU
+BEFORE INSERT ON CT_PHIEUTHU
+FOR EACH ROW
+BEGIN
+    DECLARE nguoi_dam_nhan VARCHAR(5);
+    DECLARE max_stt INT;
+    
+    -- Lấy người đảm nhận danh mục từ bảng DANHMUC
+    SELECT NguoiDamNhan INTO nguoi_dam_nhan
+    FROM DANHMUC
+    WHERE MaDM = NEW.MaDMT;
+    
+    -- Gán NguoiXacNhan = NguoiDamNhan nếu không được chỉ định
+    IF NEW.NguoiXacNhan IS NULL AND nguoi_dam_nhan IS NOT NULL THEN
+        SET NEW.NguoiXacNhan = nguoi_dam_nhan;
+    END IF;
+    
+    -- Tự động tính số thứ tự trong phiếu thu
+    SELECT COALESCE(MAX(SoThuTu), 0) + 1 INTO max_stt
+    FROM CT_PHIEUTHU
+    WHERE MaPhieuThu = NEW.MaPhieuThu;
+    
+    SET NEW.SoThuTu = max_stt;
+    
+    -- Đảm bảo TinhHopLe mặc định là FALSE
+    IF NEW.TinhHopLe IS NULL THEN
+        SET NEW.TinhHopLe = FALSE;
+    END IF;
+END$$
+
+-- 18. Trigger cập nhật TongThu khi xác nhận hợp lệ
+CREATE TRIGGER TRG_UPDATE_TONGTHU_AFTER_XACNHAN
+AFTER UPDATE ON CT_PHIEUTHU
+FOR EACH ROW
+BEGIN
+    -- Chỉ xử lý khi TinhHopLe chuyển từ FALSE sang TRUE
+    IF OLD.TinhHopLe = FALSE AND NEW.TinhHopLe = TRUE THEN
+        
+        -- Cập nhật TongThu trong bảng DANHMUC
+        UPDATE DANHMUC
+        SET TongThu = COALESCE(TongThu, 0) + NEW.SoTienThu
+        WHERE MaDM = NEW.MaDMT;
+        
+        -- Cập nhật TongThu trong bảng PHIEUTHUQUY
+        UPDATE PHIEUTHUQUY
+        SET TongThu = COALESCE(TongThu, 0) + NEW.SoTienThu
+        WHERE MaPhieuThu = NEW.MaPhieuThu;
+        
+    -- Xử lý trường hợp hủy xác nhận (TRUE sang FALSE) - tùy chọn
+    ELSEIF OLD.TinhHopLe = TRUE AND NEW.TinhHopLe = FALSE THEN
+        
+        -- Trừ TongThu trong bảng DANHMUC
+        UPDATE DANHMUC
+        SET TongThu = COALESCE(TongThu, 0) - OLD.SoTienThu
+        WHERE MaDM = OLD.MaDMT;
+        
+        -- Trừ TongThu trong bảng PHIEUTHUQUY
+        UPDATE PHIEUTHUQUY
+        SET TongThu = COALESCE(TongThu, 0) - OLD.SoTienThu
+        WHERE MaPhieuThu = OLD.MaPhieuThu;
+        
+    END IF;
+END$$
+
+-- 19. Tạo trigger cập nhật NgayXacNhan
+CREATE TRIGGER TRG_UPDATE_NGAYXACNHAN
+BEFORE UPDATE ON CT_PHIEUTHU
+FOR EACH ROW
+BEGIN
+    -- Cập nhật NgayXacNhan khi TinhHopLe chuyển sang TRUE
+    IF OLD.TinhHopLe = FALSE AND NEW.TinhHopLe = TRUE THEN
+        SET NEW.NgayXacNhan = CURRENT_TIMESTAMP();
+    -- Xóa NgayXacNhan khi hủy xác nhận
+    ELSEIF OLD.TinhHopLe = TRUE AND NEW.TinhHopLe = FALSE THEN
+        SET NEW.NgayXacNhan = NULL;
+    END IF;
+END$$
+
+-- 20. Trigger cập nhật TongChi khi INSERT
+CREATE TRIGGER TRG_UPDATE_TONGCHI_AFTER_INSERT
+AFTER INSERT ON PHIEUCHIQUY
+FOR EACH ROW
+BEGIN
+    UPDATE DANHMUC
+    SET TongChi = COALESCE(TongChi, 0) + NEW.SoTienChi
+    WHERE MaDM = NEW.MaDMC;
+END$$
+
+-- 21. Trigger cập nhật TongChi khi xóa phiếu chi
+CREATE TRIGGER TRG_UPDATE_TONGCHI_AFTER_DELETE
+AFTER DELETE ON PHIEUCHIQUY
+FOR EACH ROW
+BEGIN
+    UPDATE DANHMUC
+    SET TongChi = COALESCE(TongChi, 0) - OLD.SoTienChi
+    WHERE MaDM = OLD.MaDMC;
 END$$
 DELIMITER ;
 
@@ -584,17 +693,24 @@ INSERT INTO DIADIEMMAITANG (MaDiaDiem, TenDiaDiem) VALUES
 ('DD04', 'Nghĩa trang Đà Nẵng'),
 ('DD05', 'Hỏa táng Phúc An Viên');
 
+-- Insert loại tài khoản
+INSERT INTO LOAITAIKHOAN (MaLoaiTK, TenLoaiTK) VALUES
+('LTK01', 'Admin'),
+('LTK02', 'Trưởng tộc'),
+('LTK03', 'User')
+ON DUPLICATE KEY UPDATE TenLoaiTK = VALUES(TenLoaiTK);
+
 -- Thêm để test
 -- Thành viên
 INSERT INTO THANHVIEN (HoTen, NgayGioSinh, DiaChi, MaQueQuan, MaNgheNghiep, GioiTinh) VALUES
-('Nguyễn Văn Tổ',      '1920-05-15 08:00:00', 'Nghệ An', 'QQ02', 'NN04', 'Nam'), -- TV01 - Thủy tổ (Đời 1)
-('Nguyễn Văn Long',    '1945-03-20 10:30:00', 'Hà Nội', 'QQ01', 'NN06', 'Nam'), -- TV02 - Con của Tổ (Đời 2)
-('Lê Thị Lan',         '1948-11-25 14:00:00', 'Đà Nẵng', 'QQ03', 'NN03', 'Nữ'),  -- TV03 - Vợ Long (Đời 2)
-('Nguyễn Văn Hùng',    '1972-08-10 09:15:00', 'Hà Nội', 'QQ01', 'NN01', 'Nam'), -- TV04 - Con của Long & Lan (Đời 3)
-('Phạm Thị Hồng',      '1975-09-12 11:20:00', 'Hà Nội', 'QQ01', 'NN02', 'Nữ'),  -- TV05 - Vợ Hùng (Đời 3)
-('Nguyễn Văn Nam',     '1998-04-05 07:45:00', 'TP.HCM', 'QQ04', 'NN01', 'Nam'), -- TV06 - Con của Hùng & Hồng (Đời 4)
-('Nguyễn Thị Ngọc Anh','2002-01-18 16:30:00', 'Hà Nội', 'QQ01', 'NN02', 'Nữ'),  -- TV07 - Con của Hùng & Hồng (Đời 4)
-('Nguyễn Văn Minh',    '2024-06-10 12:00:00', 'Hà Nội', 'QQ01', 'NN05', 'Nam'); -- TV08 - Con của Nam (Đời 5)
+('Nguyễn Văn Tổ',      '1920-05-15', 'Nghệ An', 'QQ02', 'NN04', 'Nam'), -- TV01 - Thủy tổ (Đời 1)
+('Nguyễn Văn Long',    '1945-03-20', 'Hà Nội', 'QQ01', 'NN06', 'Nam'), -- TV02 - Con của Tổ (Đời 2)
+('Lê Thị Lan',         '1948-11-25', 'Đà Nẵng', 'QQ03', 'NN03', 'Nữ'),  -- TV03 - Vợ Long (Đời 2)
+('Nguyễn Văn Hùng',    '1972-08-10', 'Hà Nội', 'QQ01', 'NN01', 'Nam'), -- TV04 - Con của Long & Lan (Đời 3)
+('Phạm Thị Hồng',      '1975-09-12', 'Hà Nội', 'QQ01', 'NN02', 'Nữ'),  -- TV05 - Vợ Hùng (Đời 3)
+('Nguyễn Văn Nam',     '1998-04-05', 'TP.HCM', 'QQ04', 'NN01', 'Nam'), -- TV06 - Con của Hùng & Hồng (Đời 4)
+('Nguyễn Thị Ngọc Anh','2002-01-18', 'Hà Nội', 'QQ01', 'NN02', 'Nữ'),  -- TV07 - Con của Hùng & Hồng (Đời 4)
+('Nguyễn Văn Minh',    '2024-06-10', 'Hà Nội', 'QQ01', 'NN05', 'Nam'); -- TV08 - Con của Nam (Đời 5)
 
 INSERT INTO CAYGIAPHA (TenGiaPha, NguoiLap, TruongToc) VALUES
 ('Nguyễn Văn - Hà Nội', 'TV02', 'TV02'),   -- Ông Long vừa lập vừa làm trưởng tộc
@@ -631,12 +747,18 @@ INSERT INTO GHINHANTHANHTICH (MaLTT, MaTV, NgayPhatSinh) VALUES -- GHINHAN THANH
 -- Cập nhật thông tin mất cho một số thành viên
 UPDATE THANHVIEN SET MaNguyenNhanMat = 'NNM01', NgayGioMat = '2020-01-15 10:30:00', MaDiaDiem = 'DD02' WHERE MaTV = 'TV01'; -- TV01 mất
 
--- Insert loại tài khoản
-INSERT INTO LOAITAIKHOAN (MaLoaiTK, TenLoaiTK) VALUES
-('LTK01', 'Admin'),
-('LTK02', 'TruongToc'),
-('LTK03', 'User')
-ON DUPLICATE KEY UPDATE TenLoaiTK = VALUES(TenLoaiTK);
+INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, MaLoaiTK) VALUES 
+('admin@example.com', SHA2(CONCAT('Admin@123', 'secret'), 256), 'LTK01');
+
+INSERT INTO DANHMUC (MaDM, TenDM, NguoiDamNhan, TongThu, TongChi) VALUES
+('DM01', 'Quỹ khuyến học', 'TV02', 0, 0),
+('DM02', 'Quỹ từ thiện', 'TV04', 0, 0),
+('DM03', 'Quỹ xây dựng nhà thờ họ', 'TV06', 0, 0),
+('DM04', 'Quỹ hiếu hỷ', 'TV02', 0, 0),
+('DM05', 'Quỹ hỗ trợ sinh viên', 'TV04', 0, 0)
+ON DUPLICATE KEY UPDATE 
+    TenDM = VALUES(TenDM),
+    NguoiDamNhan = VALUES(NguoiDamNhan);
 
 SELECT * FROM TAIKHOAN;
 SELECT * FROM REFRESH_TOKENS;
@@ -649,7 +771,10 @@ SELECT * FROM QUANHECON; -- Kiểm tra dữ liệu quan hệ con cái
 SELECT * FROM LOAITAIKHOAN; -- Kiểm tra dữ liệu loại tài khoản
 SELECT * FROM NGHENGHIEP; -- Kiểm tra dữ liệu nghề nghiệp
 SELECT * FROM QUEQUAN; -- Kiểm tra dữ liệu quê quán
-
+SELECT * FROM PHIEUCHIQUY; -- Kiểm tra dữ liệu phiếu chi quỹ
+SELECT * FROM PHIEUTHUQUY; -- Kiểm tra dữ liệu phiếu thu
+SELECT * FROM CT_PHIEUTHU; -- Kiểm tra dữ liệu chi tiết phiếu thu
+SELECT * FROM DANHMUC; -- Kiểm tra dữ liệu danh mục
 -- Insert tài khoản (Đã có LoạiTK ở trên)
 INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, MaLoaiTK) VALUES 
 ('test@example.com', SHA2(CONCAT('Test@123', 'secret'), 256), 'LTK01');

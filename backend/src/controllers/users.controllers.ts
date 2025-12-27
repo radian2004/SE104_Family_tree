@@ -15,29 +15,12 @@ dotenv.config();
  */
 export const registerController = async (req: Request<ParamsDictionary, any, RegisterReqBody>, res: Response) => {
   const result = await usersService.register(req.body)
-  
-  // Set cookies cho tokens
-  res.cookie('access_token', result.access_token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 15 * 60 * 1000 // 15 phút
-  })
-  
-  res.cookie('refresh_token', result.refresh_token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 ngày
-  })
-  
+
   return res.status(HTTP_STATUS.CREATED).json({
     message: USERS_MESSAGES.REGISTER_SUCCESS,
     result: {
-      access_token: result.access_token,
-      refresh_token: result.refresh_token,
-      MaGiaPha: result.MaGiaPha,
-      giapha_message: result.giapha_message
+      giapha_message: result.giapha_message,
+      MaGiaPha: result.MaGiaPha
     }
   })
 }
@@ -98,6 +81,19 @@ export const refreshTokenController = async (
 
   return res.status(HTTP_STATUS.OK).json({
     message: USERS_MESSAGES.REFRESH_TOKEN_SUCCESS,
+    result
+  });
+};
+
+export const getMeController = async (req: Request, res: Response) => {
+  // Lấy user_id từ decoded_authorization (đã được validate bởi middleware)
+  const { user_id } = req.decoded_authorization as TokenPayload;
+  
+  // Gọi service để lấy thông tin
+  const result = await usersService.getMe(user_id);
+
+  return res.status(HTTP_STATUS.OK).json({
+    message: USERS_MESSAGES.GET_ME_SUCCESS,
     result
   });
 };
