@@ -8,6 +8,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useEffect } from 'react';
 import { useAuthStore } from './store/authStore';
 import { ProtectedRoute, PublicRoute } from './components/common/ProtectedRoute';
+import { AdminRoute } from './components/common/AdminRoute';
 
 // Pages
 import LoginPage from './pages/LoginPage';
@@ -23,6 +24,9 @@ import GiaPhaDetailPage from './pages/GiaPhaDetailPage';
 import BaoCaoPage from './pages/BaoCaoPage';
 import QuanHeHonNhanPage from './pages/QuanHeHonNhanPage';
 import QuanHeConCaiPage from './pages/QuanHeConCaiPage';
+
+// Admin Pages
+import QuanLyTaiKhoanPage from './pages/admin/QuanLyTaiKhoanPage';
 
 export default function App() {
   const checkAuth = useAuthStore((state) => state.checkAuth);
@@ -126,6 +130,16 @@ export default function App() {
             <ProtectedRoute>
               <QuanHeConCaiPage />
             </ProtectedRoute>
+          }
+        />
+
+        {/* ==================== ADMIN ROUTES ==================== */}
+        <Route
+          path="/admin/taikhoan"
+          element={
+            <AdminRoute>
+              <QuanLyTaiKhoanPage />
+            </AdminRoute>
           }
         />
 

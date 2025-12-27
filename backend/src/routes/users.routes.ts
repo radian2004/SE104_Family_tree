@@ -54,6 +54,14 @@ usersRouter.post('/logout', accessTokenValidator, refreshTokenValidator, wrapAsy
  */
 usersRouter.post('/refresh-token', wrapAsync(refreshTokenController));
 
+/**
+ * Description: Lấy thông tin người dùng hiện tại
+ * Path: /users/me
+ * Method: GET
+ * Headers: { Authorization: Bearer <access_token> }
+ */
+usersRouter.get('/me', accessTokenValidator, wrapAsync(getMeController));
+
 // 🔍 DEBUG: Log khi route được đăng ký
 console.log('✅ Đang đăng ký nested routes...');
 console.log('  - /thanhvien');

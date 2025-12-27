@@ -27,13 +27,13 @@ class AuthService {
   /**
    * Đăng nhập
    * POST /users/login
-   * Backend trả về: { message, user } + set cookies
+   * Backend trả về: { message, result: { user } } + set cookies
    */
   async login(payload) {
     try {
       const response = await apiClient.post('/users/login', payload);
-      // Backend trả về { message, user } - không có .result
-      return response.data.user;
+      // Backend trả về { message, result: { user } }
+      return response.data.result?.user || response.data.user || response.data.result;
     } catch (error) {
       throw error;
     }

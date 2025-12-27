@@ -6,110 +6,150 @@
  */
 
 import { create } from 'zustand';
-import { saveTokens, clearTokens, isAuthenticated } from '../utils/helpers';
+import { persist } from 'zustand/middleware';
+import apiClient from '../api/client';
 
 /**
  * @typedef {Object} User
  * @property {string} TenDangNhap - Username/Email
  * @property {string} MaTV - Mã thành viên
  * @property {string} MaLoaiTK - Mã loại tài khoản
+ * @property {string} HoTen - Họ tên
+ * @property {string} LoaiTaiKhoan - Tên loại tài khoản
  */
 
-/**
- * @typedef {Object} AuthState
- * @property {User|null} user - User info
- * @property {boolean} isLoggedIn - Trạng thái đăng nhập
- * @property {boolean} isLoading - Trạng thái loading
- * @property {string|null} error - Error message
- * @property {Function} setUser - Set user info
- * @property {Function} setLoading - Set loading state
- * @property {Function} setError - Set error
- * @property {Function} login - Xử lý đăng nhập
- * @property {Function} logout - Xử lý đăng xuất
- * @property {Function} clearError - Xóa error
- * @property {Function} checkAuth - Kiểm tra auth status
- */
-
-export const useAuthStore = create((set) => ({
-  // ==================== STATE ====================
-  user: null,
-  isLoggedIn: isAuthenticated(),
-  isLoading: false,
-  error: null,
-
-  // ==================== SETTERS ====================
-  /**
-   * Set user info
-   */
-  setUser: (user) => set({ user }),
-
-  /**
-   * Set loading state
-   */
-  setLoading: (isLoading) => set({ isLoading }),
-
-  /**
-   * Set error message
-   */
-  setError: (error) => set({ error }),
-
-  /**
-   * Clear error message
-   */
-  clearError: () => set({ error: null }),
-
-  /**
-   * Reset auth state (khi logout)
-   */
-  resetAuth: () => set({
-    user: null,
-    isLoggedIn: false,
-    isLoading: false,
-    error: null,
-  }),
-
-  // ==================== ACTIONS ====================
-  /**
-   * Handle login
-   * @param {Object} userData - User data từ backend
-   * @param {string} userData.access_token - Access token
-   * @param {string} userData.refresh_token - Refresh token
-   * @param {Object} userData.user - User info
-   */
-  login: (userData) => {
-    const { access_token, refresh_token, user } = userData;
-    
-    // Lưu tokens
-    saveTokens(access_token, refresh_token);
-    
-    // Lưu user info
-    set({
-      user,
-      isLoggedIn: true,
-      isLoading: false,
-      error: null,
-    });
-  },
-
-  /**
-   * Handle logout
-   */
-  logout: () => {
-    clearTokens();
-    set({
+export const useAuthStore = create(
+  persist(
+    (set, get) => ({
+      // ==================== STATE ====================
       user: null,
       isLoggedIn: false,
       isLoading: false,
       error: null,
-    });
-  },
 
-  /**
-   * Kiểm tra auth status từ localStorage
-   */
-  checkAuth: () => {
-    const isLoggedIn = isAuthenticated();
-    set({ isLoggedIn });
-    return isLoggedIn;
-  },
-}));
+      // ==================== SETTERS ====================
+      setUser: (user) => set({ user }),
+      setLoading: (isLoading) => set({ isLoading }),
+      setError: (error) => set({ error }),
+      clearError: () => set({ error: null }),
+
+      resetAuth: () => set({
+        user: null,
+        isLoggedIn: false,
+        isLoading: false,
+        error: null,
+      }),
+
+      // ==================== ACTIONS ====================
+
+      /**
+       * Handle login - nhận user data từ response và lưu vào store
+       * Tokens được lưu trong HTTP-only cookies (do backend quản lý)
+       */
+      login: (userData) => {
+        set({
+          user: userData,
+          isLoggedIn: true,
+          isLoading: false,
+          error: null,
+        });
+      },
+
+      /**
+       * Fetch user info từ API /users/me
+       * Sử dụng khi cần refresh thông tin user
+       */
+      fetchUserInfo: async () => {
+        try {
+          set({ isLoading: true });
+          const response = await apiClient.get('/users/me');
+          const userData = response.data.result;
+
+          set({
+            user: userData,
+            isLoggedIn: true,
+            isLoading: false,
+            error: null,
+          });
+
+          return userData;
+        } catch (error) {
+          console.error('[authStore] fetchUserInfo error:', error);
+          // Nếu lỗi 401, có thể token đã hết hạn
+          if (error.response?.status === 401) {
+            set({
+              user: null,
+              isLoggedIn: false,
+              isLoading: false,
+              error: null,
+            });
+          }
+          throw error;
+        }
+      },
+
+      /**
+       * Handle logout - gọi API logout và reset state
+       */
+      logout: async () => {
+        try {
+          await apiClient.post('/users/logout');
+        } catch (error) {
+          console.error('[authStore] logout error:', error);
+        } finally {
+          set({
+            user: null,
+            isLoggedIn: false,
+            isLoading: false,
+            error: null,
+          });
+        }
+      },
+
+      /**
+       * Kiểm tra auth status bằng cách gọi API /users/me
+       * Nếu thành công -> user đã login
+       * Nếu thất bại -> user chưa login hoặc token hết hạn
+       */
+      checkAuth: async () => {
+        const currentUser = get().user;
+
+        // Nếu đã có user trong store, coi như đã login
+        if (currentUser) {
+          set({ isLoggedIn: true });
+          return true;
+        }
+
+        // Thử fetch user info từ API
+        try {
+          set({ isLoading: true });
+          const response = await apiClient.get('/users/me');
+          const userData = response.data.result;
+
+          set({
+            user: userData,
+            isLoggedIn: true,
+            isLoading: false,
+          });
+
+          return true;
+        } catch (error) {
+          // Token không hợp lệ hoặc hết hạn
+          set({
+            user: null,
+            isLoggedIn: false,
+            isLoading: false,
+          });
+          return false;
+        }
+      },
+    }),
+    {
+      name: 'auth-storage',
+      partialize: (state) => ({
+        user: state.user,
+        isLoggedIn: state.isLoggedIn
+      }),
+    }
+  )
+);

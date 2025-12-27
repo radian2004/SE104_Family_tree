@@ -1,21 +1,38 @@
 /**
  * ============================================
  * DASHBOARD PAGE - Premium Family Tree Design
+ * With Role-Based Navigation
  * ============================================
  */
 
 import { useAuth } from '../hooks/useAuth';
+import { usePermissions } from '../hooks/usePermissions';
 import { useNavigate } from 'react-router-dom';
-import { FiUsers, FiGitBranch, FiPieChart, FiAward, FiHeart, FiBarChart2, FiLogOut, FiChevronRight } from 'react-icons/fi';
+import {
+  FiUsers,
+  FiGitBranch,
+  FiPieChart,
+  FiAward,
+  FiHeart,
+  FiBarChart2,
+  FiLogOut,
+  FiChevronRight,
+  FiShield,
+  FiUserPlus,
+  FiSettings,
+  FiBook
+} from 'react-icons/fi';
 
 export default function DashboardPage() {
   const { user, handleLogout } = useAuth();
+  const { isAdmin, isOwner, isUser, roleName, roleIcon } = usePermissions();
   const navigate = useNavigate();
 
   const handleLogoutClick = async () => {
     await handleLogout();
   };
 
+  // ========== MAIN FEATURES (all roles) ==========
   const mainFeatures = [
     {
       title: 'Thành viên',
@@ -46,13 +63,36 @@ export default function DashboardPage() {
     },
   ];
 
-  const quickActions = [
-    { title: 'Thêm thành viên', icon: <FiUsers />, path: '/thanhvien/create', color: 'text-orange-500' },
-    { title: 'Ghi nhận thành tích', icon: <FiAward />, path: '/thanhvien', color: 'text-yellow-500' },
-    { title: 'Tạo quan hệ hôn nhân', icon: <FiHeart />, path: '/quanhe/honnhan', color: 'text-pink-500' },
-    { title: 'Tạo quan hệ con cái', icon: <FiUsers />, path: '/quanhe/concai', color: 'text-emerald-500' },
-    { title: 'Xuất báo cáo', icon: <FiBarChart2 />, path: '/baocao', color: 'text-blue-500' },
-  ];
+  // ========== QUICK ACTIONS based on role ==========
+  const getQuickActions = () => {
+    const actions = [];
+
+    // Admin & Owner: Tiếp nhận thành viên
+    if (isAdmin || isOwner) {
+      actions.push({ title: 'Thêm thành viên', icon: <FiUserPlus />, path: '/thanhvien/create', color: 'text-orange-500' });
+    }
+
+    // Admin & Owner: Ghi nhận thành tích
+    if (isAdmin || isOwner) {
+      actions.push({ title: 'Ghi nhận thành tích', icon: <FiAward />, path: '/thanhvien', color: 'text-yellow-500' });
+    }
+
+    // Admin & Owner: Tạo quan hệ
+    if (isAdmin || isOwner) {
+      actions.push({ title: 'Tạo quan hệ hôn nhân', icon: <FiHeart />, path: '/quanhe/honnhan', color: 'text-pink-500' });
+      actions.push({ title: 'Tạo quan hệ con cái', icon: <FiUsers />, path: '/quanhe/concai', color: 'text-emerald-500' });
+    }
+
+    // All roles: Báo cáo
+    actions.push({ title: 'Xuất báo cáo', icon: <FiBarChart2 />, path: '/baocao', color: 'text-blue-500' });
+
+    // All roles: Tra cứu
+    actions.push({ title: 'Tra cứu thành viên', icon: <FiBook />, path: '/thanhvien', color: 'text-indigo-500' });
+
+    return actions;
+  };
+
+  const quickActions = getQuickActions();
 
   return (
     <div className="min-h-screen">
@@ -79,11 +119,17 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex items-center gap-4">
+            {/* Role Badge */}
+            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-white/70 rounded-full border border-neutral-200">
+              <span className="text-lg">{roleIcon}</span>
+              <span className="text-sm font-medium text-neutral-600">{roleName}</span>
+            </div>
+
             <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-white/50 rounded-full">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center text-white text-sm font-bold shadow">
-                {user?.TenDangNhap?.charAt(0)?.toUpperCase() || 'U'}
+                {user?.TenDangNhap?.charAt(0)?.toUpperCase() || user?.HoTen?.charAt(0)?.toUpperCase() || 'U'}
               </div>
-              <span className="font-medium text-neutral-700">{user?.TenDangNhap}</span>
+              <span className="font-medium text-neutral-700">{user?.HoTen || user?.TenDangNhap}</span>
             </div>
             <button onClick={handleLogoutClick} className="btn btn-ghost btn-small group">
               <FiLogOut className="w-4 h-4 group-hover:text-red-500 transition-colors" />
@@ -98,12 +144,92 @@ export default function DashboardPage() {
         {/* Welcome Section */}
         <div className="mb-10 animate-fade-in">
           <h2 className="heading-display mb-2">
-            Xin chào, {user?.TenDangNhap || 'Người dùng'}! 👋
+            Xin chào, {user?.HoTen || user?.TenDangNhap || 'Người dùng'}! 👋
           </h2>
           <p className="text-neutral-600 text-lg">
             Chào mừng bạn đến với hệ thống quản lý gia phả. Hãy khám phá và quản lý lịch sử gia đình của bạn.
           </p>
         </div>
+
+        {/* ========== ADMIN SECTION ========== */}
+        {isAdmin && (
+          <div className="mb-8 animate-fade-in">
+            <div
+              onClick={() => navigate('/admin/taikhoan')}
+              className="group relative overflow-hidden rounded-2xl cursor-pointer bg-gradient-to-br from-purple-500 to-indigo-600 p-6 shadow-lg hover:shadow-xl transition-all"
+            >
+              <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full"></div>
+              <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full"></div>
+
+              <div className="relative flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
+                    <FiShield className="w-8 h-8 text-white" />
+                  </div>
+                  <div className="text-white">
+                    <h3 className="text-2xl font-bold" style={{ fontFamily: 'Playfair Display, serif' }}>
+                      👑 Quản trị hệ thống
+                    </h3>
+                    <p className="text-white/80">Phân quyền tài khoản, quản lý người dùng</p>
+                  </div>
+                </div>
+                <div className="text-white flex items-center gap-2 group-hover:translate-x-2 transition-transform">
+                  Truy cập <FiChevronRight className="w-5 h-5" />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ========== OWNER SECTION ========== */}
+        {(isAdmin || isOwner) && (
+          <div className="mb-8 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+            <h3 className="text-lg font-bold text-neutral-800 mb-4 flex items-center gap-2">
+              🏠 Quản lý Gia phả
+              {isOwner && <span className="text-sm font-normal text-neutral-500">(Trưởng tộc)</span>}
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <button
+                onClick={() => navigate('/thanhvien/create')}
+                className="flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all border-l-4 border-orange-500"
+              >
+                <div className="w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600">
+                  <FiUserPlus className="w-6 h-6" />
+                </div>
+                <div className="text-left">
+                  <h4 className="font-bold text-neutral-800">Tiếp nhận thành viên</h4>
+                  <p className="text-sm text-neutral-500">Thêm thành viên mới vào gia phả</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => navigate('/quanhe/honnhan')}
+                className="flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all border-l-4 border-pink-500"
+              >
+                <div className="w-12 h-12 rounded-lg bg-pink-100 flex items-center justify-center text-pink-600">
+                  <FiHeart className="w-6 h-6" />
+                </div>
+                <div className="text-left">
+                  <h4 className="font-bold text-neutral-800">Quan hệ hôn nhân</h4>
+                  <p className="text-sm text-neutral-500">Quản lý quan hệ vợ chồng</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => navigate('/quanhe/concai')}
+                className="flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all border-l-4 border-emerald-500"
+              >
+                <div className="w-12 h-12 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600">
+                  <FiUsers className="w-6 h-6" />
+                </div>
+                <div className="text-left">
+                  <h4 className="font-bold text-neutral-800">Quan hệ con cái</h4>
+                  <p className="text-sm text-neutral-500">Quản lý quan hệ cha mẹ - con</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Main Feature Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
@@ -174,6 +300,27 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Permission Info for User */}
+        {isUser && (
+          <div className="glass-card p-6 mb-12 animate-fade-in border-l-4 border-blue-500" style={{ animationDelay: '0.35s' }}>
+            <h3 className="text-lg font-bold text-neutral-800 mb-2">
+              ℹ️ Quyền của bạn
+            </h3>
+            <p className="text-neutral-600">
+              Bạn đang đăng nhập với quyền <strong>Thành viên</strong>. Bạn có thể:
+            </p>
+            <ul className="mt-2 text-neutral-600 list-disc list-inside">
+              <li>Tra cứu thông tin thành viên</li>
+              <li>Tra cứu thành tích, kết thúc</li>
+              <li>Xem báo cáo năm</li>
+              <li>Ghi nhận thu quỹ họ</li>
+            </ul>
+            <p className="mt-3 text-sm text-neutral-500">
+              Liên hệ Trưởng tộc hoặc Quản trị viên để được cấp thêm quyền.
+            </p>
+          </div>
+        )}
+
         {/* Features Grid */}
         <div className="glass-card p-6 animate-fade-in" style={{ animationDelay: '0.4s', opacity: 0 }}>
           <h3 className="text-xl font-bold text-neutral-800 mb-6" style={{ fontFamily: 'Playfair Display, serif' }}>
@@ -208,3 +355,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

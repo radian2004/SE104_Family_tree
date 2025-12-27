@@ -29,14 +29,16 @@ interface RefreshTokenRow extends RowDataPacket {
 interface GetMeUserRow extends RowDataPacket {
   // Thông tin tài khoản
   TenDangNhap: string;
+  MaTV: string | null;
+  MaLoaiTK: string;
   TenLoaiTK: string;
 
   // Thông tin thành viên
-  HoTen: string;
+  HoTen: string | null;
   NgayGioSinh: Date | null;
   DiaChi: string | null;
-  TrangThai: string;
-  DOI: number;
+  TrangThai: string | null;
+  DOI: number | null;
   GioiTinh: string | null;
 
   // Quê quán
@@ -46,6 +48,7 @@ interface GetMeUserRow extends RowDataPacket {
   TenNgheNghiep: string | null;
 
   // Gia phả
+  MaGiaPha: string | null;
   TenGiaPha: string | null;
   TenNguoiLap: string | null;
   TenTruongToc: string | null;
@@ -129,15 +132,29 @@ class UsersService {
     const rows = await databaseService.query<TaiKhoanRow[]>(sql, [email]);
     return rows.length > 0;
   }
-
   /**
    * Đăng ký tài khoản mới
    */
   async register(payload: RegisterReqBody) {
     const { name, email, password, giapha } = payload
     const hashedPassword = hashPassword(password)
-    let MaGiaPha: string
+    let MaGiaPha: string | null = null
     let giapha_message: string
+    let MaTV: string | null = null
+
+    // Trường hợp 0: Không cung cấp thông tin gia phả (đăng ký đơn giản)
+    if (!giapha || !giapha.name) {
+      // Chỉ tạo tài khoản, không liên kết với thành viên hoặc gia phả
+      await databaseService.getPool().execute<ResultSetHeader>(
+        'INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, MaLoaiTK) VALUES (?, ?, ?)',
+        [email, hashedPassword, 'LTK03']
+      )
+
+      return {
+        giapha_message: 'Đăng ký thành công! Bạn có thể tham gia gia phả sau.',
+        MaGiaPha: null
+      };
+    }
 
     // Trường hợp 1: Tạo gia phả mới (exist = false)
     if (giapha.exist === false) {
@@ -166,7 +183,7 @@ class UsersService {
         'SELECT MaTV FROM THANHVIEN WHERE MaGiaPha = ? AND HoTen = ? ORDER BY MaTV DESC LIMIT 1',
         [MaGiaPha, name]
       )
-      const MaTV = memberRows[0].MaTV
+      MaTV = memberRows[0].MaTV
 
       // Tạo tài khoản
       await databaseService.getPool().execute<ResultSetHeader>(
@@ -211,7 +228,7 @@ class UsersService {
         'SELECT MaTV FROM THANHVIEN WHERE MaGiaPha = ? AND HoTen = ? ORDER BY MaTV DESC LIMIT 1',
         [MaGiaPha, name]
       )
-      const MaTV = memberRows[0].MaTV
+      MaTV = memberRows[0].MaTV
 
       // Tạo tài khoản
       await databaseService.getPool().execute<ResultSetHeader>(
@@ -220,14 +237,10 @@ class UsersService {
       )
     }
 
+    // Trả về thông tin đăng ký (không trả về tokens - tokens sẽ được cấp khi login)
     return {
-      access_token,
-      refresh_token,
-      user: {
-        TenDangNhap: email,
-        MaTV: MaTV,
-        MaLoaiTK: 'LTK03'
-      }
+      giapha_message,
+      MaGiaPha
     };
   }
 
@@ -294,18 +307,27 @@ class UsersService {
 
   /**
    * Làm mới access token và refresh token
-   * @param old_refresh_token - Refresh token cũ
-   * @param user_id - ID người dùng (email)
+   * @param old_refresh_token - Refresh token cũ (sẽ decode để lấy user_id)
    */
-  async refreshToken(old_refresh_token: string, user_id: string) {
-    // 1. Xóa refresh token cũ khỏi database
+  async refreshToken(old_refresh_token: string) {
+    // 1. Tìm user_id từ refresh token trong database
+    const findUserSql = 'SELECT TenDangNhap FROM REFRESH_TOKENS WHERE token = ? AND NgayHetHan > NOW()';
+    const rows = await databaseService.query<RefreshTokenRow[]>(findUserSql, [old_refresh_token]);
+
+    if (rows.length === 0) {
+      return null; // Token không hợp lệ hoặc đã hết hạn
+    }
+
+    const user_id = rows[0].TenDangNhap;
+
+    // 2. Xóa refresh token cũ khỏi database
     const deleteSql = 'DELETE FROM REFRESH_TOKENS WHERE token = ?';
     await databaseService.query(deleteSql, [old_refresh_token]);
 
-    // 2. Tạo cặp token mới
+    // 3. Tạo cặp token mới
     const [access_token, refresh_token] = await this.signAccessAndRefreshToken(user_id);
 
-    // 3. Lưu refresh token mới vào database
+    // 4. Lưu refresh token mới vào database
     const expDate = new Date();
     expDate.setDate(expDate.getDate() + 7);
 
@@ -315,9 +337,18 @@ class UsersService {
     `;
     await databaseService.query(insertRefreshTokenSql, [refresh_token, user_id, expDate]);
 
+    // 5. Lấy thông tin user
+    const userSql = 'SELECT TenDangNhap, MaTV, MaLoaiTK FROM TAIKHOAN WHERE TenDangNhap = ?';
+    const userRows = await databaseService.query<TaiKhoanRow[]>(userSql, [user_id]);
+
     return {
       access_token,
-      refresh_token
+      refresh_token,
+      user: userRows.length > 0 ? {
+        TenDangNhap: userRows[0].TenDangNhap,
+        MaTV: userRows[0].MaTV,
+        MaLoaiTK: userRows[0].MaLoaiTK
+      } : null
     };
   }
 
@@ -361,7 +392,7 @@ class UsersService {
         gp.TGLap
         
       FROM TAIKHOAN tk
-      INNER JOIN THANHVIEN tv ON tk.MaTV = tv.MaTV
+      LEFT JOIN THANHVIEN tv ON tk.MaTV = tv.MaTV
       LEFT JOIN LOAITAIKHOAN ltk ON tk.MaLoaiTK = ltk.MaLoaiTK
       LEFT JOIN QUEQUAN qq ON tv.MaQueQuan = qq.MaQueQuan
       LEFT JOIN NGHENGHIEP nn ON tv.MaNgheNghiep = nn.MaNgheNghiep
@@ -383,6 +414,22 @@ class UsersService {
     }
 
     const userInfo = userInfoRows[0];
+
+    // Nếu tài khoản không liên kết với thành viên (admin account)
+    if (!userInfo.MaTV) {
+      return {
+        TenDangNhap: userInfo.TenDangNhap,
+        MaLoaiTK: userInfo.MaLoaiTK,
+        LoaiTaiKhoan: userInfo.TenLoaiTK,
+        HoTen: null,
+        MaTV: null,
+        MaGiaPha: null,
+        GiaPha: null,
+        HonNhan: [],
+        ChaMe: null,
+        ThanhTich: []
+      };
+    }
 
     // 2. Lấy thông tin quan hệ hôn nhân (vợ/chồng)
     const honNhanSql = `
@@ -436,9 +483,11 @@ class UsersService {
     return {
       // Thông tin tài khoản
       TenDangNhap: userInfo.TenDangNhap,
+      MaLoaiTK: userInfo.MaLoaiTK,
       LoaiTaiKhoan: userInfo.TenLoaiTK,
 
       // Thông tin cơ bản thành viên
+      MaTV: userInfo.MaTV,
       HoTen: userInfo.HoTen,
       NgayGioSinh: userInfo.NgayGioSinh,
       DiaChi: userInfo.DiaChi,
@@ -453,6 +502,7 @@ class UsersService {
       NgheNghiep: userInfo.TenNgheNghiep,
 
       // Thông tin gia phả
+      MaGiaPha: userInfo.MaGiaPha,
       GiaPha: userInfo.TenGiaPha ? {
         TenGiaPha: userInfo.TenGiaPha,
         NguoiLap: userInfo.TenNguoiLap,

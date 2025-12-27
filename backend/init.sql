@@ -784,3 +784,9 @@ SELECT * FROM DANHMUC; -- Kiểm tra dữ liệu danh mục
 -- Insert tài khoản (Đã có LoạiTK ở trên)
 INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, MaLoaiTK) VALUES 
 ('test@example.com', SHA2(CONCAT('Test@123', 'secret'), 256), 'LTK01');
+
+INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, MaLoaiTK) VALUES 
+('truongtoc@example.com', SHA2(CONCAT('Test@123', 'secret'), 256), 'LTK02');
+
+INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, MaLoaiTK) VALUES 
+('user@example.com', SHA2(CONCAT('Test@123', 'secret'), 256), 'LTK03');

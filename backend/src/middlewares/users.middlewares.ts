@@ -90,17 +90,13 @@ export const registerValidator = validate(
         }
       },
       'giapha.exist': {
-        notEmpty: {
-          errorMessage: USERS_MESSAGES.GIAPHA_EXIST_IS_REQUIRED
-        },
+        optional: true,
         isBoolean: {
           errorMessage: USERS_MESSAGES.GIAPHA_EXIST_MUST_BE_BOOLEAN
         }
       },
       'giapha.name': {
-        notEmpty: {
-          errorMessage: USERS_MESSAGES.GIAPHA_NAME_IS_REQUIRED
-        },
+        optional: true,
         isString: {
           errorMessage: USERS_MESSAGES.GIAPHA_NAME_MUST_BE_STRING
         },
@@ -114,7 +110,7 @@ export const registerValidator = validate(
         trim: true
       }
     },
-    
+
     ['body']
   )
 );
@@ -147,56 +143,53 @@ export const loginValidator = validate(
 
 /**
  * Middleware validate access token
+ * Hỗ trợ cả HTTP-only cookies và Authorization header
  */
-export const accessTokenValidator = validate(
-  checkSchema(
-    {
-      Authorization: {
-        trim: true,
-        custom: {
-          options: async (value: string, { req }) => {
-            // Kiểm tra có gửi access token không
-            if (!value) {
-              throw new ErrorWithStatus({
-                message: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED,
-                status: HTTP_STATUS.UNAUTHORIZED
-              });
-            }
+export const accessTokenValidator = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    let access_token: string | undefined;
 
-            // Lấy token từ "Bearer <token>"
-            const access_token = value.split(' ')[1];
-
-            if (!access_token) {
-              throw new ErrorWithStatus({
-                message: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED,
-                status: HTTP_STATUS.UNAUTHORIZED
-              });
-            }
-
-            try {
-              // Verify token
-              const decoded_authorization = await verifyToken(
-                access_token,
-                process.env.JWT_SECRET_ACCESS_TOKEN as string
-              );
-
-              // Gán vào req để controller sử dụng
-              (req as Request).decoded_authorization = decoded_authorization;
-            } catch (error) {
-              throw new ErrorWithStatus({
-                message: (error as JsonWebTokenError).message,
-                status: HTTP_STATUS.UNAUTHORIZED
-              });
-            }
-
-            return true;
-          }
-        }
+    // 1. Ưu tiên lấy từ cookies (HTTP-only cookie auth)
+    if (req.cookies && req.cookies.access_token) {
+      access_token = req.cookies.access_token;
+    }
+    // 2. Fallback: lấy từ Authorization header (Bearer token)
+    else if (req.headers.authorization) {
+      const authHeader = req.headers.authorization;
+      if (authHeader.startsWith('Bearer ')) {
+        access_token = authHeader.split(' ')[1];
       }
-    },
-    ['headers']
-  )
-);
+    }
+
+    // Kiểm tra có access token không
+    if (!access_token) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED,
+        status: HTTP_STATUS.UNAUTHORIZED
+      });
+    }
+
+    try {
+      // Verify token
+      const decoded_authorization = await verifyToken(
+        access_token,
+        process.env.JWT_SECRET_ACCESS_TOKEN as string
+      );
+
+      // Gán vào req để controller sử dụng
+      req.decoded_authorization = decoded_authorization;
+    } catch (error) {
+      throw new ErrorWithStatus({
+        message: (error as JsonWebTokenError).message,
+        status: HTTP_STATUS.UNAUTHORIZED
+      });
+    }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
 
 /**
  * Middleware validate refresh token
@@ -243,7 +236,7 @@ export const refreshTokenValidator = validate(
                 message: (error as JsonWebTokenError).message,
                 status: HTTP_STATUS.UNAUTHORIZED
               });
-              
+
             }
 
             return true;

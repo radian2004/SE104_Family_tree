@@ -42,30 +42,36 @@ export const loginController = async (req: Request<ParamsDictionary, any, LoginR
     });
   }
 
+  // ✅ Set HTTP-only cookies cho tokens
+  res.cookie('access_token', result.access_token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 15 * 60 * 1000  // 15 phút
+  });
+
+  res.cookie('refresh_token', result.refresh_token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 7 * 24 * 60 * 60 * 1000  // 7 ngày
+  });
+
+  // Lấy thông tin user để trả về
+  const userInfo = await usersService.getMe(email);
+
   return res.status(HTTP_STATUS.OK).json({
     message: USERS_MESSAGES.LOGIN_SUCCESS,
-    result
+    result: {
+      user: userInfo
+    }
   });
 };
 
 /**
  * Controller đăng xuất
  * POST /users/logout
- * Headers: { Authorization: Bearer <access_token> }
- * Body: { refresh_token: string }
- */
-export const logoutController = async (req: Request<ParamsDictionary, any, LogoutReqBody>, res: Response) => {
-  const { refresh_token } = req.body;
-
-  const result = await usersService.logout(refresh_token);
-
-  return res.status(HTTP_STATUS.OK).json(result);
-};
-
-/**
- * Controller làm mới token
- * POST /users/refresh-token
- * Body: { refresh_token: string }
+ * ✅ Lấy refresh_token từ cookies và xóa cả access + refresh cookies
  */
 export const logoutController = async (
   req: Request<ParamsDictionary, any, LogoutReqBody>,
@@ -131,6 +137,14 @@ export const refreshTokenController = async (
       maxAge: 15 * 60 * 1000  // 15 phút
     });
 
+    // Set new refresh token cookie (token rotation)
+    res.cookie('refresh_token', result.refresh_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000  // 7 ngày
+    });
+
     return res.status(HTTP_STATUS.OK).json({
       message: 'Refresh token thành công',
       user: result.user
@@ -139,6 +153,34 @@ export const refreshTokenController = async (
     console.error('[refreshTokenController] Error:', error);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       message: 'Lỗi refresh token',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Controller lấy thông tin user hiện tại
+ * GET /users/me
+ * Headers: { Authorization: Bearer <access_token> }
+ */
+export const getMeController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    // user_id được set bởi accessTokenValidator middleware
+    const { user_id } = req.decoded_authorization as TokenPayload;
+
+    const result = await usersService.getMe(user_id);
+
+    return res.status(HTTP_STATUS.OK).json({
+      message: 'Lấy thông tin thành công',
+      result
+    });
+  } catch (error: any) {
+    console.error('[getMeController] Error:', error);
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      message: 'Lỗi lấy thông tin người dùng',
       error: error.message
     });
   }

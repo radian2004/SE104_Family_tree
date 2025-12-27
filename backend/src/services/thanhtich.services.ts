@@ -88,6 +88,7 @@ class ThanhTichService {
    */
   async traCuuThanhTich(
     filters?: {
+      MaTV?: string;
       HoTen?: string;
       TenLoaiThanhTich?: string;
       TuNgay?: Date;
