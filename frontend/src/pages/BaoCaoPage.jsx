@@ -68,7 +68,8 @@ export default function BaoCaoPage() {
                     MaGiaPha: selectedGiaPha
                 });
                 console.log('[BaoCaoPage] thanhvien response:', response);
-                const data = response?.result || [];
+                // Backend returns { result: { NamBatDau, NamKetThuc, DanhSach, TongSinh, TongKetHon, TongMat } }
+                const data = response?.result?.DanhSach || [];
                 console.log('[BaoCaoPage] Setting baoCaoThanhVien:', data);
                 setBaoCaoThanhVien(Array.isArray(data) ? data : []);
             } else if (activeTab === 'thanhtich') {

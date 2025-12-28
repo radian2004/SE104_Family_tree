@@ -180,15 +180,6 @@ export default function App() {
         />
 
 
-        <Route
-          path="/admin/taikhoan"
-          element={
-            <AdminRoute>
-              <QuanLyTaiKhoanPage />
-            </AdminRoute>
-          }
-        />
-
         {/* ==================== DEFAULT & 404 ==================== */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/404" element={<NotFoundPage />} />

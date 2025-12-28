@@ -283,36 +283,60 @@ class ThanhVienService {
     const paramsKetHon = [NamBatDau, NamKetThuc, ...params];
     const paramsMat = [NamBatDau, NamKetThuc, ...params];
 
-    const sinhRows = await databaseService.query<RowDataPacket[]>(sqlSinh, paramsSinh);
-    const ketHonRows = await databaseService.query<RowDataPacket[]>(sqlKetHon, paramsKetHon);
-    const matRows = await databaseService.query<RowDataPacket[]>(sqlMat, paramsMat);
+    // Ensure numeric params
+    const startYear = Number(NamBatDau);
+    const endYear = Number(NamKetThuc);
+    const queryParams = [...params]; // Copy params
+    const sqlParams = [startYear, endYear, ...queryParams];
 
-    // Tổng hợp kết quả
-    const result: any[] = [];
-    const years = new Set<number>();
+    console.log('[Info] getBaoCaoTangGiam params:', sqlParams);
 
-    sinhRows.forEach((row: any) => years.add(row.Nam));
-    ketHonRows.forEach((row: any) => years.add(row.Nam));
-    matRows.forEach((row: any) => years.add(row.Nam));
+    try {
+      // Use getPool().execute method to match RowDataPacket types better or force cast
+      const pool = databaseService.getPool();
+      const [sinhRows] = await pool.execute<RowDataPacket[]>(sqlSinh, sqlParams);
+      const [ketHonRows] = await pool.execute<RowDataPacket[]>(sqlKetHon, sqlParams);
+      const [matRows] = await pool.execute<RowDataPacket[]>(sqlMat, sqlParams);
 
-    Array.from(years).sort().forEach((year: number) => {
-      const sinh = sinhRows.find((r: any) => r.Nam === year)?.SoLuong || 0;
-      const ketHon = ketHonRows.find((r: any) => r.Nam === year)?.SoLuong || 0;
-      const mat = matRows.find((r: any) => r.Nam === year)?.SoLuong || 0;
+      // Tổng hợp kết quả
+      const result: any[] = [];
+      const years = new Set<number>();
 
-      // Chỉ thêm năm có ít nhất 1 sự kiện
-      if (sinh > 0 || ketHon > 0 || mat > 0) {
+      (sinhRows as any[]).forEach((row: any) => years.add(row.Nam));
+      (ketHonRows as any[]).forEach((row: any) => years.add(row.Nam));
+      (matRows as any[]).forEach((row: any) => years.add(row.Nam));
+
+      const sortedYears = Array.from(years).sort((a, b) => a - b);
+
+      sortedYears.forEach((year: number) => {
+        if (!year) return;
+        const sinh = (sinhRows as any[]).find((r: any) => r.Nam === year)?.SoLuong || 0;
+        const ketHon = (ketHonRows as any[]).find((r: any) => r.Nam === year)?.SoLuong || 0;
+        const mat = (matRows as any[]).find((r: any) => r.Nam === year)?.SoLuong || 0;
+
         result.push({
           Nam: year,
-          SoSinh: sinh,
-          SoKetHon: ketHon,
-          SoMat: mat
+          SoSinh: Number(sinh),
+          SoKetHon: Number(ketHon),
+          SoMat: Number(mat)
         });
-      }
-    });
+      });
 
-    return result;
+      return {
+        NamBatDau: startYear,
+        NamKetThuc: endYear,
+        DanhSach: result,
+        TongSinh: result.reduce((sum, r) => sum + r.SoSinh, 0),
+        TongKetHon: result.reduce((sum, r) => sum + r.SoKetHon, 0),
+        TongMat: result.reduce((sum, r) => sum + r.SoMat, 0)
+      };
+
+    } catch (err: any) {
+      console.error('ERROR in getBaoCaoTangGiam:', err);
+      throw new Error(`Lỗi truy vấn báo cáo: ${err.message}`);
+    }
   }
+
 
 
   // ========================================
