@@ -13,13 +13,28 @@ dotenv.config();
 
 /**
  * Middleware validate đăng ký
+ * Hỗ trợ 2 mode: tạo mới gia phả (exist=false) hoặc gia nhập (exist=true)
  */
 export const registerValidator = validate(
   checkSchema(
     {
       name: {
         notEmpty: {
-          errorMessage: USERS_MESSAGES.NAME_IS_REQUIRED
+          errorMessage: 'Vui lòng nhập họ tên'
+        },
+        isString: true,
+        isLength: {
+          options: {
+            min: 1,
+            max: 50
+          },
+          errorMessage: 'Họ tên không hợp lệ'
+        },
+        trim: true
+      },
+      'giapha.name': {
+        notEmpty: {
+          errorMessage: 'Vui lòng nhập tên gia phả'
         },
         isString: true,
         isLength: {
@@ -27,9 +42,14 @@ export const registerValidator = validate(
             min: 1,
             max: 100
           },
-          errorMessage: USERS_MESSAGES.NAME_LENGTH_INVALID
+          errorMessage: 'Tên gia phả không hợp lệ'
         },
         trim: true
+      },
+      'giapha.exist': {
+        isBoolean: {
+          errorMessage: 'giapha.exist phải là boolean'
+        }
       },
       email: {
         notEmpty: {
@@ -88,26 +108,6 @@ export const registerValidator = validate(
             return true;
           }
         }
-      },
-      'giapha.exist': {
-        optional: true,
-        isBoolean: {
-          errorMessage: USERS_MESSAGES.GIAPHA_EXIST_MUST_BE_BOOLEAN
-        }
-      },
-      'giapha.name': {
-        optional: true,
-        isString: {
-          errorMessage: USERS_MESSAGES.GIAPHA_NAME_MUST_BE_STRING
-        },
-        isLength: {
-          options: {
-            min: 1,
-            max: 35
-          },
-          errorMessage: USERS_MESSAGES.GIAPHA_NAME_LENGTH_MUST_BE_FROM_1_TO_35
-        },
-        trim: true
       }
     },
 

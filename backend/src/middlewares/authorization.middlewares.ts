@@ -616,3 +616,49 @@ export const attachUserInfo = async (req: Request, res: Response, next: NextFunc
     next(error);
   }
 };
+
+/**
+ * Kiểm tra quyền xem chi tiết gia phả
+ * - Admin (LTK01): Có thể xem tất cả
+ * - TruongToc (LTK02): Chỉ xem gia phả mà mình làm TruongToc hoặc là thành viên
+ * - ThanhVien (LTK03): Chỉ xem gia phả mà mình là thành viên
+ */
+export const checkViewGiaPhaDetail = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { MaGiaPha } = req.params;
+    const { user_id } = req.decoded_authorization as TokenPayload;
+
+    const userInfo = await getUserInfo(user_id);
+    req.userInfo = userInfo;
+
+    // Admin có thể xem tất cả
+    if (userInfo.MaLoaiTK === 'LTK01') {
+      return next();
+    }
+
+    // TruongToc và ThanhVien: kiểm tra có thuộc gia phả này không
+    // Check 1: User là TruongToc của gia phả này
+    const [truongTocCheck] = await databaseService.query<RowDataPacket[]>(
+      'SELECT MaGiaPha FROM CAYGIAPHA WHERE MaGiaPha = ? AND TruongToc = ?',
+      [MaGiaPha, userInfo.MaTV]
+    );
+
+    if (truongTocCheck && truongTocCheck.length > 0) {
+      return next();
+    }
+
+    // Check 2: User là thành viên trong gia phả này
+    if (userInfo.MaGiaPha === MaGiaPha) {
+      return next();
+    }
+
+    // Không có quyền
+    throw new ErrorWithStatus({
+      message: 'Bạn không có quyền xem chi tiết gia phả này. Chỉ thành viên trong gia phả mới có thể xem.',
+      status: HTTP_STATUS.FORBIDDEN
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};

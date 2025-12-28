@@ -232,8 +232,14 @@ class ThanhVienService {
     const conditions: string[] = [];
     const params: any[] = [];
 
-    // Phân quyền
-    if (userInfo.MaLoaiTK !== 'LTK01') {
+    // Phân quyền - Admin cũng có thể filter theo MaGiaPha nếu được truyền
+    if (userInfo.MaLoaiTK === 'LTK01') {
+      // Admin: filter theo MaGiaPha nếu được truyền, không thì xem tất cả
+      if (userInfo.MaGiaPha) {
+        conditions.push('tv.MaGiaPha = ?');
+        params.push(userInfo.MaGiaPha);
+      }
+    } else {
       if (!userInfo.MaGiaPha) {
         throw new Error('Bạn chưa thuộc gia phả nào');
       }
@@ -485,24 +491,38 @@ class ThanhVienService {
         }
       }
 
-      // [3] INSERT thành viên mới vào bảng THANHVIEN
+      // [3] Tính DOI và MaGiaPha cho thành viên mới
+      let newDOI = 1;
+      let newMaGiaPha = thanhvienCu.MaGiaPha || null;
+
+      if (payload.LoaiQuanHe === 'Con cái') {
+        // Con có DOI = DOI cha/mẹ + 1
+        newDOI = (thanhvienCu.DOI || 1) + 1;
+      } else if (payload.LoaiQuanHe === 'Vợ/Chồng') {
+        // Vợ/chồng có DOI = DOI người kia (cùng đời)
+        newDOI = thanhvienCu.DOI || 1;
+      }
+
+      // [4] INSERT thành viên mới vào bảng THANHVIEN
       const insertThanhVienSql = `
         INSERT INTO THANHVIEN (
           HoTen, NgayGioSinh, DiaChi, TrangThai, 
-          DOI, MaQueQuan, MaNgheNghiep, GioiTinh
-        ) VALUES (?, ?, ?, 'Còn Sống', 0, ?, ?, ?)
+          DOI, MaQueQuan, MaNgheNghiep, GioiTinh, MaGiaPha
+        ) VALUES (?, ?, ?, 'Còn Sống', ?, ?, ?, ?, ?)
       `;
 
       await connection.execute(insertThanhVienSql, [
         payload.HoTen,
         payload.NgayGioSinh,
         payload.DiaChi,
+        newDOI,
         payload.MaQueQuan,
         payload.MaNgheNghiep || null,
-        payload.GioiTinh
+        payload.GioiTinh,
+        newMaGiaPha
       ]);
 
-      // [4] Lấy MaTV của thành viên vừa tạo (trigger tự gen)
+      // [5] Lấy MaTV của thành viên vừa tạo (trigger tự gen)
       const [newMemberRows] = await connection.query<ThanhVienRow[]>(
         'SELECT * FROM THANHVIEN ORDER BY TGTaoMoi DESC LIMIT 1'
       );
@@ -512,7 +532,7 @@ class ThanhVienService {
         throw new Error('Không thể lấy thông tin thành viên vừa tạo');
       }
 
-      // [5] INSERT quan hệ tương ứng
+      // [6] INSERT quan hệ tương ứng
       if (payload.LoaiQuanHe === 'Con cái') {
         // Xác định cha/mẹ dựa trên giới tính thành viên cũ
         let insertQuanHeConSql: string;
@@ -552,7 +572,7 @@ class ThanhVienService {
         ]);
       }
 
-      // [6] Lấy lại thông tin thành viên mới sau khi trigger cập nhật DOI và MaGiaPha
+      // [7] Lấy lại thông tin thành viên mới (đã có DOI và MaGiaPha đúng)
       const [updatedMemberRows] = await connection.query<ThanhVienRow[]>(
         'SELECT * FROM THANHVIEN WHERE MaTV = ?',
         [newMember.MaTV]

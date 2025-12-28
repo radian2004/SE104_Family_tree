@@ -231,12 +231,13 @@ export const capNhatThanhTichController = async (req: Request, res: Response) =>
 /**
  * Controller báo cáo thành tích (CÓ PHÂN QUYỀN)
  * GET /thanhtich/baocao
+ * Admin có thể truyền MaGiaPha để xem báo cáo của gia phả cụ thể
  */
 export const getBaoCaoThanhTichController = async (req: Request, res: Response) => {
   const userInfo = req.userInfo!;
 
   try {
-    const { NamBatDau, NamKetThuc } = req.query;
+    const { NamBatDau, NamKetThuc, MaGiaPha } = req.query;
 
     if (!NamBatDau || !NamKetThuc) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
@@ -253,8 +254,14 @@ export const getBaoCaoThanhTichController = async (req: Request, res: Response) 
       });
     }
 
+    // Nếu Admin truyền MaGiaPha, override userInfo.MaGiaPha
+    let effectiveUserInfo = { ...userInfo };
+    if (MaGiaPha && userInfo.MaLoaiTK === 'LTK01') {
+      effectiveUserInfo.MaGiaPha = MaGiaPha as string;
+    }
+
     // Truyền userInfo vào service để filter theo gia phả
-    const result = await thanhTichService.getBaoCaoThanhTich(namBatDau, namKetThuc, userInfo);
+    const result = await thanhTichService.getBaoCaoThanhTich(namBatDau, namKetThuc, effectiveUserInfo);
 
     return res.status(HTTP_STATUS.OK).json({
       message: 'Lấy báo cáo thành tích thành công',

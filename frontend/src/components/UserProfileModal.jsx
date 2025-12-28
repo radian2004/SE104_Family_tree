@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
 import { FiX, FiUser, FiMail, FiCalendar, FiMapPin, FiShield } from 'react-icons/fi';
-import { usePermissions } from '../hooks/usePermissions';
+import { ACCOUNT_TYPE_NAMES, ACCOUNT_TYPE_ICONS } from '../hooks/usePermissions';
 
 export default function UserProfileModal({ user, onClose }) {
-    const { roleName, roleIcon } = usePermissions();
+    // Lấy thông tin quyền từ user prop thay vì hook
+    const MaLoaiTK = user?.MaLoaiTK;
+    const roleName = user?.TenLoaiTK || ACCOUNT_TYPE_NAMES[MaLoaiTK] || 'Chưa xác định';
+    const roleIcon = ACCOUNT_TYPE_ICONS[MaLoaiTK] || '👤';
+
     const [activeTab, setActiveTab] = useState('info');
 
     // Click outside to close

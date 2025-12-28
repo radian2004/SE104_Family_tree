@@ -12,13 +12,14 @@ class AuthService {
   /**
    * Đăng ký tài khoản mới
    * POST /users/register
-   * Backend trả về: { message, user } + set cookies
+   * Payload: { memberName, giapha, email, password, confirm_password }
+   * Backend trả về: { message, result: { MaTV, MaGiaPha, HoTen, TenGiaPha } }
    */
   async register(payload) {
     try {
       const response = await apiClient.post('/users/register', payload);
-      // Backend trả về { message, user } - không có .result
-      return response.data.user;
+      // Backend trả về { message, result }
+      return response.data.result;
     } catch (error) {
       throw error;
     }

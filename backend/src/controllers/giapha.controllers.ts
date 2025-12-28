@@ -19,6 +19,7 @@ export const getAllGiaPhaController = async (req: Request, res: Response) => {
         }
 
         const result = await giaPhaService.getAll(MaTV, MaLoaiTK);
+        console.log('DEBUG getAllGiaPha result:', JSON.stringify(result, null, 2));
         return res.status(HTTP_STATUS.OK).json({
             message: 'Lấy danh sách gia phả thành công',
             result

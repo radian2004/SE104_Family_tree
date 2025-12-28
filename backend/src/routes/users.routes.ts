@@ -9,7 +9,9 @@ import {
   getPasswordRequestsController,
   approvePasswordRequestController,
   verifyResetPermissionController,
-  resetPasswordController
+  resetPasswordController,
+  getGenealogiesController,
+  getAvailableMembersController
 } from '~/controllers/users.controllers';
 import {
   registerValidator,
@@ -30,10 +32,24 @@ import phieuChiRouter from './phieuchi.routes';
 const usersRouter = Router();
 
 /**
+ * Description: Lấy danh sách gia phả (cho đăng ký)
+ * Path: /users/genealogies
+ * Method: GET
+ */
+usersRouter.get('/genealogies', wrapAsync(getGenealogiesController));
+
+/**
+ * Description: Lấy danh sách thành viên chưa có tài khoản (cho đăng ký)
+ * Path: /users/available-members?giapha=<tên gia phả>
+ * Method: GET
+ */
+usersRouter.get('/available-members', wrapAsync(getAvailableMembersController));
+
+/**
  * Description: Đăng ký tài khoản
  * Path: /users/register
  * Method: POST
- * Body: { name: string, email: string, password: string, confirm_password: string }
+ * Body: { memberName: string, giapha: string, email: string, password: string, confirm_password: string }
  */
 usersRouter.post('/register', registerValidator, wrapAsync(registerController));
 

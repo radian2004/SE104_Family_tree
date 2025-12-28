@@ -32,13 +32,32 @@ export default function GiaPhaPage() {
     const [addMemberEmail, setAddMemberEmail] = useState('');
     const [isAddingMember, setIsAddingMember] = useState(false);
 
-    // Load gia phả function
+    // Load gia phả function with member counts
     const loadGiaPha = async () => {
         setIsLoading(true);
         setError(null);
         try {
             const data = await giaPhaService.getAll();
-            setGiaPhaList(data);
+
+            // Fetch member counts for each gia pha (since backend doesn't return it correctly)
+            const giaPhaWithCounts = await Promise.all(
+                data.map(async (gp) => {
+                    try {
+                        const members = await giaPhaService.getThanhVienByGiaPha(gp.MaGiaPha);
+                        const maxDoi = members.reduce((max, m) => Math.max(max, m.DOI || 0), 0);
+                        return {
+                            ...gp,
+                            SoThanhVien: members.length,
+                            SoDoi: maxDoi
+                        };
+                    } catch (err) {
+                        return { ...gp, SoThanhVien: 0, SoDoi: 0 };
+                    }
+                })
+            );
+
+            console.log('DEBUG GiaPhaPage data with counts:', giaPhaWithCounts);
+            setGiaPhaList(giaPhaWithCounts);
         } catch (err) {
             setError(err.response?.data?.message || 'Lỗi tải danh sách gia phả');
         } finally {
@@ -213,14 +232,14 @@ export default function GiaPhaPage() {
                     <div className="glass-card p-4 text-center hover:scale-105 transition-transform">
                         <div className="text-2xl mb-2">👨‍👩‍👧‍👦</div>
                         <div className="text-2xl font-bold text-emerald-600">
-                            {giaPhaList.reduce((sum, gp) => sum + (gp.SoThanhVien || 0), 0) || '-'}
+                            {giaPhaList.reduce((sum, gp) => sum + (Number(gp.SoThanhVien) || 0), 0)}
                         </div>
                         <div className="text-xs text-neutral-500">Tổng thành viên</div>
                     </div>
                     <div className="glass-card p-4 text-center hover:scale-105 transition-transform">
                         <div className="text-2xl mb-2">📊</div>
                         <div className="text-2xl font-bold text-violet-600">
-                            {giaPhaList.reduce((sum, gp) => sum + (gp.SoDoi || 0), 0) || '-'}
+                            {giaPhaList.reduce((sum, gp) => sum + (Number(gp.SoDoi) || 0), 0)}
                         </div>
                         <div className="text-xs text-neutral-500">Tổng số đời</div>
                     </div>

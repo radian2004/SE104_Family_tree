@@ -2,16 +2,25 @@
  * ============================================
  * FAMILY TREE VIEW COMPONENT - Cây gia phả dạng đời
  * Clean Layout: Mỗi đời một hàng ngang
+ * Với chức năng sửa/xóa thành viên
  * ============================================
  */
 
 import { useState, useMemo } from 'react';
-import { FiHeart } from 'react-icons/fi';
-import { useNavigate } from 'react-router-dom';
+import { FiHeart, FiEdit2, FiTrash2, FiMoreVertical, FiUserPlus } from 'react-icons/fi';
+import { useNavigate, Link } from 'react-router-dom';
 
-export default function FamilyTreeView({ members = [], relationships = [] }) {
+export default function FamilyTreeView({
+    members = [],
+    relationships = [],
+    canManage = false,
+    onEdit,
+    onDelete,
+    MaGiaPha
+}) {
     const navigate = useNavigate();
     const [viewMode, setViewMode] = useState('tree'); // 'generation' | 'tree'
+    const [activeMenu, setActiveMenu] = useState(null); // MaTV of member with open menu
 
     // Helper: Check if deceased
     const isDeceased = (member) => {
@@ -52,7 +61,7 @@ export default function FamilyTreeView({ members = [], relationships = [] }) {
         // Group members by DOI
         const byDoi = {};
         members.forEach(m => {
-            const doi = m.DOI || 1;
+            const doi = m.DOI !== undefined && m.DOI !== null ? m.DOI : 1;
             if (!byDoi[doi]) byDoi[doi] = [];
             byDoi[doi].push(m);
         });
@@ -93,32 +102,85 @@ export default function FamilyTreeView({ members = [], relationships = [] }) {
         return generations;
     }, [members, relationships]);
 
-    // Member Card Component
+    // Toggle action menu
+    const toggleMenu = (e, MaTV) => {
+        e.stopPropagation();
+        setActiveMenu(activeMenu === MaTV ? null : MaTV);
+    };
+
+    // Close menu when clicking outside
+    const handleClickOutside = () => {
+        setActiveMenu(null);
+    };
+
+    // Member Card Component with action menu
     const MemberCard = ({ member, size = 'normal' }) => {
         if (!member) return null;
         const isSmall = size === 'small';
+        const isMenuOpen = activeMenu === member.MaTV;
 
         return (
-            <div
-                onClick={() => navigate(`/thanhvien/${member.MaTV}`)}
-                className={`
-                    cursor-pointer transition-all hover:scale-105 hover:shadow-lg
-                    rounded-xl flex items-center gap-2 border-2
-                    ${isSmall ? 'px-3 py-2' : 'px-4 py-3'}
-                    ${isDeceased(member)
-                        ? 'bg-gray-100 border-gray-300 text-gray-500'
-                        : member.GioiTinh === 'Nữ'
-                            ? 'bg-pink-50 border-pink-200 text-pink-700'
-                            : 'bg-blue-50 border-blue-200 text-blue-700'
-                    }
-                `}
-            >
-                <span className={isSmall ? 'text-base' : 'text-xl'}>
-                    {member.GioiTinh === 'Nữ' ? '👩' : '👨'}
-                </span>
-                <span className={`font-semibold ${isSmall ? 'text-xs' : 'text-sm'} max-w-[120px] truncate`}>
-                    {member.HoTen}
-                </span>
+            <div className="relative group">
+                <div
+                    onClick={() => navigate(`/thanhvien/${member.MaTV}`)}
+                    className={`
+                        cursor-pointer transition-all hover:scale-105 hover:shadow-lg
+                        rounded-xl flex items-center gap-2 border-2
+                        ${isSmall ? 'px-3 py-2' : 'px-4 py-3'}
+                        ${isDeceased(member)
+                            ? 'bg-gray-100 border-gray-300 text-gray-500'
+                            : member.GioiTinh === 'Nữ'
+                                ? 'bg-pink-50 border-pink-200 text-pink-700'
+                                : 'bg-blue-50 border-blue-200 text-blue-700'
+                        }
+                    `}
+                >
+                    <span className={isSmall ? 'text-base' : 'text-xl'}>
+                        {member.GioiTinh === 'Nữ' ? '👩' : '👨'}
+                    </span>
+                    <span className={`font-semibold ${isSmall ? 'text-xs' : 'text-sm'} max-w-[120px] truncate`}>
+                        {member.HoTen}
+                    </span>
+
+                    {/* Action button - only show for managers */}
+                    {canManage && (
+                        <button
+                            onClick={(e) => toggleMenu(e, member.MaTV)}
+                            className="ml-1 p-1 rounded-full hover:bg-white/50 transition-colors opacity-0 group-hover:opacity-100"
+                        >
+                            <FiMoreVertical className="w-4 h-4" />
+                        </button>
+                    )}
+                </div>
+
+                {/* Dropdown Menu */}
+                {canManage && isMenuOpen && (
+                    <div
+                        className="absolute top-full left-0 mt-1 bg-white rounded-lg shadow-xl border border-neutral-200 py-1 z-50 min-w-[140px]"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            onClick={() => {
+                                setActiveMenu(null);
+                                onEdit && onEdit(member.MaTV);
+                            }}
+                            className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-emerald-50 text-neutral-700"
+                        >
+                            <FiEdit2 className="w-4 h-4 text-emerald-600" />
+                            Chỉnh sửa
+                        </button>
+                        <button
+                            onClick={() => {
+                                setActiveMenu(null);
+                                onDelete && onDelete(member.MaTV, member.HoTen);
+                            }}
+                            className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-red-50 text-red-600"
+                        >
+                            <FiTrash2 className="w-4 h-4" />
+                            Xóa
+                        </button>
+                    </div>
+                )}
             </div>
         );
     };
@@ -142,7 +204,7 @@ export default function FamilyTreeView({ members = [], relationships = [] }) {
 
     // Generation View - Clean horizontal layout
     const GenerationView = () => (
-        <div className="space-y-8">
+        <div className="space-y-8" onClick={handleClickOutside}>
             {generationData.map(({ doi, families }) => (
                 <div key={doi} className="relative">
                     {/* Generation Header */}
@@ -177,7 +239,7 @@ export default function FamilyTreeView({ members = [], relationships = [] }) {
 
     // Tree View - Hierarchical with connectors
     const TreeView = () => (
-        <div className="overflow-x-auto py-4">
+        <div className="overflow-x-auto py-4" onClick={handleClickOutside}>
             <div className="flex flex-col items-center gap-8 min-w-max">
                 {generationData.map(({ doi, families }, genIndex) => (
                     <div key={doi} className="flex flex-col items-center">
@@ -221,31 +283,44 @@ export default function FamilyTreeView({ members = [], relationships = [] }) {
     return (
         <div className="glass-card overflow-hidden">
             {/* Header */}
-            <div className="px-6 py-4 border-b border-neutral-100 flex justify-between items-center">
+            <div className="px-6 py-4 border-b border-neutral-100 flex justify-between items-center flex-wrap gap-3">
                 <h2 className="text-xl font-bold text-neutral-800" style={{ fontFamily: 'Playfair Display, serif' }}>
                     Cây gia phả
                 </h2>
 
-                {/* View Toggle */}
-                <div className="flex bg-neutral-100 rounded-lg p-1">
-                    <button
-                        onClick={() => setViewMode('generation')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === 'generation'
+                <div className="flex items-center gap-3">
+                    {/* Add Member Button (inline) */}
+                    {canManage && MaGiaPha && (
+                        <Link
+                            to={`/thanhvien/create?MaGiaPha=${MaGiaPha}`}
+                            className="btn btn-sm btn-outline flex items-center gap-1 text-emerald-600 border-emerald-300 hover:bg-emerald-50"
+                        >
+                            <FiUserPlus className="w-4 h-4" />
+                            <span className="hidden sm:inline">Thêm</span>
+                        </Link>
+                    )}
+
+                    {/* View Toggle */}
+                    <div className="flex bg-neutral-100 rounded-lg p-1">
+                        <button
+                            onClick={() => setViewMode('generation')}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === 'generation'
                                 ? 'bg-white shadow text-emerald-600'
                                 : 'text-neutral-500 hover:text-neutral-700'
-                            }`}
-                    >
-                        📊 Theo đời
-                    </button>
-                    <button
-                        onClick={() => setViewMode('tree')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === 'tree'
+                                }`}
+                        >
+                            📊 Theo đời
+                        </button>
+                        <button
+                            onClick={() => setViewMode('tree')}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === 'tree'
                                 ? 'bg-white shadow text-emerald-600'
                                 : 'text-neutral-500 hover:text-neutral-700'
-                            }`}
-                    >
-                        🌳 Dạng cây
-                    </button>
+                                }`}
+                        >
+                            🌳 Dạng cây
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -254,7 +329,16 @@ export default function FamilyTreeView({ members = [], relationships = [] }) {
                 {members.length === 0 ? (
                     <div className="text-center py-12">
                         <div className="text-5xl mb-4">🌳</div>
-                        <p className="text-neutral-500">Chưa có thành viên nào</p>
+                        <p className="text-neutral-500 mb-4">Chưa có thành viên nào</p>
+                        {canManage && MaGiaPha && (
+                            <Link
+                                to={`/thanhvien/create?MaGiaPha=${MaGiaPha}`}
+                                className="btn btn-primary"
+                            >
+                                <FiUserPlus className="w-4 h-4" />
+                                Thêm thành viên đầu tiên
+                            </Link>
+                        )}
                     </div>
                 ) : viewMode === 'generation' ? (
                     <GenerationView />

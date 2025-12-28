@@ -483,7 +483,7 @@ export default function QuanLyTaiKhoanPage() {
 
                 {/* Footer */}
                 <footer className="mt-12 text-center text-neutral-500 text-sm">
-                    <p>© 2025 Gia Phả Management System. Designed by SE104 team</p>
+                    <p>© 2025 Gia Phả Management System. Designed by Thanh An, Hoàng Phúc, Đại Thành, Triệu Trinh</p>
                 </footer>
             </main>
         </div>

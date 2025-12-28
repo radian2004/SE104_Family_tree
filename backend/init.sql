@@ -64,7 +64,7 @@ CREATE TABLE THANHVIEN (
     NgayGioSinh DATE DEFAULT (CURDATE()),
     DiaChi VARCHAR(50),
     TrangThai VARCHAR(20) DEFAULT 'Còn Sống',
-    TGTaoMoi TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
+    TGTaoMoi DATE DEFAULT (CURDATE()),
     DOI	INT DEFAULT 0,
     MaQueQuan VARCHAR(5),
     MaNgheNghiep VARCHAR(5),
@@ -83,7 +83,7 @@ CREATE TABLE CAYGIAPHA(
 	MaGiaPha VARCHAR(5) PRIMARY KEY,
 	TenGiaPha VARCHAR(35),
 	NguoiLap VARCHAR(20),
-    TGLap TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
+    TGLap DATE DEFAULT (CURDATE()),
 	TruongToc VARCHAR(20),
 	FOREIGN KEY(NguoiLap) REFERENCES THANHVIEN(MaTV),
 	FOREIGN KEY(TruongToc) REFERENCES THANHVIEN(MaTV)
@@ -99,7 +99,7 @@ CREATE TABLE LOAITHANHTICH(
 CREATE TABLE GHINHANTHANHTICH(
 	MaLTT VARCHAR(5),
 	MaTV VARCHAR(5),
-	NgayPhatSinh TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
+	NgayPhatSinh DATE DEFAULT (CURDATE()),
     PRIMARY KEY(MaLTT, MaTV, NgayPhatSinh),
 	FOREIGN KEY(MaLTT) REFERENCES LOAITHANHTICH(MaLTT),
     FOREIGN KEY(MaTV) REFERENCES THANHVIEN(MaTV)
@@ -108,8 +108,8 @@ CREATE TABLE GHINHANTHANHTICH(
 CREATE TABLE HONNHAN(
 	MaTV VARCHAR(5),
 	MaTVVC VARCHAR(5),
-	NgayBatDau TIMESTAMP DEFAULT CURRENT_TIMESTAMP(), -- Ngày đăng ký kết hôn
-	NgayKetThuc TIMESTAMP,
+	NgayBatDau DATE DEFAULT (CURDATE()), -- Ngày đăng ký kết hôn
+	NgayKetThuc DATE,
 	PRIMARY KEY(MaTV, MaTVVC),
 	FOREIGN KEY(MaTV) REFERENCES THANHVIEN(MaTV),
 	FOREIGN KEY(MaTVVC) REFERENCES THANHVIEN(MaTV)
@@ -160,9 +160,7 @@ CREATE TABLE CT_PHIEUTHU(
     SoThuTu INT DEFAULT 1,
     TinhHopLe BOOLEAN DEFAULT FALSE,
 	NgayXacNhan TIMESTAMP NULL,
-	NguoiXacNhan VARCHAR(5),
 	PRIMARY KEY(MaPhieuThu, MaDMT),
-    FOREIGN KEY(NguoiXacNhan) REFERENCES THANHVIEN(MaTV),
 	FOREIGN KEY(MaPhieuThu) REFERENCES PHIEUTHUQUY(MaPhieuThu),
 	FOREIGN KEY(MaDMT) REFERENCES DANHMUC(MaDM)
 );
@@ -212,6 +210,18 @@ CREATE TABLE REFRESH_TOKENS (
     INDEX idx_tendangnhap (TenDangNhap),
     INDEX idx_ngayhethan (NgayHetHan)
 );
+
+-- Bảng yêu cầu đặt lại mật khẩu (Password Reset Requests)
+CREATE TABLE YEU_CAU_MAT_KHAU (
+    MaYeuCau INT AUTO_INCREMENT PRIMARY KEY,
+    Email VARCHAR(50) NOT NULL,
+    TrangThai ENUM('ChoDuyet', 'DaDuyet', 'DaDoi') DEFAULT 'ChoDuyet',
+    NgayYeuCau TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
+    NgayDuyet TIMESTAMP NULL,
+    INDEX idx_email (Email),
+    INDEX idx_trangthai (TrangThai)
+);
+
 -- ----------TRIGGER--------------
 DELIMITER $$
 -- 1. Generate ID cho THANHVIEN
@@ -546,22 +556,11 @@ BEGIN
 END$$
 
 -- 17. Trigger tự động gán NguoiXacNhan
-CREATE TRIGGER TRG_INSERT_NGUOIXACNHAN_CT_PHIEUTHU
+CREATE TRIGGER TRG_INSERT_AUTO_CT_PHIEUTHU
 BEFORE INSERT ON CT_PHIEUTHU
 FOR EACH ROW
 BEGIN
-    DECLARE nguoi_dam_nhan VARCHAR(5);
     DECLARE max_stt INT;
-    
-    -- Lấy người đảm nhận danh mục từ bảng DANHMUC
-    SELECT NguoiDamNhan INTO nguoi_dam_nhan
-    FROM DANHMUC
-    WHERE MaDM = NEW.MaDMT;
-    
-    -- Gán NguoiXacNhan = NguoiDamNhan nếu không được chỉ định
-    IF NEW.NguoiXacNhan IS NULL AND nguoi_dam_nhan IS NOT NULL THEN
-        SET NEW.NguoiXacNhan = nguoi_dam_nhan;
-    END IF;
     
     -- Tự động tính số thứ tự trong phiếu thu
     SELECT COALESCE(MAX(SoThuTu), 0) + 1 INTO max_stt
@@ -764,8 +763,8 @@ INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, MaLoaiTK) VALUES
 INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, MaLoaiTK) VALUES 
 ('truongtoc@example.com', SHA2(CONCAT('Test@123', 'secret'), 256), 'LTK02');
 
-INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, MaLoaiTK) VALUES 
-('user@example.com', SHA2(CONCAT('Test@123', 'secret'), 256), 'LTK03');
+-- INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, MaLoaiTK) VALUES 
+-- ('user@example.com', SHA2(CONCAT('Test@123', 'secret'), 256), 'LTK03');
 
 INSERT INTO DANHMUC (MaDM, TenDM, NguoiDamNhan, TongThu, TongChi) VALUES
 ('DM01', 'Quỹ khuyến học', 'TV02', 0, 0),

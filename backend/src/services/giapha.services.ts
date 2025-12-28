@@ -23,26 +23,24 @@ interface UpdateGiaPhaData {
 
 class GiaPhaService {
     /**
-     * Lấy danh sách tất cả gia phả
-     */
-    /**
      * Lấy danh sách gia phả theo quyền hạn
-     * - Admin (LTK01): Tất cả
-     * - Owner (LTK02) / User (LTK03): Chỉ cây mình làm Trưởng tộc hoặc là Thành viên
+     * - Admin (LTK01): Xem tất cả gia phả
+     * - TruongToc (LTK02): Xem tất cả gia phả (để có overview)
+     * - ThanhVien (LTK03): Chỉ xem gia phả của mình
      */
-    async getAll(userId: string, userRole: string): Promise<GiaPha[]> {
+    async getAll(userId?: string, userRole?: string): Promise<GiaPha[]> {
         let condition = '';
         const params: any[] = [];
 
-        // Nếu không phải Admin, áp dụng filter
-        if (userRole !== 'LTK01') {
+        // ThanhVien chỉ xem gia phả của mình
+        if (userRole === 'LTK03') {
             condition = `
-                WHERE gp.TruongToc = ? 
-                OR gp.MaGiaPha IN (SELECT MaGiaPha FROM THANHVIEN WHERE MaTV = ?)
+                WHERE gp.MaGiaPha IN (SELECT MaGiaPha FROM THANHVIEN WHERE MaTV = ?)
             `;
-            params.push(userId, userId);
+            params.push(userId);
         }
 
+        // Use simple subqueries like getDetail which works correctly
         const sql = `
             SELECT 
                 gp.MaGiaPha,
@@ -50,17 +48,16 @@ class GiaPhaService {
                 gp.NguoiLap,
                 gp.TGLap,
                 gp.TruongToc,
-                nl.HoTen as TenNguoiLap,
-                tt.HoTen as TenTruongToc,
+                (SELECT HoTen FROM THANHVIEN WHERE MaTV = gp.NguoiLap) as TenNguoiLap,
+                (SELECT HoTen FROM THANHVIEN WHERE MaTV = gp.TruongToc) as TenTruongToc,
                 (SELECT COUNT(*) FROM THANHVIEN WHERE MaGiaPha = gp.MaGiaPha) as SoThanhVien,
-                (SELECT CAST(MAX(DOI) - MIN(DOI) + 1 AS UNSIGNED) FROM THANHVIEN WHERE MaGiaPha = gp.MaGiaPha) as SoDoi
+                (SELECT MAX(DOI) FROM THANHVIEN WHERE MaGiaPha = gp.MaGiaPha) as SoDoi
             FROM CAYGIAPHA gp
-            LEFT JOIN THANHVIEN nl ON gp.NguoiLap = nl.MaTV
-            LEFT JOIN THANHVIEN tt ON gp.TruongToc = tt.MaTV
             ${condition}
             ORDER BY gp.TGLap DESC
         `;
         const result = await databaseService.query<RowDataPacket[]>(sql, params);
+        console.log('DEBUG getAll result:', JSON.stringify(result));
         return result as GiaPha[];
     }
 

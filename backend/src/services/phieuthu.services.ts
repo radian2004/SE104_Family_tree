@@ -23,7 +23,7 @@ interface ChiTietPhieuThuRow extends RowDataPacket {
   SoThuTu: number;
   TinhHopLe: boolean;
   NgayXacNhan: Date | null;
-  NguoiXacNhan: string | null;
+  NguoiDamNhan: string | null;
   TenNguoiXacNhan: string | null;
 }
 
@@ -203,11 +203,11 @@ class PhieuThuService {
         ct.SoThuTu,
         ct.TinhHopLe,
         ct.NgayXacNhan,
-        ct.NguoiXacNhan,
+        dm.NguoiDamNhan,
         tv.HoTen AS TenNguoiXacNhan
       FROM CT_PHIEUTHU ct
       LEFT JOIN DANHMUC dm ON ct.MaDMT = dm.MaDM
-      LEFT JOIN THANHVIEN tv ON ct.NguoiXacNhan = tv.MaTV
+      LEFT JOIN THANHVIEN tv ON dm.NguoiDamNhan = tv.MaTV
       WHERE ct.MaPhieuThu = ?
       ORDER BY ct.SoThuTu
     `;

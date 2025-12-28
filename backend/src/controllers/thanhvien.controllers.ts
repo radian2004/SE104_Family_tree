@@ -125,6 +125,7 @@ export const deleteThanhVienController = async (req: Request, res: Response) => 
  * Query params: 
  * - NamBatDau: Năm bắt đầu (required)
  * - NamKetThuc: Năm kết thúc (required)
+ * - MaGiaPha: Mã gia phả (optional, Admin only)
  * 
  * Response: {
  *   message: string,
@@ -141,13 +142,19 @@ export const deleteThanhVienController = async (req: Request, res: Response) => 
  */
 export const getBaoCaoTangGiamController = async (req: Request, res: Response) => {
   const userInfo = req.userInfo!;
-  const { NamBatDau, NamKetThuc } = req.query;
+  const { NamBatDau, NamKetThuc, MaGiaPha } = req.query;
 
   try {
+    // Nếu Admin truyền MaGiaPha, override userInfo.MaGiaPha
+    let effectiveUserInfo = { ...userInfo };
+    if (MaGiaPha && userInfo.MaLoaiTK === 'LTK01') {
+      effectiveUserInfo.MaGiaPha = MaGiaPha as string;
+    }
+
     const result = await thanhvienService.getBaoCaoTangGiam(
       Number(NamBatDau),
       Number(NamKetThuc),
-      userInfo
+      effectiveUserInfo
     );
 
     return res.status(200).json({

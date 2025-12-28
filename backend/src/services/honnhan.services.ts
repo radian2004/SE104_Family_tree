@@ -20,13 +20,42 @@ interface HonNhanDetailRow extends RowDataPacket {
   TrangThaiHonNhan: string;
 }
 
+interface ThanhVienInfo extends RowDataPacket {
+  MaTV: string;
+  HoTen: string;
+  GioiTinh: string;
+  NgayGioSinh: Date;
+  NgayGioMat: Date | null;
+  TrangThai: string;
+}
+
 class HonNhanService {
   /**
-   * Thiết lập quan hệ hôn nhân
-   * @param MaTV - Mã thành viên trong gia phả
-   * @param MaTVVC - Mã vợ/chồng (chưa có trong gia phả)
-   * @param NgayBatDau - Ngày đăng ký kết hôn
-   * @param NgayKetThuc - Ngày kết thúc hôn nhân (optional)
+   * Helper: Lấy thông tin thành viên
+   */
+  private async getThanhVienInfo(MaTV: string): Promise<ThanhVienInfo | null> {
+    const sql = `
+      SELECT MaTV, HoTen, GioiTinh, NgayGioSinh, NgayGioMat, TrangThai
+      FROM THANHVIEN WHERE MaTV = ?
+    `;
+    const rows = await databaseService.query<ThanhVienInfo[]>(sql, [MaTV]);
+    return rows.length > 0 ? rows[0] : null;
+  }
+
+  /**
+   * Helper: Kiểm tra thành viên có đang trong hôn nhân chưa kết thúc không
+   */
+  private async hasActiveMarriage(MaTV: string): Promise<boolean> {
+    const sql = `
+      SELECT COUNT(*) as count FROM HONNHAN 
+      WHERE (MaTV = ? OR MaTVVC = ?) AND NgayKetThuc IS NULL
+    `;
+    const rows = await databaseService.query<RowDataPacket[]>(sql, [MaTV, MaTV]);
+    return rows[0].count > 0;
+  }
+
+  /**
+   * Thiết lập quan hệ hôn nhân với đầy đủ validation
    */
   async thietLapHonNhan(payload: {
     MaTV: string;
@@ -34,8 +63,85 @@ class HonNhanService {
     NgayBatDau: Date;
     NgayKetThuc?: Date;
   }) {
-    const honNhan = new HonNhan(payload);
+    const { MaTV, MaTVVC, NgayBatDau, NgayKetThuc } = payload;
 
+    // [1] Lấy thông tin 2 thành viên
+    const tv1 = await this.getThanhVienInfo(MaTV);
+    const tv2 = await this.getThanhVienInfo(MaTVVC);
+
+    if (!tv1) throw new Error(`Không tìm thấy thành viên với mã ${MaTV}`);
+    if (!tv2) throw new Error(`Không tìm thấy thành viên với mã ${MaTVVC}`);
+
+    // [2] VALIDATION: Khác giới tính (không cho phép cùng giới)
+    if (tv1.GioiTinh === tv2.GioiTinh) {
+      throw new Error('Quan hệ hôn nhân chỉ được phép giữa hai người khác giới tính!');
+    }
+
+    // [3] VALIDATION: Hai người đều còn sống
+    const ngayKetHon = new Date(NgayBatDau);
+
+    if (tv1.TrangThai === 'Mất' || tv1.NgayGioMat) {
+      const ngayMat1 = new Date(tv1.NgayGioMat!);
+      if (ngayKetHon > ngayMat1) {
+        throw new Error(`${tv1.HoTen} đã qua đời ngày ${ngayMat1.toLocaleDateString('vi-VN')}, không thể kết hôn sau ngày này!`);
+      }
+    }
+
+    if (tv2.TrangThai === 'Mất' || tv2.NgayGioMat) {
+      const ngayMat2 = new Date(tv2.NgayGioMat!);
+      if (ngayKetHon > ngayMat2) {
+        throw new Error(`${tv2.HoTen} đã qua đời ngày ${ngayMat2.toLocaleDateString('vi-VN')}, không thể kết hôn sau ngày này!`);
+      }
+    }
+
+    // [4] VALIDATION: Ngày kết hôn phải sau ngày sinh của cả hai
+    const ngaySinh1 = new Date(tv1.NgayGioSinh);
+    const ngaySinh2 = new Date(tv2.NgayGioSinh);
+
+    if (ngayKetHon <= ngaySinh1) {
+      throw new Error(`Ngày kết hôn phải sau ngày sinh của ${tv1.HoTen}!`);
+    }
+    if (ngayKetHon <= ngaySinh2) {
+      throw new Error(`Ngày kết hôn phải sau ngày sinh của ${tv2.HoTen}!`);
+    }
+
+    // [5] VALIDATION: Kiểm tra người 1 có đang trong hôn nhân không
+    const hasActive1 = await this.hasActiveMarriage(MaTV);
+    if (hasActive1) {
+      throw new Error(`${tv1.HoTen} đang trong một hôn nhân chưa kết thúc! Hãy kết thúc hôn nhân hiện tại trước.`);
+    }
+
+    // [6] VALIDATION: Kiểm tra người 2 có đang trong hôn nhân không
+    const hasActive2 = await this.hasActiveMarriage(MaTVVC);
+    if (hasActive2) {
+      throw new Error(`${tv2.HoTen} đang trong một hôn nhân chưa kết thúc! Hãy kết thúc hôn nhân hiện tại trước.`);
+    }
+
+    // [7] VALIDATION: Kiểm tra quan hệ hôn nhân đã tồn tại (cả 2 chiều)
+    const checkDuplicateSql = `
+      SELECT MaTV, MaTVVC FROM HONNHAN 
+      WHERE (MaTV = ? AND MaTVVC = ?) 
+         OR (MaTV = ? AND MaTVVC = ?)
+    `;
+    const existingRows = await databaseService.query<RowDataPacket[]>(
+      checkDuplicateSql,
+      [MaTV, MaTVVC, MaTVVC, MaTV]
+    );
+
+    if (existingRows.length > 0) {
+      throw new Error('Quan hệ hôn nhân giữa hai thành viên này đã tồn tại!');
+    }
+
+    // [8] VALIDATION: Nếu có ngày kết thúc, phải sau ngày bắt đầu
+    if (NgayKetThuc) {
+      const ngayKetThucDate = new Date(NgayKetThuc);
+      if (ngayKetThucDate <= ngayKetHon) {
+        throw new Error('Ngày kết thúc hôn nhân phải sau ngày bắt đầu!');
+      }
+    }
+
+    // [9] INSERT quan hệ hôn nhân
+    const honNhan = new HonNhan(payload);
     const sql = `
       INSERT INTO HONNHAN (MaTV, MaTVVC, NgayBatDau, NgayKetThuc) 
       VALUES (?, ?, ?, ?)
@@ -60,11 +166,9 @@ class HonNhanService {
         affectedRows: result.affectedRows
       };
     } catch (error: any) {
-      // Xử lý lỗi từ trigger
       if (error.code === 'ER_SIGNAL_EXCEPTION') {
-        throw new Error(error.sqlMessage || 'Ngày kết hôn phải sau ngày sinh thành viên!');
+        throw new Error(error.sqlMessage || 'Lỗi thiết lập hôn nhân!');
       }
-      // Xử lý lỗi duplicate key (quan hệ đã tồn tại)
       if (error.code === 'ER_DUP_ENTRY') {
         throw new Error('Quan hệ hôn nhân giữa hai thành viên này đã tồn tại!');
       }
@@ -126,7 +230,6 @@ class HonNhanService {
 
   /**
    * Lấy danh sách quan hệ hôn nhân của một thành viên cụ thể
-   * Trả về thông tin của NGƯỜI KIA (vợ/chồng), không phải người đang query
    */
   async getHonNhanByMaTV(MaTV: string) {
     const sql = `
@@ -152,45 +255,81 @@ class HonNhanService {
   }
 
   /**
-   * Cập nhật ngày kết thúc hôn nhân (ly hôn)
+   * Cập nhật ngày kết thúc hôn nhân (ly hôn) với validation
    */
   async ketThucHonNhan(MaTV: string, MaTVVC: string, NgayKetThuc: Date) {
-    const sql = `
+    // [1] Lấy thông tin hôn nhân hiện tại
+    const checkSql = `
+      SELECT h.NgayBatDau, tv1.HoTen as HoTen1, tv2.HoTen as HoTen2
+      FROM HONNHAN h
+      JOIN THANHVIEN tv1 ON h.MaTV = tv1.MaTV
+      JOIN THANHVIEN tv2 ON h.MaTVVC = tv2.MaTV
+      WHERE (h.MaTV = ? AND h.MaTVVC = ?) OR (h.MaTV = ? AND h.MaTVVC = ?)
+    `;
+    const existing = await databaseService.query<RowDataPacket[]>(checkSql, [MaTV, MaTVVC, MaTVVC, MaTV]);
+
+    if (existing.length === 0) {
+      throw new Error('Không tìm thấy quan hệ hôn nhân để cập nhật');
+    }
+
+    const marriage = existing[0];
+    const ngayBatDau = new Date(marriage.NgayBatDau);
+    const ngayKetThucDate = new Date(NgayKetThuc);
+
+    // [2] VALIDATION: Ngày kết thúc phải sau ngày bắt đầu
+    if (ngayKetThucDate <= ngayBatDau) {
+      throw new Error(`Ngày kết thúc (${ngayKetThucDate.toLocaleDateString('vi-VN')}) phải sau ngày bắt đầu hôn nhân (${ngayBatDau.toLocaleDateString('vi-VN')})!`);
+    }
+
+    // [3] UPDATE - thử cả 2 chiều
+    const sql1 = `
       UPDATE HONNHAN 
       SET NgayKetThuc = ? 
       WHERE MaTV = ? AND MaTVVC = ?
     `;
+    const result1 = await databaseService.query<ResultSetHeader>(sql1, [NgayKetThuc, MaTV, MaTVVC]);
 
-    const result = await databaseService.query<ResultSetHeader>(sql, [NgayKetThuc, MaTV, MaTVVC]);
+    if (result1.affectedRows === 0) {
+      // Thử chiều ngược lại
+      const sql2 = `
+        UPDATE HONNHAN 
+        SET NgayKetThuc = ? 
+        WHERE MaTV = ? AND MaTVVC = ?
+      `;
+      const result2 = await databaseService.query<ResultSetHeader>(sql2, [NgayKetThuc, MaTVVC, MaTV]);
 
-    if (result.affectedRows === 0) {
-      throw new Error('Không tìm thấy quan hệ hôn nhân để cập nhật');
+      if (result2.affectedRows === 0) {
+        throw new Error('Không tìm thấy quan hệ hôn nhân để cập nhật');
+      }
     }
 
     return {
       message: 'Cập nhật kết thúc hôn nhân thành công',
-      affectedRows: result.affectedRows
+      affectedRows: 1
     };
   }
 
   /**
-   * Xóa quan hệ hôn nhân
+   * Xóa quan hệ hôn nhân (hỗ trợ cả 2 chiều)
    */
   async xoaHonNhan(MaTV: string, MaTVVC: string) {
-    const sql = `
-      DELETE FROM HONNHAN 
-      WHERE MaTV = ? AND MaTVVC = ?
-    `;
+    // Thử xóa theo thứ tự đầu tiên
+    const sql1 = `DELETE FROM HONNHAN WHERE MaTV = ? AND MaTVVC = ?`;
+    const result1 = await databaseService.query<ResultSetHeader>(sql1, [MaTV, MaTVVC]);
 
-    const result = await databaseService.query<ResultSetHeader>(sql, [MaTV, MaTVVC]);
+    if (result1.affectedRows === 0) {
+      // Thử chiều ngược lại
+      const sql2 = `DELETE FROM HONNHAN WHERE MaTV = ? AND MaTVVC = ?`;
+      const result2 = await databaseService.query<ResultSetHeader>(sql2, [MaTVVC, MaTV]);
 
-    if (result.affectedRows === 0) {
-      throw new Error('Không tìm thấy quan hệ hôn nhân để xóa');
+      if (result2.affectedRows === 0) {
+        throw new Error('Không tìm thấy quan hệ hôn nhân để xóa');
+      }
     }
 
     return {
       message: 'Xóa quan hệ hôn nhân thành công',
-      affectedRows: result.affectedRows
+      affectedRows: 1
     };
   }
 

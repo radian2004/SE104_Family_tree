@@ -9,29 +9,29 @@ class KetThucService {
   /**
    * 1. Ghi nhận kết thúc (thành viên qua đời)
    * Cập nhật thông tin mất vào bảng THANHVIEN
-   * Trigger sẽ tự động chuyển TrangThai → 'Mất'
+   * Đồng thời cập nhật TrangThai → 'Mất'
    */
   async ghiNhanKetThuc(payload: GhiNhanKetThucPayload, userInfo?: TaiKhoanInfo) {
     const { MaTV, NgayGioMat, MaNguyenNhanMat, MaDiaDiem } = payload
-    
+
     const query = `
       UPDATE THANHVIEN
       SET NgayGioMat = ?,
           MaNguyenNhanMat = ?,
-          MaDiaDiem = ?
+          MaDiaDiem = ?,
+          TrangThai = 'Mất'
       WHERE MaTV = ? AND TrangThai = 'Còn Sống'
     `
-    
-    // ✅ SỬA: executeQuery → query, bỏ destructuring
+
     const result = await databaseService.query<ResultSetHeader>(
       query,
       [NgayGioMat, MaNguyenNhanMat, MaDiaDiem, MaTV]
     )
-    
+
     if (result.affectedRows === 0) {
       throw new Error('Không tìm thấy thành viên hoặc thành viên đã được ghi nhận mất trước đó')
     }
-    
+
     return {
       message: 'Ghi nhận kết thúc thành công',
       MaTV,
@@ -39,9 +39,9 @@ class KetThucService {
     }
   }
 
- /**
-   * 2. Tra cứu danh sách thành viên đã kết thúc
-   */
+  /**
+    * 2. Tra cứu danh sách thành viên đã kết thúc
+    */
   async traCuuKetThuc(filters?: {
     HoTen?: string
     MaNguyenNhanMat?: string
@@ -147,7 +147,7 @@ class KetThucService {
     `;
 
     const rows = await databaseService.query<RowDataPacket[]>(query, [MaTV]);
-    
+
     if (rows.length === 0) {
       return null;
     }
@@ -160,7 +160,7 @@ class KetThucService {
       if (!userInfo.MaGiaPha) {
         throw new Error('Bạn chưa thuộc gia phả nào');
       }
-      
+
       if (member.MaGiaPha !== userInfo.MaGiaPha) {
         throw new ErrorWithStatus({
           message: 'Bạn chỉ có quyền xem thông tin kết thúc của thành viên trong gia phả của mình',

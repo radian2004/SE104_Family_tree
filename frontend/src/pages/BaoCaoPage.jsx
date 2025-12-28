@@ -10,6 +10,7 @@ import { FiArrowLeft, FiBarChart2, FiTrendingUp, FiTrendingDown, FiAward, FiUser
 import thanhvienService from '../services/thanhvien.js';
 import thanhtichService from '../services/thanhtich.js';
 import phieuThuService from '../services/phieuthu.js';
+import giaPhaService from '../services/giapha.js';
 
 export default function BaoCaoPage() {
     const currentYear = new Date().getFullYear();
@@ -21,14 +22,38 @@ export default function BaoCaoPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
 
+    // Gia phả selector
+    const [giaPhaList, setGiaPhaList] = useState([]);
+    const [selectedGiaPha, setSelectedGiaPha] = useState(''); // MaGiaPha
+
     // Data
     const [baoCaoThanhVien, setBaoCaoThanhVien] = useState([]);
     const [baoCaoThanhTich, setBaoCaoThanhTich] = useState([]);
     const [baoCaoThuChi, setBaoCaoThuChi] = useState(null);
 
+    // Load gia phả list on mount
+    useEffect(() => {
+        const loadGiaPhaList = async () => {
+            try {
+                const data = await giaPhaService.getAll();
+                setGiaPhaList(data);
+                // Select first gia pha by default if available
+                if (data.length > 0) {
+                    setSelectedGiaPha(data[0].MaGiaPha);
+                }
+            } catch (err) {
+                console.error('Error loading gia pha list:', err);
+            }
+        };
+        loadGiaPhaList();
+    }, []);
+
     // Load báo cáo
     const loadBaoCao = async () => {
+        if (!selectedGiaPha) return; // Wait for gia pha selection
+
         console.log('[BaoCaoPage] Starting loadBaoCao...');
+        console.log('[BaoCaoPage] selectedGiaPha:', selectedGiaPha);
         console.log('[BaoCaoPage] activeTab:', activeTab);
         console.log('[BaoCaoPage] namBatDau:', namBatDau, 'namKetThuc:', namKetThuc);
 
@@ -39,26 +64,28 @@ export default function BaoCaoPage() {
                 console.log('[BaoCaoPage] Calling thanhvienService.getBaoCao...');
                 const response = await thanhvienService.getBaoCao({
                     NamBatDau: namBatDau,
-                    NamKetThuc: namKetThuc
+                    NamKetThuc: namKetThuc,
+                    MaGiaPha: selectedGiaPha
                 });
                 console.log('[BaoCaoPage] thanhvien response:', response);
-                // Backend returns { result: { DanhSach: [...], TongSinh, TongMat, ... } }
-                const data = response?.result?.DanhSach || [];
+                const data = response?.result || [];
                 console.log('[BaoCaoPage] Setting baoCaoThanhVien:', data);
                 setBaoCaoThanhVien(Array.isArray(data) ? data : []);
             } else if (activeTab === 'thanhtich') {
                 console.log('[BaoCaoPage] Calling thanhtichService.getBaoCao...');
                 const response = await thanhtichService.getBaoCao({
                     NamBatDau: namBatDau,
-                    NamKetThuc: namKetThuc
+                    NamKetThuc: namKetThuc,
+                    MaGiaPha: selectedGiaPha
                 });
                 console.log('[BaoCaoPage] thanhtich response:', response);
-                const data = response?.result?.DanhSach || response?.result || [];
+                // Backend returns {result: {NamBatDau, NamKetThuc, TongSoLuong, DanhSach: [...]}}
+                const data = response?.result?.DanhSach || [];
                 console.log('[BaoCaoPage] Setting baoCaoThanhTich:', data);
                 setBaoCaoThanhTich(Array.isArray(data) ? data : []);
             } else if (activeTab === 'thuChi') {
                 console.log('[BaoCaoPage] Calling phieuThuService.traCuuDanhMuc...');
-                const response = await phieuThuService.traCuuDanhMuc(namKetThuc);
+                const response = await phieuThuService.traCuuDanhMuc(namKetThuc, selectedGiaPha);
                 console.log('[BaoCaoPage] thuChi response:', response);
                 setBaoCaoThuChi(response);
             }
@@ -73,14 +100,16 @@ export default function BaoCaoPage() {
     };
 
     useEffect(() => {
-        console.log('[BaoCaoPage] useEffect triggered, activeTab:', activeTab);
-        loadBaoCao();
-    }, [activeTab]);
+        console.log('[BaoCaoPage] useEffect triggered, activeTab:', activeTab, 'selectedGiaPha:', selectedGiaPha);
+        if (selectedGiaPha) {
+            loadBaoCao();
+        }
+    }, [activeTab, selectedGiaPha]);
 
-    // Tính tổng (safely handle empty arrays and parse to numbers)
-    const totalSinh = Array.isArray(baoCaoThanhVien) ? baoCaoThanhVien.reduce((sum, row) => sum + Number(row.SoLuongSinh || 0), 0) : 0;
-    const totalKetHon = Array.isArray(baoCaoThanhVien) ? baoCaoThanhVien.reduce((sum, row) => sum + Number(row.SoLuongKetHon || 0), 0) : 0;
-    const totalMat = Array.isArray(baoCaoThanhVien) ? baoCaoThanhVien.reduce((sum, row) => sum + Number(row.SoLuongMat || 0), 0) : 0;
+    // Tính tổng - sử dụng đúng tên trường từ backend (SoSinh, SoKetHon, SoMat)
+    const totalSinh = Array.isArray(baoCaoThanhVien) ? baoCaoThanhVien.reduce((sum, row) => sum + Number(row.SoSinh || row.SoLuongSinh || 0), 0) : 0;
+    const totalKetHon = Array.isArray(baoCaoThanhVien) ? baoCaoThanhVien.reduce((sum, row) => sum + Number(row.SoKetHon || row.SoLuongKetHon || 0), 0) : 0;
+    const totalMat = Array.isArray(baoCaoThanhVien) ? baoCaoThanhVien.reduce((sum, row) => sum + Number(row.SoMat || row.SoLuongMat || 0), 0) : 0;
     const totalThanhTich = Array.isArray(baoCaoThanhTich) ? baoCaoThanhTich.reduce((sum, row) => sum + Number(row.SoLuong || 0), 0) : 0;
 
     return (
@@ -151,6 +180,23 @@ export default function BaoCaoPage() {
                 {/* Filters */}
                 <div className="glass-card p-4 mb-6">
                     <div className="flex flex-wrap items-end gap-4">
+                        <div className="min-w-[200px]">
+                            <label className="block text-sm font-medium text-neutral-600 mb-1">Gia phả</label>
+                            <select
+                                value={selectedGiaPha}
+                                onChange={(e) => setSelectedGiaPha(e.target.value)}
+                                className="input w-full"
+                            >
+                                {giaPhaList.length === 0 && (
+                                    <option value="">Đang tải...</option>
+                                )}
+                                {giaPhaList.map((gp) => (
+                                    <option key={gp.MaGiaPha} value={gp.MaGiaPha}>
+                                        {gp.TenGiaPha} ({gp.MaGiaPha})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                         <div>
                             <label className="block text-sm font-medium text-neutral-600 mb-1">Từ năm</label>
                             <input
@@ -175,7 +221,7 @@ export default function BaoCaoPage() {
                         </div>
                         <button
                             onClick={loadBaoCao}
-                            disabled={isLoading}
+                            disabled={isLoading || !selectedGiaPha}
                             className="btn btn-primary"
                         >
                             {isLoading ? 'Đang tải...' : 'Xem báo cáo'}
@@ -314,157 +360,59 @@ export default function BaoCaoPage() {
                             )}
                         </div>
                     </div>
-                )}
+                )
+                }
 
                 {/* ==================== BÁO CÁO THÀNH TÍCH ==================== */}
-                {!isLoading && activeTab === 'thanhtich' && (
-                    <div className="space-y-6">
-                        {/* Summary Card */}
-                        <div className="glass-card p-6">
-                            <div className="flex items-center gap-4">
-                                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
-                                    <FiAward className="w-7 h-7 text-white" />
-                                </div>
-                                <div>
-                                    <div className="text-3xl font-bold text-neutral-800">{totalThanhTich}</div>
-                                    <div className="text-sm text-neutral-500">Tổng thành tích đạt được</div>
+                {
+                    !isLoading && activeTab === 'thanhtich' && (
+                        <div className="space-y-6">
+                            {/* Summary Card */}
+                            <div className="glass-card p-6">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+                                        <FiAward className="w-7 h-7 text-white" />
+                                    </div>
+                                    <div>
+                                        <div className="text-3xl font-bold text-neutral-800">{totalThanhTich}</div>
+                                        <div className="text-sm text-neutral-500">Tổng thành tích đạt được</div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Table */}
-                        <div className="glass-card overflow-hidden">
-                            <div className="px-6 py-4 border-b border-neutral-100">
-                                <h2 className="text-xl font-bold text-neutral-800">
-                                    Chi tiết thành tích theo năm ({namBatDau} - {namKetThuc})
-                                </h2>
-                            </div>
-
-                            {baoCaoThanhTich.length === 0 ? (
-                                <div className="p-12 text-center">
-                                    <div className="text-5xl mb-4">🏆</div>
-                                    <p className="text-neutral-500">Không có dữ liệu trong khoảng thời gian này</p>
-                                </div>
-                            ) : (
-                                <div className="overflow-x-auto">
-                                    <table className="w-full">
-                                        <thead>
-                                            <tr className="bg-neutral-50 border-b border-neutral-100">
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-600">STT</th>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-600">Năm</th>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-600">Loại thành tích</th>
-                                                <th className="px-6 py-4 text-center text-sm font-semibold text-amber-600">Số lượng</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {baoCaoThanhTich.map((row, index) => (
-                                                <tr key={`${row.Nam}-${row.TenLTT}-${index}`} className="border-b border-neutral-100 hover:bg-neutral-50">
-                                                    <td className="px-6 py-4 text-sm text-neutral-500">{row.STT || index + 1}</td>
-                                                    <td className="px-6 py-4 font-medium text-neutral-800">{row.Nam}</td>
-                                                    <td className="px-6 py-4 text-neutral-700">{row.TenLTT || row.LoaiThanhTich || '-'}</td>
-                                                    <td className="px-6 py-4 text-center">
-                                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-amber-100 text-amber-700">
-                                                            🏆 {row.SoLuong || 0}
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                        <tfoot>
-                                            <tr className="bg-neutral-50 font-bold">
-                                                <td className="px-6 py-4" colSpan="3">Tổng cộng</td>
-                                                <td className="px-6 py-4 text-center text-amber-600">{totalThanhTich}</td>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {/* Thu Chi Report */}
-                {!isLoading && activeTab === 'thuChi' && (
-                    <div className="glass-card overflow-hidden animate-fade-in">
-                        <div className="p-6 border-b border-neutral-100 bg-gradient-to-r from-emerald-50 to-green-50">
-                            <h2 className="text-xl font-bold text-neutral-800">
-                                💰 Báo cáo thu chi năm {namKetThuc}
-                            </h2>
-                        </div>
-
-                        {!baoCaoThuChi ? (
-                            <div className="p-12 text-center">
-                                <div className="text-5xl mb-4">💵</div>
-                                <p className="text-neutral-500">Nhấn "Xem báo cáo" để tải dữ liệu thu chi</p>
-                            </div>
-                        ) : (
-                            <>
-                                {/* Summary Cards */}
-                                <div className="p-6 grid grid-cols-2 md:grid-cols-4 gap-4 bg-neutral-50">
-                                    <div className="bg-white p-4 rounded-xl text-center shadow-sm">
-                                        <div className="text-2xl mb-2">💰</div>
-                                        <div className="text-lg font-bold text-emerald-600">
-                                            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(baoCaoThuChi.tongThuNam || 0)}
-                                        </div>
-                                        <div className="text-xs text-neutral-500">Tổng thu</div>
-                                    </div>
-                                    <div className="bg-white p-4 rounded-xl text-center shadow-sm">
-                                        <div className="text-2xl mb-2">💸</div>
-                                        <div className="text-lg font-bold text-red-600">
-                                            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(baoCaoThuChi.tongChiNam || 0)}
-                                        </div>
-                                        <div className="text-xs text-neutral-500">Tổng chi</div>
-                                    </div>
-                                    <div className={`bg-white p-4 rounded-xl text-center shadow-sm`}>
-                                        <div className="text-2xl mb-2">{(baoCaoThuChi.tongDuThieu || 0) >= 0 ? '📈' : '📉'}</div>
-                                        <div className={`text-lg font-bold ${(baoCaoThuChi.tongDuThieu || 0) >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
-                                            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Math.abs(baoCaoThuChi.tongDuThieu || 0))}
-                                        </div>
-                                        <div className="text-xs text-neutral-500">{(baoCaoThuChi.tongDuThieu || 0) >= 0 ? 'Dư' : 'Thiếu'}</div>
-                                    </div>
-                                    <div className="bg-white p-4 rounded-xl text-center shadow-sm">
-                                        <div className="text-2xl mb-2">📂</div>
-                                        <div className="text-lg font-bold text-violet-600">{baoCaoThuChi.tongSoDanhMuc || 0}</div>
-                                        <div className="text-xs text-neutral-500">Danh mục</div>
-                                    </div>
+                            {/* Table */}
+                            <div className="glass-card overflow-hidden">
+                                <div className="px-6 py-4 border-b border-neutral-100">
+                                    <h2 className="text-xl font-bold text-neutral-800">
+                                        Chi tiết thành tích theo năm ({namBatDau} - {namKetThuc})
+                                    </h2>
                                 </div>
 
-                                {/* Detailed Table */}
-                                {baoCaoThuChi.danhSach && baoCaoThuChi.danhSach.length > 0 ? (
+                                {baoCaoThanhTich.length === 0 ? (
+                                    <div className="p-12 text-center">
+                                        <div className="text-5xl mb-4">🏆</div>
+                                        <p className="text-neutral-500">Không có dữ liệu trong khoảng thời gian này</p>
+                                    </div>
+                                ) : (
                                     <div className="overflow-x-auto">
                                         <table className="w-full">
                                             <thead>
                                                 <tr className="bg-neutral-50 border-b border-neutral-100">
                                                     <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-600">STT</th>
-                                                    <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-600">Danh mục</th>
-                                                    <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-600">Người đảm nhận</th>
-                                                    <th className="px-6 py-4 text-right text-sm font-semibold text-emerald-600">Tổng thu</th>
-                                                    <th className="px-6 py-4 text-right text-sm font-semibold text-red-600">Tổng chi</th>
-                                                    <th className="px-6 py-4 text-right text-sm font-semibold text-neutral-600">Dư/Thiếu</th>
-                                                    <th className="px-6 py-4 text-center text-sm font-semibold text-neutral-600">Trạng thái</th>
+                                                    <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-600">Năm</th>
+                                                    <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-600">Loại thành tích</th>
+                                                    <th className="px-6 py-4 text-center text-sm font-semibold text-amber-600">Số lượng</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {baoCaoThuChi.danhSach.map((item, idx) => (
-                                                    <tr key={idx} className="border-b border-neutral-100 hover:bg-neutral-50">
-                                                        <td className="px-6 py-4 text-sm text-neutral-500">{item.STT}</td>
-                                                        <td className="px-6 py-4 font-medium text-neutral-800">{item.TenDM}</td>
-                                                        <td className="px-6 py-4 text-neutral-600">{item.NguoiDamNhan?.HoTen || '-'}</td>
-                                                        <td className="px-6 py-4 text-right font-medium text-emerald-600">
-                                                            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.TongThu || 0)}
-                                                        </td>
-                                                        <td className="px-6 py-4 text-right font-medium text-red-600">
-                                                            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.TongChi || 0)}
-                                                        </td>
-                                                        <td className={`px-6 py-4 text-right font-medium ${(item.DuThieu || 0) >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
-                                                            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Math.abs(item.DuThieu || 0))}
-                                                        </td>
+                                                {baoCaoThanhTich.map((row, index) => (
+                                                    <tr key={`${row.Nam}-${row.TenLTT}-${index}`} className="border-b border-neutral-100 hover:bg-neutral-50">
+                                                        <td className="px-6 py-4 text-sm text-neutral-500">{row.STT || index + 1}</td>
+                                                        <td className="px-6 py-4 font-medium text-neutral-800">{row.Nam}</td>
+                                                        <td className="px-6 py-4 text-neutral-700">{row.TenLTT || row.LoaiThanhTich || '-'}</td>
                                                         <td className="px-6 py-4 text-center">
-                                                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${item.TrangThai === 'Dư' ? 'bg-blue-100 text-blue-700' :
-                                                                item.TrangThai === 'Thiếu' ? 'bg-orange-100 text-orange-700' :
-                                                                    'bg-neutral-100 text-neutral-600'
-                                                                }`}>
-                                                                {item.TrangThai || 'Cân bằng'}
+                                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-amber-100 text-amber-700">
+                                                                🏆 {row.SoLuong || 0}
                                                             </span>
                                                         </td>
                                                     </tr>
@@ -473,35 +421,137 @@ export default function BaoCaoPage() {
                                             <tfoot>
                                                 <tr className="bg-neutral-50 font-bold">
                                                     <td className="px-6 py-4" colSpan="3">Tổng cộng</td>
-                                                    <td className="px-6 py-4 text-right text-emerald-600">
-                                                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(baoCaoThuChi.tongThuNam || 0)}
-                                                    </td>
-                                                    <td className="px-6 py-4 text-right text-red-600">
-                                                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(baoCaoThuChi.tongChiNam || 0)}
-                                                    </td>
-                                                    <td className={`px-6 py-4 text-right ${(baoCaoThuChi.tongDuThieu || 0) >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
-                                                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Math.abs(baoCaoThuChi.tongDuThieu || 0))}
-                                                    </td>
-                                                    <td className="px-6 py-4 text-center">
-                                                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${(baoCaoThuChi.tongDuThieu || 0) >= 0 ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'
-                                                            }`}>
-                                                            {(baoCaoThuChi.tongDuThieu || 0) >= 0 ? 'Dư' : 'Thiếu'}
-                                                        </span>
-                                                    </td>
+                                                    <td className="px-6 py-4 text-center text-amber-600">{totalThanhTich}</td>
                                                 </tr>
                                             </tfoot>
                                         </table>
                                     </div>
-                                ) : (
-                                    <div className="p-12 text-center">
-                                        <div className="text-5xl mb-4">📊</div>
-                                        <p className="text-neutral-500">Không có dữ liệu thu chi trong năm {namKetThuc}</p>
-                                    </div>
                                 )}
-                            </>
-                        )}
-                    </div>
-                )}
+                            </div>
+                        </div>
+                    )
+                }
+
+                {/* Thu Chi Report */}
+                {
+                    !isLoading && activeTab === 'thuChi' && (
+                        <div className="glass-card overflow-hidden animate-fade-in">
+                            <div className="p-6 border-b border-neutral-100 bg-gradient-to-r from-emerald-50 to-green-50">
+                                <h2 className="text-xl font-bold text-neutral-800">
+                                    💰 Báo cáo thu chi năm {namKetThuc}
+                                </h2>
+                            </div>
+
+                            {!baoCaoThuChi ? (
+                                <div className="p-12 text-center">
+                                    <div className="text-5xl mb-4">💵</div>
+                                    <p className="text-neutral-500">Nhấn "Xem báo cáo" để tải dữ liệu thu chi</p>
+                                </div>
+                            ) : (
+                                <>
+                                    {/* Summary Cards */}
+                                    <div className="p-6 grid grid-cols-2 md:grid-cols-4 gap-4 bg-neutral-50">
+                                        <div className="bg-white p-4 rounded-xl text-center shadow-sm">
+                                            <div className="text-2xl mb-2">💰</div>
+                                            <div className="text-lg font-bold text-emerald-600">
+                                                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(baoCaoThuChi.tongThuNam || 0)}
+                                            </div>
+                                            <div className="text-xs text-neutral-500">Tổng thu</div>
+                                        </div>
+                                        <div className="bg-white p-4 rounded-xl text-center shadow-sm">
+                                            <div className="text-2xl mb-2">💸</div>
+                                            <div className="text-lg font-bold text-red-600">
+                                                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(baoCaoThuChi.tongChiNam || 0)}
+                                            </div>
+                                            <div className="text-xs text-neutral-500">Tổng chi</div>
+                                        </div>
+                                        <div className={`bg-white p-4 rounded-xl text-center shadow-sm`}>
+                                            <div className="text-2xl mb-2">{(baoCaoThuChi.tongDuThieu || 0) >= 0 ? '📈' : '📉'}</div>
+                                            <div className={`text-lg font-bold ${(baoCaoThuChi.tongDuThieu || 0) >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+                                                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Math.abs(baoCaoThuChi.tongDuThieu || 0))}
+                                            </div>
+                                            <div className="text-xs text-neutral-500">{(baoCaoThuChi.tongDuThieu || 0) >= 0 ? 'Dư' : 'Thiếu'}</div>
+                                        </div>
+                                        <div className="bg-white p-4 rounded-xl text-center shadow-sm">
+                                            <div className="text-2xl mb-2">📂</div>
+                                            <div className="text-lg font-bold text-violet-600">{baoCaoThuChi.tongSoDanhMuc || 0}</div>
+                                            <div className="text-xs text-neutral-500">Danh mục</div>
+                                        </div>
+                                    </div>
+
+                                    {/* Detailed Table */}
+                                    {baoCaoThuChi.danhSach && baoCaoThuChi.danhSach.length > 0 ? (
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full">
+                                                <thead>
+                                                    <tr className="bg-neutral-50 border-b border-neutral-100">
+                                                        <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-600">STT</th>
+                                                        <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-600">Danh mục</th>
+                                                        <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-600">Người đảm nhận</th>
+                                                        <th className="px-6 py-4 text-right text-sm font-semibold text-emerald-600">Tổng thu</th>
+                                                        <th className="px-6 py-4 text-right text-sm font-semibold text-red-600">Tổng chi</th>
+                                                        <th className="px-6 py-4 text-right text-sm font-semibold text-neutral-600">Dư/Thiếu</th>
+                                                        <th className="px-6 py-4 text-center text-sm font-semibold text-neutral-600">Trạng thái</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {baoCaoThuChi.danhSach.map((item, idx) => (
+                                                        <tr key={idx} className="border-b border-neutral-100 hover:bg-neutral-50">
+                                                            <td className="px-6 py-4 text-sm text-neutral-500">{item.STT}</td>
+                                                            <td className="px-6 py-4 font-medium text-neutral-800">{item.TenDM}</td>
+                                                            <td className="px-6 py-4 text-neutral-600">{item.NguoiDamNhan?.HoTen || '-'}</td>
+                                                            <td className="px-6 py-4 text-right font-medium text-emerald-600">
+                                                                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.TongThu || 0)}
+                                                            </td>
+                                                            <td className="px-6 py-4 text-right font-medium text-red-600">
+                                                                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.TongChi || 0)}
+                                                            </td>
+                                                            <td className={`px-6 py-4 text-right font-medium ${(item.DuThieu || 0) >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+                                                                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Math.abs(item.DuThieu || 0))}
+                                                            </td>
+                                                            <td className="px-6 py-4 text-center">
+                                                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${item.TrangThai === 'Dư' ? 'bg-blue-100 text-blue-700' :
+                                                                    item.TrangThai === 'Thiếu' ? 'bg-orange-100 text-orange-700' :
+                                                                        'bg-neutral-100 text-neutral-600'
+                                                                    }`}>
+                                                                    {item.TrangThai || 'Cân bằng'}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                                <tfoot>
+                                                    <tr className="bg-neutral-50 font-bold">
+                                                        <td className="px-6 py-4" colSpan="3">Tổng cộng</td>
+                                                        <td className="px-6 py-4 text-right text-emerald-600">
+                                                            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(baoCaoThuChi.tongThuNam || 0)}
+                                                        </td>
+                                                        <td className="px-6 py-4 text-right text-red-600">
+                                                            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(baoCaoThuChi.tongChiNam || 0)}
+                                                        </td>
+                                                        <td className={`px-6 py-4 text-right ${(baoCaoThuChi.tongDuThieu || 0) >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+                                                            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Math.abs(baoCaoThuChi.tongDuThieu || 0))}
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${(baoCaoThuChi.tongDuThieu || 0) >= 0 ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'
+                                                                }`}>
+                                                                {(baoCaoThuChi.tongDuThieu || 0) >= 0 ? 'Dư' : 'Thiếu'}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                    ) : (
+                                        <div className="p-12 text-center">
+                                            <div className="text-5xl mb-4">📊</div>
+                                            <p className="text-neutral-500">Không có dữ liệu thu chi trong năm {namKetThuc}</p>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    )}
             </main>
         </div>
     );

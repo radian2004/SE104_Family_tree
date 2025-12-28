@@ -14,7 +14,7 @@ import {
     addMemberByEmailController
 } from '~/controllers/giapha.controllers';
 import { accessTokenValidator } from '~/middlewares/users.middlewares';
-import { attachUserInfo, requireAdminOrOwner } from '~/middlewares/authorization.middlewares';
+import { attachUserInfo, requireAdminOrOwner, checkViewGiaPhaDetail } from '~/middlewares/authorization.middlewares';
 
 const giaPhaRouter = Router();
 
@@ -29,24 +29,24 @@ giaPhaRouter.get('/search-members', accessTokenValidator, wrapAsync(searchMember
 /**
  * Lấy danh sách tất cả gia phả
  * GET /caygiapha
- * Quyền: Tất cả (public)
+ * Quyền: Admin/TruongToc xem tất cả, ThanhVien chỉ xem của mình
  */
-giaPhaRouter.get('/', wrapAsync(getAllGiaPhaController));
+giaPhaRouter.get('/', accessTokenValidator, attachUserInfo, wrapAsync(getAllGiaPhaController));
 
 /**
  * Lấy danh sách thành viên của gia phả
  * GET /caygiapha/:MaGiaPha/members
- * Quyền: Tất cả (public)
+ * Quyền: Admin xem tất cả, TruongToc/ThanhVien chỉ xem gia phả của mình
  * ⚠️ Route này phải đặt TRƯỚC /:MaGiaPha
  */
-giaPhaRouter.get('/:MaGiaPha/members', wrapAsync(getMembersController));
+giaPhaRouter.get('/:MaGiaPha/members', accessTokenValidator, checkViewGiaPhaDetail, wrapAsync(getMembersController));
 
 /**
  * Lấy chi tiết gia phả
  * GET /caygiapha/:MaGiaPha
- * Quyền: Tất cả (public)
+ * Quyền: Admin xem tất cả, TruongToc/ThanhVien chỉ xem gia phả của mình
  */
-giaPhaRouter.get('/:MaGiaPha', wrapAsync(getGiaPhaDetailController));
+giaPhaRouter.get('/:MaGiaPha', accessTokenValidator, checkViewGiaPhaDetail, wrapAsync(getGiaPhaDetailController));
 
 /**
  * Tạo gia phả mới

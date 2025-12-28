@@ -132,116 +132,283 @@ class UsersService {
     const rows = await databaseService.query<TaiKhoanRow[]>(sql, [email]);
     return rows.length > 0;
   }
+
   /**
    * Đăng ký tài khoản mới
+   * - Trường hợp 1: giapha.exist = false → Tạo gia phả MỚI, user là Trưởng tộc
+   * - Trường hợp 2: giapha.exist = true → Gia nhập gia phả có sẵn
    */
   async register(payload: RegisterReqBody) {
-    const { name, email, password, giapha } = payload
-    const hashedPassword = hashPassword(password)
-    let MaGiaPha: string | null = null
-    let giapha_message: string
-    let MaTV: string | null = null
+    const { name, email, password, giapha } = payload;
+    const hashedPassword = hashPassword(password);
 
-    // Trường hợp 0: Không cung cấp thông tin gia phả (đăng ký đơn giản)
-    if (!giapha || !giapha.name) {
-      // Chỉ tạo tài khoản, không liên kết với thành viên hoặc gia phả
-      await databaseService.getPool().execute<ResultSetHeader>(
-        'INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, MaLoaiTK) VALUES (?, ?, ?)',
-        [email, hashedPassword, 'LTK03']
-      )
-
-      return {
-        giapha_message: 'Đăng ký thành công! Bạn có thể tham gia gia phả sau.',
-        MaGiaPha: null
-      };
+    // Kiểm tra email đã tồn tại chưa
+    const emailExists = await this.checkEmailExist(email);
+    if (emailExists) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.EMAIL_ALREADY_EXISTS,
+        status: HTTP_STATUS.CONFLICT
+      });
     }
 
-    // Trường hợp 1: Tạo gia phả mới (exist = false)
+    // Validate input
+    if (!name || !giapha || !giapha.name) {
+      throw new ErrorWithStatus({
+        message: 'Vui lòng nhập tên và thông tin gia phả',
+        status: HTTP_STATUS.BAD_REQUEST
+      });
+    }
+
+    let MaGiaPha: string;
+    let MaTV: string;
+    let HoTen: string = name;
+    let resultMessage: string;
+    let accountType: string = 'LTK03'; // User mặc định
+
+    // ========== TRƯỜNG HỢP 1: TẠO GIA PHẢ MỚI (exist = false) ==========
     if (giapha.exist === false) {
-      // Tạo gia phả mới - Trigger sẽ tự động sinh MaGiaPha
-      const [insertGiaPhaResult] = await databaseService.getPool().execute<ResultSetHeader>(
+      // 1. Tạo gia phả mới
+      await databaseService.getPool().execute<ResultSetHeader>(
         'INSERT INTO CAYGIAPHA (TenGiaPha) VALUES (?)',
         [giapha.name]
-      )
+      );
 
-      // Lấy MaGiaPha vừa được tạo
-      const [rows] = await databaseService.getPool().execute<RowDataPacket[]>(
+      // 2. Lấy MaGiaPha vừa tạo
+      const [gpRows] = await databaseService.getPool().execute<RowDataPacket[]>(
         'SELECT MaGiaPha FROM CAYGIAPHA WHERE TenGiaPha = ? ORDER BY MaGiaPha DESC LIMIT 1',
         [giapha.name]
-      )
-      MaGiaPha = rows[0].MaGiaPha
-      giapha_message = USERS_MESSAGES.GIAPHA_CREATED
+      );
+      MaGiaPha = gpRows[0].MaGiaPha;
 
-      // Tạo thành viên (sẽ được set làm NguoiLap và TruongToc)
-      const [insertMemberResult] = await databaseService.getPool().execute<ResultSetHeader>(
-        'INSERT INTO THANHVIEN (MaGiaPha, HoTen) VALUES (?, ?)',
-        [MaGiaPha, name]
-      )
+      // 3. Tạo thành viên mới (người lập gia phả)
+      await databaseService.getPool().execute<ResultSetHeader>(
+        'INSERT INTO THANHVIEN (MaGiaPha, HoTen, DOI, TrangThai) VALUES (?, ?, 1, ?)',
+        [MaGiaPha, name, 'Còn Sống']
+      );
 
-      // Lấy MaTV vừa tạo
-      const [memberRows] = await databaseService.getPool().execute<RowDataPacket[]>(
+      // 4. Lấy MaTV vừa tạo
+      const [tvRows] = await databaseService.getPool().execute<RowDataPacket[]>(
         'SELECT MaTV FROM THANHVIEN WHERE MaGiaPha = ? AND HoTen = ? ORDER BY MaTV DESC LIMIT 1',
         [MaGiaPha, name]
-      )
-      MaTV = memberRows[0].MaTV
+      );
+      MaTV = tvRows[0].MaTV;
 
-      // Tạo tài khoản
-      await databaseService.getPool().execute<ResultSetHeader>(
-        'INSERT INTO TAIKHOAN (TenDangNhap, MaTV, MatKhau, MaLoaiTK) VALUES (?, ?, ?, ?)',
-        [email, MaTV, hashedPassword, 'LTK03']
-      )
-
-      // Cập nhật NguoiLap và TruongToc cho gia phả
+      // 5. Cập nhật NguoiLap và TruongToc
       await databaseService.getPool().execute(
         'UPDATE CAYGIAPHA SET NguoiLap = ?, TruongToc = ? WHERE MaGiaPha = ?',
         [MaTV, MaTV, MaGiaPha]
-      )
+      );
+
+      // 6. Tạo tài khoản với quyền Trưởng tộc (LTK02)
+      accountType = 'LTK02';
+      resultMessage = `Đăng ký thành công! Bạn đã tạo gia phả "${giapha.name}" và trở thành Trưởng tộc.`;
 
     }
-    // Trường hợp 2: Gia nhập gia phả có sẵn (exist = true)
+    // ========== TRƯỜNG HỢP 2: GIA NHẬP GIA PHẢ CÓ SẴN (exist = true) ==========
     else {
-      // Tìm gia phả theo tên
+      // 1. Tìm gia phả theo tên
       const [giaPhaRows] = await databaseService.getPool().execute<RowDataPacket[]>(
         'SELECT MaGiaPha, TenGiaPha FROM CAYGIAPHA WHERE TenGiaPha = ?',
         [giapha.name]
-      )
+      );
 
-      // Nếu không tìm thấy gia phả
       if (giaPhaRows.length === 0) {
         throw new ErrorWithStatus({
-          message: USERS_MESSAGES.GIAPHA_NOT_FOUND,
+          message: `Không tìm thấy gia phả "${giapha.name}". Vui lòng kiểm tra lại hoặc tạo gia phả mới.`,
           status: HTTP_STATUS.NOT_FOUND
-        })
+        });
       }
 
-      MaGiaPha = giaPhaRows[0].MaGiaPha
-      giapha_message = `${USERS_MESSAGES.GIAPHA_JOINED} Gia phả: '${giaPhaRows[0].TenGiaPha}'.`
+      MaGiaPha = giaPhaRows[0].MaGiaPha;
 
-      // Tạo thành viên mới trong gia phả đã tồn tại
-      const [insertMemberResult] = await databaseService.getPool().execute<ResultSetHeader>(
-        'INSERT INTO THANHVIEN (MaGiaPha, HoTen) VALUES (?, ?)',
-        [MaGiaPha, name]
-      )
+      // 2. Tìm thành viên
+      if (giapha.MaTV) {
+        // Đã chọn MaTV cụ thể (trường hợp trùng tên)
+        const [memberRows] = await databaseService.getPool().execute<RowDataPacket[]>(
+          `SELECT tv.MaTV, tv.HoTen, tk.TenDangNhap AS HasAccount
+           FROM THANHVIEN tv
+           LEFT JOIN TAIKHOAN tk ON tv.MaTV = tk.MaTV
+           WHERE tv.MaTV = ? AND tv.MaGiaPha = ?`,
+          [giapha.MaTV, MaGiaPha]
+        );
 
-      // Lấy MaTV vừa tạo
-      const [memberRows] = await databaseService.getPool().execute<RowDataPacket[]>(
-        'SELECT MaTV FROM THANHVIEN WHERE MaGiaPha = ? AND HoTen = ? ORDER BY MaTV DESC LIMIT 1',
-        [MaGiaPha, name]
-      )
-      MaTV = memberRows[0].MaTV
+        if (memberRows.length === 0) {
+          throw new ErrorWithStatus({
+            message: `Không tìm thấy thành viên với mã "${giapha.MaTV}" trong gia phả.`,
+            status: HTTP_STATUS.NOT_FOUND
+          });
+        }
 
-      // Tạo tài khoản
-      await databaseService.getPool().execute<ResultSetHeader>(
-        'INSERT INTO TAIKHOAN (TenDangNhap, MaTV, MatKhau, MaLoaiTK) VALUES (?, ?, ?, ?)',
-        [email, MaTV, hashedPassword, 'LTK03']
-      )
+        const member = memberRows[0];
+        if (member.HasAccount) {
+          throw new ErrorWithStatus({
+            message: `Thành viên này đã có tài khoản (${member.HasAccount}). Vui lòng đăng nhập.`,
+            status: HTTP_STATUS.CONFLICT
+          });
+        }
+
+        MaTV = member.MaTV;
+        HoTen = member.HoTen;
+        resultMessage = `Đăng ký thành công! Tài khoản đã được liên kết với "${HoTen}" trong gia phả "${giapha.name}".`;
+
+      } else {
+        // Tìm theo tên
+        const [memberRows] = await databaseService.getPool().execute<RowDataPacket[]>(
+          `SELECT tv.MaTV, tv.HoTen, tv.DOI, tv.GioiTinh, tv.NgayGioSinh, tv.DiaChi,
+                  cha.HoTen AS TenCha, me.HoTen AS TenMe,
+                  tk.TenDangNhap AS HasAccount
+           FROM THANHVIEN tv
+           LEFT JOIN QUANHECON qhc ON tv.MaTV = qhc.MaTV
+           LEFT JOIN THANHVIEN cha ON qhc.MaTVCha = cha.MaTV
+           LEFT JOIN THANHVIEN me ON qhc.MaTVMe = me.MaTV
+           LEFT JOIN TAIKHOAN tk ON tv.MaTV = tk.MaTV
+           WHERE tv.MaGiaPha = ? AND tv.HoTen = ?
+           ORDER BY tv.DOI ASC`,
+          [MaGiaPha, name]
+        );
+
+        if (memberRows.length === 0) {
+          throw new ErrorWithStatus({
+            message: `Không tìm thấy thành viên "${name}" trong gia phả "${giapha.name}". Vui lòng liên hệ Trưởng tộc để được thêm vào.`,
+            status: HTTP_STATUS.NOT_FOUND
+          });
+        }
+
+        // Filter những người chưa có tài khoản
+        const available = memberRows.filter((m: any) => !m.HasAccount);
+
+        if (available.length === 0) {
+          throw new ErrorWithStatus({
+            message: `Tất cả thành viên tên "${name}" đều đã có tài khoản. Vui lòng đăng nhập.`,
+            status: HTTP_STATUS.CONFLICT
+          });
+        }
+
+        if (available.length === 1) {
+          // Chỉ còn 1 người → tự động liên kết
+          MaTV = available[0].MaTV;
+          HoTen = available[0].HoTen;
+          resultMessage = `Đăng ký thành công! Tài khoản đã được liên kết với "${HoTen}" trong gia phả "${giapha.name}".`;
+        } else {
+          // Nhiều người cùng tên → yêu cầu chọn
+          const candidates = available.map((m: any) => ({
+            MaTV: m.MaTV,
+            HoTen: m.HoTen,
+            DOI: m.DOI,
+            GioiTinh: m.GioiTinh,
+            NgayGioSinh: m.NgayGioSinh,
+            DiaChi: m.DiaChi,
+            TenCha: m.TenCha || 'Không rõ',
+            TenMe: m.TenMe || 'Không rõ'
+          }));
+
+          const error: any = new ErrorWithStatus({
+            message: `Có ${available.length} thành viên cùng tên "${name}". Vui lòng chọn đúng thành viên.`,
+            status: 300 // Multiple Choices
+          });
+          error.candidates = candidates;
+          throw error;
+        }
+      }
+
+      // 3. Kiểm tra thành viên đã có tài khoản chưa (double check)
+      const [accountRows] = await databaseService.getPool().execute<RowDataPacket[]>(
+        'SELECT TenDangNhap FROM TAIKHOAN WHERE MaTV = ?',
+        [MaTV]
+      );
+
+      if (accountRows.length > 0) {
+        throw new ErrorWithStatus({
+          message: `Thành viên này đã có tài khoản (${accountRows[0].TenDangNhap}). Vui lòng đăng nhập.`,
+          status: HTTP_STATUS.CONFLICT
+        });
+      }
     }
 
-    // Trả về thông tin đăng ký (không trả về tokens - tokens sẽ được cấp khi login)
+    // Tạo tài khoản
+    await databaseService.getPool().execute<ResultSetHeader>(
+      'INSERT INTO TAIKHOAN (TenDangNhap, MaTV, MatKhau, MaLoaiTK) VALUES (?, ?, ?, ?)',
+      [email, MaTV, hashedPassword, accountType]
+    );
+
     return {
-      giapha_message,
-      MaGiaPha
+      message: resultMessage!,
+      MaTV,
+      MaGiaPha,
+      HoTen,
+      TenGiaPha: giapha.name,
+      isNewGiaPha: giapha.exist === false,
+      isTruongToc: accountType === 'LTK02'
     };
+  }
+
+  /**
+   * Lấy danh sách gia phả (cho dropdown đăng ký)
+   */
+  async getAvailableGenealogies() {
+    const sql = 'SELECT MaGiaPha, TenGiaPha FROM CAYGIAPHA ORDER BY TenGiaPha';
+    const rows = await databaseService.query<RowDataPacket[]>(sql);
+    return rows.map(row => ({
+      MaGiaPha: row.MaGiaPha,
+      TenGiaPha: row.TenGiaPha
+    }));
+  }
+
+  /**
+   * Lấy danh sách thành viên chưa có tài khoản trong gia phả (cho dropdown đăng ký)
+   */
+  async getAvailableMembersForRegistration(giaPhaName: string) {
+    // Tìm gia phả theo tên
+    const [giaPhaRows] = await databaseService.getPool().execute<RowDataPacket[]>(
+      'SELECT MaGiaPha FROM CAYGIAPHA WHERE TenGiaPha = ?',
+      [giaPhaName]
+    );
+
+    if (giaPhaRows.length === 0) {
+      throw new ErrorWithStatus({
+        message: `Không tìm thấy gia phả "${giaPhaName}"`,
+        status: HTTP_STATUS.NOT_FOUND
+      });
+    }
+
+    const MaGiaPha = giaPhaRows[0].MaGiaPha;
+
+    // Lấy thành viên chưa có tài khoản + thông tin chi tiết để phân biệt trùng tên
+    const sql = `
+      SELECT 
+        tv.MaTV, 
+        tv.HoTen, 
+        tv.NgayGioSinh,
+        tv.DOI,
+        tv.GioiTinh,
+        tv.DiaChi,
+        qq.TenQueQuan,
+        cha.HoTen AS TenCha,
+        me.HoTen AS TenMe
+      FROM THANHVIEN tv
+      LEFT JOIN TAIKHOAN tk ON tv.MaTV = tk.MaTV
+      LEFT JOIN QUEQUAN qq ON tv.MaQueQuan = qq.MaQueQuan
+      LEFT JOIN QUANHECON qhc_cha ON tv.MaTV = qhc_cha.MaCon AND qhc_cha.QuanHe = 'Con ruột'
+      LEFT JOIN THANHVIEN cha ON qhc_cha.MaCha = cha.MaTV
+      LEFT JOIN QUANHECON qhc_me ON tv.MaTV = qhc_me.MaCon AND qhc_me.QuanHe = 'Con ruột'
+      LEFT JOIN HONNHAN hn ON qhc_me.MaCha = hn.MaChong OR qhc_me.MaCha = hn.MaVo
+      LEFT JOIN THANHVIEN me ON (hn.MaVo = me.MaTV AND hn.MaChong = cha.MaTV) OR (hn.MaChong = me.MaTV AND hn.MaVo = cha.MaTV)
+      WHERE tv.MaGiaPha = ? AND tk.TenDangNhap IS NULL
+      ORDER BY tv.HoTen, tv.NgayGioSinh
+    `;
+    const rows = await databaseService.query<RowDataPacket[]>(sql, [MaGiaPha]);
+
+    return rows.map(row => ({
+      MaTV: row.MaTV,
+      HoTen: row.HoTen,
+      NgayGioSinh: row.NgayGioSinh,
+      DOI: row.DOI,
+      GioiTinh: row.GioiTinh,
+      DiaChi: row.DiaChi || row.TenQueQuan,
+      TenCha: row.TenCha,
+      TenMe: row.TenMe,
+      HasAccount: false
+    }));
   }
 
   /**

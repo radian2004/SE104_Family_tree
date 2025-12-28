@@ -11,7 +11,6 @@ export interface CTPhieuThuSchema {
   SoThuTu: number;
   SoTienThu: number;
   TinhHopLe: boolean;
-  NguoiXacNhan: string;
   NgayXacNhan: Date | null;
 }
 

@@ -14,16 +14,48 @@ dotenv.config();
  * POST /users/register
  */
 export const registerController = async (req: Request<ParamsDictionary, any, RegisterReqBody>, res: Response) => {
-  const result = await usersService.register(req.body)
+  const result = await usersService.register(req.body);
 
   return res.status(HTTP_STATUS.CREATED).json({
     message: USERS_MESSAGES.REGISTER_SUCCESS,
-    result: {
-      giapha_message: result.giapha_message,
-      MaGiaPha: result.MaGiaPha
-    }
-  })
-}
+    result
+  });
+};
+
+/**
+ * Controller lấy danh sách gia phả cho đăng ký
+ * GET /users/genealogies
+ */
+export const getGenealogiesController = async (req: Request, res: Response) => {
+  const result = await usersService.getAvailableGenealogies();
+
+  return res.status(HTTP_STATUS.OK).json({
+    message: 'Lấy danh sách gia phả thành công',
+    result
+  });
+};
+
+/**
+ * Controller lấy danh sách thành viên chưa có tài khoản
+ * GET /users/available-members?giapha=<tên gia phả>
+ */
+export const getAvailableMembersController = async (req: Request, res: Response) => {
+  const giaPhaName = req.query.giapha as string;
+
+  if (!giaPhaName) {
+    throw new ErrorWithStatus({
+      message: 'Vui lòng cung cấp tên gia phả',
+      status: HTTP_STATUS.BAD_REQUEST
+    });
+  }
+
+  const result = await usersService.getAvailableMembersForRegistration(giaPhaName);
+
+  return res.status(HTTP_STATUS.OK).json({
+    message: 'Lấy danh sách thành viên thành công',
+    result
+  });
+};
 
 /**
  * Controller đăng nhập

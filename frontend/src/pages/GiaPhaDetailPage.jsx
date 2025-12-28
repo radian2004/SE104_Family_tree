@@ -1,19 +1,25 @@
 /**
  * ============================================
  * GIA PHẢ DETAIL PAGE - Chi tiết cây gia phả
+ * Với chức năng thêm/sửa/xóa thành viên
  * ============================================
  */
 
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { FiArrowLeft, FiUsers, FiCalendar } from 'react-icons/fi';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { FiArrowLeft, FiUsers, FiCalendar, FiUserPlus, FiRefreshCw } from 'react-icons/fi';
 import giaPhaService from '../services/giapha.js';
+import thanhvienService from '../services/thanhvien.js';
 import { useLookupsStore } from '../store/lookupsStore.js';
+import { usePermissions } from '../hooks/usePermissions';
 import FamilyTreeView from '../components/giapha/FamilyTreeView.jsx';
 
 export default function GiaPhaDetailPage() {
     const { MaGiaPha } = useParams();
+    const navigate = useNavigate();
     const { cayGiaPha } = useLookupsStore();
+    const { isAdmin, isOwner } = usePermissions();
+    const canManage = isAdmin || isOwner;
 
     const [giaPha, setGiaPha] = useState(null);
     const [thanhVienList, setThanhVienList] = useState([]);
@@ -22,38 +28,60 @@ export default function GiaPhaDetailPage() {
     const [error, setError] = useState(null);
 
     // Load gia phả detail and members
-    useEffect(() => {
-        const loadData = async () => {
-            setIsLoading(true);
-            setError(null);
-            try {
-                // Fetch Gia Pha Detail directly
-                const gpDetail = await giaPhaService.getDetail(MaGiaPha);
-                if (gpDetail) {
-                    setGiaPha(gpDetail);
-                }
-
-                // Get tree data (members + relationships)
-                const treeData = await giaPhaService.getTreeData(MaGiaPha);
-                setThanhVienList(treeData.members);
-                setRelationships(treeData.relationships);
-            } catch (err) {
-                setError(err.response?.data?.message || 'Lỗi tải thông tin gia phả');
-                console.error('Error loading gia pha detail:', err);
-            } finally {
-                setIsLoading(false);
+    const loadData = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            // Fetch Gia Pha Detail directly
+            const gpDetail = await giaPhaService.getDetail(MaGiaPha);
+            if (gpDetail) {
+                setGiaPha(gpDetail);
             }
-        };
 
+            // Get tree data (members + relationships)
+            const treeData = await giaPhaService.getTreeData(MaGiaPha);
+            setThanhVienList(treeData.members);
+            setRelationships(treeData.relationships);
+        } catch (err) {
+            setError(err.response?.data?.message || 'Lỗi tải thông tin gia phả');
+            console.error('Error loading gia pha detail:', err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
         if (MaGiaPha) {
             loadData();
         }
-    }, [MaGiaPha]); // Removed cayGiaPha dependency
+    }, [MaGiaPha]);
 
     // Check if member is deceased
     const isDeceased = (tv) => {
         const status = (tv.TrangThai || '').toLowerCase();
         return status.includes('mất') || status.includes('mat');
+    };
+
+    // Handle edit member - navigate to edit page
+    const handleEditMember = (MaTV) => {
+        navigate(`/thanhvien/edit/${MaTV}`);
+    };
+
+    // Handle delete member
+    const handleDeleteMember = async (MaTV, HoTen) => {
+        if (!window.confirm(`Bạn có chắc chắn muốn xóa thành viên "${HoTen}"?\n\nHành động này không thể hoàn tác!`)) {
+            return;
+        }
+
+        try {
+            await thanhvienService.delete(MaTV);
+            alert('Đã xóa thành viên thành công!');
+            // Reload data
+            loadData();
+        } catch (err) {
+            console.error('Delete error:', err);
+            alert(err.response?.data?.message || 'Lỗi xóa thành viên');
+        }
     };
 
     return (
@@ -74,6 +102,28 @@ export default function GiaPhaDetailPage() {
                         <FiArrowLeft className="w-5 h-5" />
                         <span>Quay lại danh sách</span>
                     </Link>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={loadData}
+                            className="btn btn-outline flex items-center gap-2"
+                            disabled={isLoading}
+                        >
+                            <FiRefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                            <span className="hidden sm:inline">Làm mới</span>
+                        </button>
+
+                        {canManage && (
+                            <Link
+                                to={`/thanhvien/create?MaGiaPha=${MaGiaPha}`}
+                                className="btn btn-primary flex items-center gap-2"
+                            >
+                                <FiUserPlus className="w-4 h-4" />
+                                <span>Thêm thành viên</span>
+                            </Link>
+                        )}
+                    </div>
                 </div>
             </nav>
 
@@ -154,16 +204,20 @@ export default function GiaPhaDetailPage() {
                             <div className="glass-card p-4 text-center">
                                 <div className="text-2xl mb-2">👫</div>
                                 <div className="text-2xl font-bold text-violet-600">
-                                    {new Set(thanhVienList.map(tv => tv.DOI)).size || '-'}
+                                    {new Set(thanhVienList.map(tv => tv.DOI)).size || 0}
                                 </div>
                                 <div className="text-xs text-neutral-500">Số đời</div>
                             </div>
                         </div>
 
-                        {/* Family Tree View Component */}
+                        {/* Family Tree View Component with CRUD actions */}
                         <FamilyTreeView
                             members={thanhVienList}
                             relationships={relationships}
+                            canManage={canManage}
+                            onEdit={handleEditMember}
+                            onDelete={handleDeleteMember}
+                            MaGiaPha={MaGiaPha}
                         />
                     </div>
                 )}
