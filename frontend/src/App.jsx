@@ -8,6 +8,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useEffect } from 'react';
 import { useAuthStore } from './store/authStore';
 import { ProtectedRoute, PublicRoute } from './components/common/ProtectedRoute';
+import { AdminRoute, OwnerRoute } from './components/common/AdminRoute';
 
 // Pages
 import LoginPage from './pages/LoginPage';
@@ -23,6 +24,15 @@ import GiaPhaDetailPage from './pages/GiaPhaDetailPage';
 import BaoCaoPage from './pages/BaoCaoPage';
 import QuanHeHonNhanPage from './pages/QuanHeHonNhanPage';
 import QuanHeConCaiPage from './pages/QuanHeConCaiPage';
+import PhieuThuPage from './pages/PhieuThuPage';
+import PhieuChiPage from './pages/PhieuChiPage';
+
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
+
+// Admin Pages
+import QuanLyTaiKhoanPage from './pages/admin/QuanLyTaiKhoanPage';
+import DanhMucPage from './pages/DanhMucPage';
 
 export default function App() {
   const checkAuth = useAuthStore((state) => state.checkAuth);
@@ -38,6 +48,8 @@ export default function App() {
         {/* ==================== PUBLIC ROUTES ==================== */}
         <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
         <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+        <Route path="/forgot-password" element={<PublicRoute><ForgotPasswordPage /></PublicRoute>} />
+        <Route path="/reset-password" element={<PublicRoute><ResetPasswordPage /></PublicRoute>} />
 
         {/* ==================== PROTECTED ROUTES ==================== */}
         <Route
@@ -128,6 +140,45 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* Thu chi routes */}
+        <Route
+          path="/phieuthu"
+          element={
+            <ProtectedRoute>
+              <PhieuThuPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/phieuchi"
+          element={
+            <ProtectedRoute>
+              <PhieuChiPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ==================== ADMIN ROUTES ==================== */}
+        <Route
+          path="/admin/users"
+          element={
+            <AdminRoute>
+              <QuanLyTaiKhoanPage />
+            </AdminRoute>
+          }
+        />
+
+        {/* Quản lý danh mục (Admin + Trưởng tộc) */}
+        <Route
+          path="/danhmuc"
+          element={
+            <OwnerRoute>
+              <DanhMucPage />
+            </OwnerRoute>
+          }
+        />
+
 
         {/* ==================== DEFAULT & 404 ==================== */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />

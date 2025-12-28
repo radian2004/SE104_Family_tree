@@ -1,0 +1,42 @@
+src/controllers/users.controllers.ts(3,25): error TS2307: Cannot find module '~/constants/httpStatus' or its corresponding type declarations.
+src/controllers/users.controllers.ts(4,32): error TS2307: Cannot find module '~/constants/messages' or its corresponding type declarations.
+src/controllers/users.controllers.ts(5,97): error TS2307: Cannot find module '~/models/requests/User.requests' or its corresponding type declarations.
+src/controllers/users.controllers.ts(6,26): error TS2307: Cannot find module '~/services/users.services' or its corresponding type declarations.
+src/controllers/users.controllers.ts(7,33): error TS2307: Cannot find module '~/models/Errors' or its corresponding type declarations.
+src/controllers/users.controllers.ts(8,8): error TS1192: Module '"C:/Users/thanh/Documents/PROJECT/SE104_Family_tree/backend/node_modules/dotenv/lib/main"' has no default export.
+src/controllers/users.controllers.ts(172,29): error TS2339: Property 'decoded_authorization' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+src/middlewares/users.middlewares.ts(4,25): error TS2307: Cannot find module '~/constants/httpStatus' or its corresponding type declarations.
+src/middlewares/users.middlewares.ts(5,32): error TS2307: Cannot find module '~/constants/messages' or its corresponding type declarations.
+src/middlewares/users.middlewares.ts(6,33): error TS2307: Cannot find module '~/models/Errors' or its corresponding type declarations.
+src/middlewares/users.middlewares.ts(7,26): error TS2307: Cannot find module '~/services/users.services' or its corresponding type declarations.
+src/middlewares/users.middlewares.ts(8,26): error TS2307: Cannot find module '~/utils/validation' or its corresponding type declarations.
+src/middlewares/users.middlewares.ts(9,29): error TS2307: Cannot find module '~/utils/jwt' or its corresponding type declarations.
+src/middlewares/users.middlewares.ts(10,8): error TS1192: Module '"C:/Users/thanh/Documents/PROJECT/SE104_Family_tree/backend/node_modules/dotenv/lib/main"' has no default export.
+src/middlewares/users.middlewares.ts(184,11): error TS2339: Property 'decoded_authorization' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+src/middlewares/users.middlewares.ts(233,32): error TS2339: Property 'decoded_refresh_token' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+src/routes/honnhan.routes.ts(11,8): error TS2307: Cannot find module '~/controllers/honnhan.controllers' or its corresponding type declarations.
+src/routes/honnhan.routes.ts(12,27): error TS2307: Cannot find module '~/utils/handlers' or its corresponding type declarations.
+src/routes/ketthuc.routes.ts(8,8): error TS2307: Cannot find module '~/controllers/ketthuc.controllers' or its corresponding type declarations.
+src/routes/ketthuc.routes.ts(9,27): error TS2307: Cannot find module '~/utils/handlers' or its corresponding type declarations.
+src/routes/ketthuc.routes.ts(14,8): error TS2307: Cannot find module '~/middlewares/authorization.middlewares' or its corresponding type declarations.
+src/routes/quanhecon.routes.ts(11,8): error TS2307: Cannot find module '~/controllers/quanhecon.controllers' or its corresponding type declarations.
+src/routes/quanhecon.routes.ts(12,27): error TS2307: Cannot find module '~/utils/handlers' or its corresponding type declarations.
+src/routes/thanhtich.routes.ts(10,8): error TS2307: Cannot find module '~/controllers/thanhtich.controllers' or its corresponding type declarations.
+src/routes/thanhtich.routes.ts(11,27): error TS2307: Cannot find module '~/utils/handlers' or its corresponding type declarations.
+src/routes/thanhtich.routes.ts(17,8): error TS2307: Cannot find module '~/middlewares/authorization.middlewares' or its corresponding type declarations.
+src/routes/thanhvien.routes.ts(16,8): error TS2307: Cannot find module '~/controllers/thanhvien.controllers' or its corresponding type declarations.
+src/routes/thanhvien.routes.ts(17,27): error TS2307: Cannot find module '~/utils/handlers' or its corresponding type declarations.
+src/routes/thanhvien.routes.ts(24,8): error TS2307: Cannot find module '~/middlewares/authorization.middlewares' or its corresponding type declarations.
+src/routes/users.routes.ts(8,8): error TS2307: Cannot find module '~/controllers/users.controllers' or its corresponding type declarations.
+src/routes/users.routes.ts(14,8): error TS2307: Cannot find module '~/middlewares/users.middlewares' or its corresponding type declarations.
+src/routes/users.routes.ts(15,27): error TS2307: Cannot find module '~/utils/handlers' or its corresponding type declarations.
+src/services/database.services.ts(2,8): error TS1192: Module '"C:/Users/thanh/Documents/PROJECT/SE104_Family_tree/backend/node_modules/mysql2/promise"' has no default export.
+src/services/database.services.ts(3,8): error TS1192: Module '"C:/Users/thanh/Documents/PROJECT/SE104_Family_tree/backend/node_modules/dotenv/lib/main"' has no default export.
+src/services/users.services.ts(3,33): error TS2307: Cannot find module '~/models/requests/User.requests' or its corresponding type declarations.
+src/services/users.services.ts(4,30): error TS2307: Cannot find module '~/utils/crypto' or its corresponding type declarations.
+src/services/users.services.ts(5,27): error TS2307: Cannot find module '~/utils/jwt' or its corresponding type declarations.
+src/services/users.services.ts(6,27): error TS2307: Cannot find module '~/constants/enums' or its corresponding type declarations.
+src/services/users.services.ts(7,8): error TS1192: Module '"C:/Users/thanh/Documents/PROJECT/SE104_Family_tree/backend/node_modules/dotenv/lib/main"' has no default export.
+src/services/users.services.ts(8,32): error TS2307: Cannot find module '~/constants/messages' or its corresponding type declarations.
+src/services/users.services.ts(9,25): error TS2307: Cannot find module '~/constants/httpStatus' or its corresponding type declarations.
+src/services/users.services.ts(10,33): error TS2307: Cannot find module '~/models/Errors' or its corresponding type declarations.

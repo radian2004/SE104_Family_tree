@@ -1,46 +1,60 @@
-import { Router } from 'express'
+import { Router } from 'express';
 import {
   ghiNhanKetThucController,
   traCuuKetThucController,
   getChiTietKetThucController,
   capNhatKetThucController,
   xoaKetThucController
-} from '~/controllers/ketthuc.controllers'
+} from '~/controllers/ketthuc.controllers';
 import { wrapAsync } from '~/utils/handlers';
+import { 
+  checkGhiNhanKetThucPermission,
+  checkUpdateDeleteKetThucPermission,
+  attachUserInfoMiddleware
+} from '~/middlewares/authorization.middlewares';
 
+const ketthucRouter = Router();
 
-const ketthucRouter = Router()
-
-/**
- * Route 1: Ghi nhận kết thúc
- * POST /api/ketthuc/ghinhan
- * Body: { MaTV, NgayGioMat, MaNguyenNhanMat, MaDiaDiem }
- */
-ketthucRouter.post('/ghinhan', wrapAsync(ghiNhanKetThucController))
-
-/**
- * Route 2: Tra cứu kết thúc
- * GET /api/ketthuc/tracuu?HoTen=...&MaNguyenNhanMat=...&MaDiaDiem=...&TuNgay=...&DenNgay=...
- */
-ketthucRouter.get('/tracuu', wrapAsync(traCuuKetThucController))
+// ========================================
+// ROUTES CẦN PHÂN QUYỀN
+// ========================================
 
 /**
- * Route 3: Xem chi tiết kết thúc
- * GET /api/ketthuc/:MaTV
+ * POST /ketthuc/ghinhan - Ghi nhận kết thúc
+ * - Admin: ghi nhận cho mọi thành viên
+ * - Owner: ghi nhận cho thành viên trong gia phả
+ * - User: KHÔNG có quyền
  */
-ketthucRouter.get('/:MaTV', wrapAsync(getChiTietKetThucController))
+ketthucRouter.post('/ghinhan', checkGhiNhanKetThucPermission, wrapAsync(ghiNhanKetThucController));
 
 /**
- * Route 4: Cập nhật thông tin kết thúc
- * PUT /api/ketthuc/:MaTV
- * Body: { NgayGioMat?, MaNguyenNhanMat?, MaDiaDiem? }
+ * GET /ketthuc/tracuu - Tra cứu kết thúc
+ * - Admin: tra cứu tất cả
+ * - Owner/User: chỉ tra cứu trong gia phả (filter tại service)
  */
-ketthucRouter.put('/:MaTV', wrapAsync(capNhatKetThucController))
+ketthucRouter.get('/tracuu', attachUserInfoMiddleware, wrapAsync(traCuuKetThucController));
 
 /**
- * Route 5: Xóa thông tin kết thúc (đưa về trạng thái Còn Sống)
- * DELETE /api/ketthuc/:MaTV
+ * GET /ketthuc/:MaTV - Xem chi tiết kết thúc
+ * - Admin: xem tất cả
+ * - Owner/User: chỉ xem trong gia phả (check tại service)
  */
-ketthucRouter.delete('/:MaTV', wrapAsync(xoaKetThucController))
+ketthucRouter.get('/:MaTV', attachUserInfoMiddleware, wrapAsync(getChiTietKetThucController));
 
-export default ketthucRouter
+/**
+ * PUT /ketthuc/:MaTV - Cập nhật thông tin kết thúc
+ * - Admin: sửa được tất cả
+ * - Owner: sửa được trong gia phả
+ * - User: KHÔNG có quyền
+ */
+ketthucRouter.put('/:MaTV', checkUpdateDeleteKetThucPermission, wrapAsync(capNhatKetThucController));
+
+/**
+ * DELETE /ketthuc/:MaTV - Xóa kết thúc (đưa về trạng thái "Còn Sống")
+ * - Admin: xóa được tất cả
+ * - Owner: xóa được trong gia phả
+ * - User: KHÔNG có quyền
+ */
+ketthucRouter.delete('/:MaTV', checkUpdateDeleteKetThucPermission, wrapAsync(xoaKetThucController));
+
+export default ketthucRouter;

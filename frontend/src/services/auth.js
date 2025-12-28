@@ -12,13 +12,14 @@ class AuthService {
   /**
    * Đăng ký tài khoản mới
    * POST /users/register
-   * Backend trả về: { message, user } + set cookies
+   * Payload: { memberName, giapha, email, password, confirm_password }
+   * Backend trả về: { message, result: { MaTV, MaGiaPha, HoTen, TenGiaPha } }
    */
   async register(payload) {
     try {
       const response = await apiClient.post('/users/register', payload);
-      // Backend trả về { message, user } - không có .result
-      return response.data.user;
+      // Backend trả về { message, result }
+      return response.data.result;
     } catch (error) {
       throw error;
     }
@@ -27,13 +28,13 @@ class AuthService {
   /**
    * Đăng nhập
    * POST /users/login
-   * Backend trả về: { message, user } + set cookies
+   * Backend trả về: { message, result: { user } } + set cookies
    */
   async login(payload) {
     try {
       const response = await apiClient.post('/users/login', payload);
-      // Backend trả về { message, user } - không có .result
-      return response.data.user;
+      // Backend trả về { message, result: { user } }
+      return response.data.result?.user || response.data.user || response.data.result;
     } catch (error) {
       throw error;
     }
@@ -69,12 +70,79 @@ class AuthService {
 
   /**
    * Lấy thông tin profile của user
-   * GET /users/profile
+   * GET /users/profile (hoặc /users/me)
    */
   async getProfile() {
     try {
-      const response = await apiClient.get('/users/profile');
+      const response = await apiClient.get('/users/me');
       return response.data.user || response.data.result;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // ==================== PASSWORD RESET APIs ====================
+
+  /**
+   * Gửi yêu cầu quên mật khẩu
+   * POST /users/forgot-password
+   */
+  async forgotPassword(email) {
+    try {
+      const response = await apiClient.post('/users/forgot-password', { email });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Lấy danh sách yêu cầu (Admin)
+   * GET /users/password-requests
+   */
+  async getPasswordRequests() {
+    try {
+      const response = await apiClient.get('/users/password-requests');
+      return response.data.result || response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Duyệt yêu cầu (Admin)
+   * POST /users/password-requests/:id/approve
+   */
+  async approvePasswordRequest(id) {
+    try {
+      const response = await apiClient.post(`/users/password-requests/${id}/approve`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Kiểm tra quyền Reset
+   * POST /users/verify-reset-permission
+   */
+  async verifyResetPermission(email) {
+    try {
+      const response = await apiClient.post('/users/verify-reset-permission', { email });
+      return response.data.result || response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Đặt lại mật khẩu
+   * POST /users/reset-password
+   */
+  async resetPassword(email, newPassword) {
+    try {
+      const response = await apiClient.post('/users/reset-password', { email, newPassword });
+      return response.data.result || response.data;
     } catch (error) {
       throw error;
     }

@@ -7,17 +7,34 @@ import { ErrorWithStatus } from '~/models/Errors';
 import usersService from '~/services/users.services';
 import { validate } from '~/utils/validation';
 import { verifyToken } from '~/utils/jwt';
-import { TokenPayload } from '~/models/requests/User.requests';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 /**
  * Middleware validate đăng ký
+ * Hỗ trợ 2 mode: tạo mới gia phả (exist=false) hoặc gia nhập (exist=true)
  */
 export const registerValidator = validate(
   checkSchema(
     {
       name: {
         notEmpty: {
-          errorMessage: USERS_MESSAGES.NAME_IS_REQUIRED
+          errorMessage: 'Vui lòng nhập họ tên'
+        },
+        isString: true,
+        isLength: {
+          options: {
+            min: 1,
+            max: 50
+          },
+          errorMessage: 'Họ tên không hợp lệ'
+        },
+        trim: true
+      },
+      'giapha.name': {
+        notEmpty: {
+          errorMessage: 'Vui lòng nhập tên gia phả'
         },
         isString: true,
         isLength: {
@@ -25,9 +42,14 @@ export const registerValidator = validate(
             min: 1,
             max: 100
           },
-          errorMessage: USERS_MESSAGES.NAME_LENGTH_INVALID
+          errorMessage: 'Tên gia phả không hợp lệ'
         },
         trim: true
+      },
+      'giapha.exist': {
+        isBoolean: {
+          errorMessage: 'giapha.exist phải là boolean'
+        }
       },
       email: {
         notEmpty: {
@@ -88,6 +110,7 @@ export const registerValidator = validate(
         }
       }
     },
+
     ['body']
   )
 );
@@ -120,95 +143,107 @@ export const loginValidator = validate(
 
 /**
  * Middleware validate access token
- * ✅ Ưu tiên đọc từ cookies, sau đó mới từ header (backward compatible)
+ * Hỗ trợ cả HTTP-only cookies và Authorization header
  */
-export const accessTokenValidator = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const accessTokenValidator = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // ✅ ĐỌC TỪ COOKIES TRƯỚC
-    let access_token = req.cookies?.access_token;
+    let access_token: string | undefined;
 
-    // ✅ NẾU KHÔNG CÓ, ĐỌC TỪ HEADER
-    if (!access_token) {
+    // 1. Ưu tiên lấy từ cookies (HTTP-only cookie auth)
+    if (req.cookies && req.cookies.access_token) {
+      access_token = req.cookies.access_token;
+    }
+    // 2. Fallback: lấy từ Authorization header (Bearer token)
+    else if (req.headers.authorization) {
       const authHeader = req.headers.authorization;
-      if (authHeader && authHeader.startsWith('Bearer ')) {
-        access_token = authHeader.substring(7);
+      if (authHeader.startsWith('Bearer ')) {
+        access_token = authHeader.split(' ')[1];
       }
     }
 
-    // ✅ KIỂM TRA TOKEN
+    // Kiểm tra có access token không
     if (!access_token) {
-      return res.status(401).json({
-        message: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED,
+        status: HTTP_STATUS.UNAUTHORIZED
       });
     }
 
-    // ✅ VERIFY TOKEN
-    const decoded = await verifyToken(
-      access_token,
-      process.env.JWT_SECRET_ACCESS_TOKEN as string
-    );
+    try {
+      // Verify token
+      const decoded_authorization = await verifyToken(
+        access_token,
+        process.env.JWT_SECRET_ACCESS_TOKEN as string
+      );
 
-    // ✅ GẮN VÀO REQUEST
-    (req as any).decoded_authorization = decoded;
+      // Gán vào req để controller sử dụng
+      req.decoded_authorization = decoded_authorization;
+    } catch (error) {
+      throw new ErrorWithStatus({
+        message: (error as JsonWebTokenError).message,
+        status: HTTP_STATUS.UNAUTHORIZED
+      });
+    }
 
     next();
   } catch (error) {
-    return res.status(401).json({
-      message: (error as any).message || 'Invalid token'
-    });
+    next(error);
   }
 };
 
 /**
  * Middleware validate refresh token
- * ✅ Ưu tiên đọc từ cookies, sau đó mới từ body (backward compatible)
  */
-export const refreshTokenValidator = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    // 1. ĐỌC TỪ COOKIES TRƯỚC
-    let refresh_token = req.cookies?.refresh_token;
+export const refreshTokenValidator = validate(
+  checkSchema(
+    {
+      refresh_token: {
+        trim: true,
+        custom: {
+          options: async (value: string, { req }) => {
+            // Kiểm tra có gửi refresh token không
+            if (!value) {
+              throw new ErrorWithStatus({
+                message: USERS_MESSAGES.REFRESH_TOKEN_IS_REQUIRED,
+                status: HTTP_STATUS.UNAUTHORIZED
+              });
+            }
 
-    // 2. NẾU KHÔNG CÓ, ĐỌC TỪ BODY
-    if (!refresh_token) {
-      refresh_token = req.body.refresh_token;
-    }
+            try {
+              // Verify token
+              const decoded_refresh_token = await verifyToken(
+                value,
+                process.env.JWT_SECRET_REFRESH_TOKEN as string
+              );
 
-    // 3. KIỂM TRA
-    if (!refresh_token) {
-      return res.status(401).json({
-        message: USERS_MESSAGES.REFRESH_TOKEN_IS_REQUIRED
-      });
-    }
+              // Kiểm tra refresh token có trong database không
+              const isExist = await usersService.checkRefreshTokenExist(value);
+              if (!isExist) {
+                throw new ErrorWithStatus({
+                  message: USERS_MESSAGES.REFRESH_TOKEN_NOT_EXIST,
+                  status: HTTP_STATUS.UNAUTHORIZED
+                });
+              }
 
-    // 4. VERIFY TOKEN
-    const decoded = await verifyToken(
-      refresh_token,
-      process.env.JWT_SECRET_REFRESH_TOKEN as string
-    );
+              // Gán vào req
+              (req as Request).decoded_refresh_token = decoded_refresh_token;
+            } catch (error) {
+              if (error instanceof ErrorWithStatus) {
+                throw error;
+              }
+              console.log("lỗi ử đây");
+              throw new ErrorWithStatus({
+                message: (error as JsonWebTokenError).message,
+                status: HTTP_STATUS.UNAUTHORIZED
+              });
 
-    // 5. KIỂM TRA TOKEN CÓ TRONG DATABASE KHÔNG
-    const isExist = await usersService.checkRefreshTokenExist(refresh_token);
-    if (!isExist) {
-      return res.status(401).json({
-        message: USERS_MESSAGES.REFRESH_TOKEN_NOT_EXIST
-      });
-    }
+            }
 
-    // 6. GẮN VÀO REQUEST
-    (req as any).decoded_refresh_token = decoded;
-
-    next();
-  } catch (error) {
-    return res.status(401).json({
-      message: (error as any).message || 'Invalid refresh token'
-    });
-  }
-};
+            return true;
+          }
+        }
+      }
+    },
+    ['body']
+  )
+);

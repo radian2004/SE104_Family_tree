@@ -51,17 +51,20 @@ export const isAuthenticated = () => {
 
 // ==================== DATE HELPERS ====================
 /**
- * Format ngày theo dạng DD/MM/YYYY
+ * Format ngày theo dạng DD/MM/YYYY (GMT+7)
  * @param {Date|string} date - Ngày cần format
  * @returns {string} Ngày đã format
  */
 export const formatDate = (date) => {
   if (!date) return '';
   const d = new Date(date);
-  const day = String(d.getDate()).padStart(2, '0');
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const year = d.getFullYear();
-  return `${day}/${month}/${year}`;
+  // Sử dụng toLocaleString với timezone Asia/Ho_Chi_Minh (GMT+7)
+  return d.toLocaleDateString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    timeZone: 'Asia/Ho_Chi_Minh'
+  });
 };
 
 /**
@@ -72,9 +75,12 @@ export const formatDate = (date) => {
 export const formatDateForInput = (date) => {
   if (!date) return '';
   const d = new Date(date);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
+  // Chuyển về timezone GMT+7
+  const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+  const gmt7 = new Date(utc + (7 * 60 * 60 * 1000));
+  const year = gmt7.getFullYear();
+  const month = String(gmt7.getMonth() + 1).padStart(2, '0');
+  const day = String(gmt7.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
 
@@ -85,6 +91,24 @@ export const formatDateForInput = (date) => {
  */
 export const parseDate = (dateString) => {
   return new Date(dateString);
+};
+
+/**
+ * Format datetime đầy đủ theo dạng DD/MM/YYYY HH:mm (GMT+7)
+ * @param {Date|string} date - Ngày giờ cần format
+ * @returns {string} Ngày giờ đã format
+ */
+export const formatDateTime = (date) => {
+  if (!date) return '';
+  const d = new Date(date);
+  return d.toLocaleString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Asia/Ho_Chi_Minh'
+  });
 };
 
 // ==================== STRING HELPERS ====================

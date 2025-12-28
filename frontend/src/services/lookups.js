@@ -172,7 +172,122 @@ class LookupsService {
       return [];
     }
   }
+
+  /**
+   * Lấy danh sách danh mục thu chi
+   * GET /danhmuc
+   */
+  async getDanhMuc() {
+    try {
+      const response = await apiClient.get('/danhmuc');
+      return response.data.result || response.data;
+    } catch (error) {
+      console.warn('API danhmuc chưa có, trả về mảng rỗng');
+      return [];
+    }
+  }
+
+  // ============================================================
+  // CRUD METHODS FOR CATEGORIES
+  // ============================================================
+
+  // ==================== QUÊ QUÁN ====================
+  async addQueQuan(TenQueQuan) {
+    const response = await apiClient.post('/quequan', { TenQueQuan });
+    return response.data;
+  }
+
+  async updateQueQuan(id, TenQueQuan) {
+    const response = await apiClient.put(`/quequan/${id}`, { TenQueQuan });
+    return response.data;
+  }
+
+  async deleteQueQuan(id) {
+    const response = await apiClient.delete(`/quequan/${id}`);
+    return response.data;
+  }
+
+  // ==================== NGHỀ NGHIỆP ====================
+  async addNgheNghiep(TenNgheNghiep) {
+    const response = await apiClient.post('/nghenghiep', { TenNgheNghiep });
+    return response.data;
+  }
+
+  async updateNgheNghiep(id, TenNgheNghiep) {
+    const response = await apiClient.put(`/nghenghiep/${id}`, { TenNgheNghiep });
+    return response.data;
+  }
+
+  async deleteNgheNghiep(id) {
+    const response = await apiClient.delete(`/nghenghiep/${id}`);
+    return response.data;
+  }
+
+  // ==================== NGUYÊN NHÂN MẤT ====================
+  async addNguyenNhanMat(TenNguyenNhanMat) {
+    const response = await apiClient.post('/nguyennhanmat', { TenNguyenNhanMat });
+    return response.data;
+  }
+
+  async updateNguyenNhanMat(id, TenNguyenNhanMat) {
+    const response = await apiClient.put(`/nguyennhanmat/${id}`, { TenNguyenNhanMat });
+    return response.data;
+  }
+
+  async deleteNguyenNhanMat(id) {
+    const response = await apiClient.delete(`/nguyennhanmat/${id}`);
+    return response.data;
+  }
+
+  // ==================== ĐỊA ĐIỂM MAI TÁNG ====================
+  async addDiaDiemMaiTang(TenDiaDiem) {
+    const response = await apiClient.post('/diadiemmaitang', { TenDiaDiem });
+    return response.data;
+  }
+
+  async updateDiaDiemMaiTang(id, TenDiaDiem) {
+    const response = await apiClient.put(`/diadiemmaitang/${id}`, { TenDiaDiem });
+    return response.data;
+  }
+
+  async deleteDiaDiemMaiTang(id) {
+    const response = await apiClient.delete(`/diadiemmaitang/${id}`);
+    return response.data;
+  }
+
+  // ==================== LOẠI THÀNH TÍCH ====================
+  async addLoaiThanhTich(TenLTT) {
+    const response = await apiClient.post('/loaithanhtich', { TenLTT });
+    return response.data;
+  }
+
+  async updateLoaiThanhTich(id, TenLTT) {
+    const response = await apiClient.put(`/loaithanhtich/${id}`, { TenLTT });
+    return response.data;
+  }
+
+  async deleteLoaiThanhTich(id) {
+    const response = await apiClient.delete(`/loaithanhtich/${id}`);
+    return response.data;
+  }
+
+  // ==================== DANH MỤC THU CHI ====================
+  async addDanhMuc(TenDM, NguoiDamNhan = null) {
+    const response = await apiClient.post('/danhmuc', { TenDM, NguoiDamNhan });
+    return response.data;
+  }
+
+  async updateDanhMuc(id, TenDM, NguoiDamNhan = null) {
+    const response = await apiClient.put(`/danhmuc/${id}`, { TenDM, NguoiDamNhan });
+    return response.data;
+  }
+
+  async deleteDanhMuc(id) {
+    const response = await apiClient.delete(`/danhmuc/${id}`);
+    return response.data;
+  }
 }
 
 export default new LookupsService();
 export { LookupsService };
+

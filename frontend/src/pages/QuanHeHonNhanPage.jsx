@@ -9,6 +9,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { FiArrowLeft, FiHeart, FiSave } from 'react-icons/fi';
 import quanheService from '../services/quanhe.js';
 import thanhvienService from '../services/thanhvien.js';
+import DateInput from '../components/common/DateInput';
 
 export default function QuanHeHonNhanPage() {
     const navigate = useNavigate();
@@ -246,13 +247,11 @@ export default function QuanHeHonNhanPage() {
                             <label className="block text-sm font-semibold text-neutral-700 mb-2">
                                 Ngày bắt đầu hôn nhân <span className="text-red-500">*</span>
                             </label>
-                            <input
-                                type="date"
+                            <DateInput
                                 name="NgayBatDau"
                                 value={formData.NgayBatDau}
                                 onChange={handleChange}
                                 className="input"
-                                required
                             />
                             <p className="text-xs text-neutral-500 mt-1">
                                 Ngày kết hôn hoặc bắt đầu quan hệ vợ chồng
@@ -264,8 +263,7 @@ export default function QuanHeHonNhanPage() {
                             <label className="block text-sm font-semibold text-neutral-700 mb-2">
                                 Ngày kết thúc (nếu có)
                             </label>
-                            <input
-                                type="date"
+                            <DateInput
                                 name="NgayKetThuc"
                                 value={formData.NgayKetThuc}
                                 onChange={handleChange}

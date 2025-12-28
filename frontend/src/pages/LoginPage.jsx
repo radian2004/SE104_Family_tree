@@ -171,10 +171,14 @@ export default function LoginPage() {
               </div>
 
               {/* Forgot Password */}
-              <div className="flex justify-end mb-6">
-                <a href="#" className="text-sm font-medium text-orange-600 hover:text-orange-700 transition-colors">
+              <div className="flex justify-end gap-2 mb-6 text-sm font-medium">
+                <Link to="/reset-password" className="text-emerald-600 hover:text-emerald-700 transition-colors">
+                  Đã được duyệt? Đặt lại mật khẩu
+                </Link>
+                <span className="text-neutral-300">|</span>
+                <Link to="/forgot-password" className="text-orange-600 hover:text-orange-700 transition-colors">
                   Quên mật khẩu?
-                </a>
+                </Link>
               </div>
 
               {/* Submit Button */}

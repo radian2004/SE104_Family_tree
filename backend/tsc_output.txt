@@ -1,0 +1,2 @@
+src/services/thanhtich.services.ts(126,19): error TS2339: Property 'MaTV' does not exist on type '{ HoTen?: string | undefined; TenLoaiThanhTich?: string | undefined; TuNgay?: Date | undefined; DenNgay?: Date | undefined; }'.
+src/services/thanhtich.services.ts(128,29): error TS2339: Property 'MaTV' does not exist on type '{ HoTen?: string | undefined; TenLoaiThanhTich?: string | undefined; TuNgay?: Date | undefined; DenNgay?: Date | undefined; }'.

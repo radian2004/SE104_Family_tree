@@ -2,43 +2,58 @@ import { Request, Response } from 'express';
 import { ParamsDictionary } from 'express-serve-static-core';
 import HTTP_STATUS from '~/constants/httpStatus';
 import { USERS_MESSAGES } from '~/constants/messages';
-import { LoginReqBody, LogoutReqBody, RegisterReqBody } from '~/models/requests/User.requests';
+import { LoginReqBody, LogoutReqBody, RefreshTokenReqBody, RegisterReqBody, TokenPayload } from '~/models/requests/User.requests';
 import usersService from '~/services/users.services';
 import { ErrorWithStatus } from '~/models/Errors';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 /**
  * Controller đăng ký
  * POST /users/register
  */
-export const registerController = async (
-  req: Request<ParamsDictionary, any, RegisterReqBody>,
-  res: Response
-) => {
+export const registerController = async (req: Request<ParamsDictionary, any, RegisterReqBody>, res: Response) => {
   const result = await usersService.register(req.body);
 
-  // ✅ SET COOKIES THAY VÌ TRẢ VỀ JSON
-  res.cookie('access_token', result.access_token, {
-    httpOnly: true,        // Không thể truy cập qua JavaScript (chống XSS)
-    secure: process.env.NODE_ENV === 'production',  // Chỉ gửi qua HTTPS trong production
-    sameSite: 'strict',    // Chống CSRF attacks
-    maxAge: 15 * 60 * 1000 // 15 phút (giống access token expiry)
-  });
-
-  res.cookie('refresh_token', result.refresh_token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 7 * 24 * 60 * 60 * 1000  // 7 ngày (giống refresh token expiry)
-  });
-
-  // ✅ Chỉ trả về message và user info (KHÔNG trả tokens)
   return res.status(HTTP_STATUS.CREATED).json({
     message: USERS_MESSAGES.REGISTER_SUCCESS,
-    user: {
-      TenDangNhap: result.user?.TenDangNhap,
-      MaTV: result.user?.MaTV,
-      MaLoaiTK: result.user?.MaLoaiTK
-    }
+    result
+  });
+};
+
+/**
+ * Controller lấy danh sách gia phả cho đăng ký
+ * GET /users/genealogies
+ */
+export const getGenealogiesController = async (req: Request, res: Response) => {
+  const result = await usersService.getAvailableGenealogies();
+
+  return res.status(HTTP_STATUS.OK).json({
+    message: 'Lấy danh sách gia phả thành công',
+    result
+  });
+};
+
+/**
+ * Controller lấy danh sách thành viên chưa có tài khoản
+ * GET /users/available-members?giapha=<tên gia phả>
+ */
+export const getAvailableMembersController = async (req: Request, res: Response) => {
+  const giaPhaName = req.query.giapha as string;
+
+  if (!giaPhaName) {
+    throw new ErrorWithStatus({
+      message: 'Vui lòng cung cấp tên gia phả',
+      status: HTTP_STATUS.BAD_REQUEST
+    });
+  }
+
+  const result = await usersService.getAvailableMembersForRegistration(giaPhaName);
+
+  return res.status(HTTP_STATUS.OK).json({
+    message: 'Lấy danh sách thành viên thành công',
+    result
   });
 };
 
@@ -46,14 +61,12 @@ export const registerController = async (
  * Controller đăng nhập
  * POST /users/login
  */
-export const loginController = async (
-  req: Request<ParamsDictionary, any, LoginReqBody>,
-  res: Response
-) => {
+export const loginController = async (req: Request<ParamsDictionary, any, LoginReqBody>, res: Response) => {
   const { email, password } = req.body;
 
   const result = await usersService.login(email, password);
 
+  // Nếu không tìm thấy hoặc sai password
   if (!result) {
     throw new ErrorWithStatus({
       message: USERS_MESSAGES.EMAIL_OR_PASSWORD_INCORRECT,
@@ -61,7 +74,7 @@ export const loginController = async (
     });
   }
 
-  // ✅ SET COOKIES
+  // ✅ Set HTTP-only cookies cho tokens
   res.cookie('access_token', result.access_token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -76,16 +89,21 @@ export const loginController = async (
     maxAge: 7 * 24 * 60 * 60 * 1000  // 7 ngày
   });
 
+  // Lấy thông tin user để trả về
+  const userInfo = await usersService.getMe(email);
+
   return res.status(HTTP_STATUS.OK).json({
     message: USERS_MESSAGES.LOGIN_SUCCESS,
-    user: result.user
+    result: {
+      user: userInfo
+    }
   });
 };
 
 /**
  * Controller đăng xuất
  * POST /users/logout
- * ✅ KHÔNG CẦN refresh_token trong body nữa, lấy từ cookies
+ * ✅ Lấy refresh_token từ cookies và xóa cả access + refresh cookies
  */
 export const logoutController = async (
   req: Request<ParamsDictionary, any, LogoutReqBody>,
@@ -114,4 +132,119 @@ export const logoutController = async (
   return res.status(HTTP_STATUS.OK).json({
     message: 'Đăng xuất thành công'
   });
+};
+
+/**
+ * Controller refresh token
+ * POST /users/refresh-token
+ * ✅ Lấy refresh_token từ cookies
+ */
+export const refreshTokenController = async (
+  req: Request,
+  res: Response
+) => {
+  // Lấy refresh_token từ cookies
+  const refresh_token = req.cookies.refresh_token;
+
+  if (!refresh_token) {
+    return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+      message: 'Không tìm thấy refresh token'
+    });
+  }
+
+  try {
+    const result = await usersService.refreshToken(refresh_token);
+
+    if (!result) {
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+        message: 'Refresh token không hợp lệ hoặc đã hết hạn'
+      });
+    }
+
+    // Set new access token cookie
+    res.cookie('access_token', result.access_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 15 * 60 * 1000  // 15 phút
+    });
+
+    // Set new refresh token cookie (token rotation)
+    res.cookie('refresh_token', result.refresh_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000  // 7 ngày
+    });
+
+    return res.status(HTTP_STATUS.OK).json({
+      message: 'Refresh token thành công',
+      user: result.user
+    });
+  } catch (error: any) {
+    console.error('[refreshTokenController] Error:', error);
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      message: 'Lỗi refresh token',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Controller lấy thông tin user hiện tại
+ * GET /users/me
+ * Headers: { Authorization: Bearer <access_token> }
+ */
+export const getMeController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    // user_id được set bởi accessTokenValidator middleware
+    const { user_id } = req.decoded_authorization as TokenPayload;
+
+    const result = await usersService.getMe(user_id);
+
+    return res.status(HTTP_STATUS.OK).json({
+      message: 'Lấy thông tin thành công',
+      result
+    });
+  } catch (error: any) {
+    console.error('[getMeController] Error:', error);
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      message: 'Lỗi lấy thông tin người dùng',
+      error: error.message
+    });
+  }
+};
+
+// ==================== PASSWORD RESET CONTROLLERS ====================
+
+export const forgotPasswordController = async (req: Request, res: Response) => {
+  const { email } = req.body;
+  const result = await usersService.forgotPassword(email);
+  return res.status(HTTP_STATUS.OK).json({ result });
+};
+
+export const getPasswordRequestsController = async (req: Request, res: Response) => {
+  const result = await usersService.getPasswordRequests();
+  return res.status(HTTP_STATUS.OK).json({ result });
+};
+
+export const approvePasswordRequestController = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const result = await usersService.approvePasswordRequest(Number(id));
+  return res.status(HTTP_STATUS.OK).json({ result });
+};
+
+export const verifyResetPermissionController = async (req: Request, res: Response) => {
+  const { email } = req.body;
+  const result = await usersService.verifyResetPermission(email);
+  return res.status(HTTP_STATUS.OK).json({ result });
+};
+
+export const resetPasswordController = async (req: Request, res: Response) => {
+  const { email, newPassword } = req.body;
+  const result = await usersService.resetPassword(email, newPassword);
+  return res.status(HTTP_STATUS.OK).json({ result });
 };

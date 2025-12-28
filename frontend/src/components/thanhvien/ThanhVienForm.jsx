@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 import { validateData, createThanhVienSchema } from '../../utils/validators';
 import { useLookupsStore } from '../../store/lookupsStore.js';
 import { formatDateForInput } from '../../utils/helpers';
+import DateInput from '../common/DateInput';
 
 export default function ThanhVienForm({ initialData, onSubmit, isLoading }) {
   const { gioiTinh, queQuan, ngheNghiep, cayGiaPha } = useLookupsStore();
@@ -85,8 +86,7 @@ export default function ThanhVienForm({ initialData, onSubmit, isLoading }) {
         {/* Ngày sinh */}
         <div className="form-group">
           <label className="form-label">Ngày sinh *</label>
-          <input
-            type="date"
+          <DateInput
             name="NgayGioSinh"
             value={formData.NgayGioSinh}
             onChange={handleChange}

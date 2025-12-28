@@ -46,20 +46,6 @@ export default function ThanhVienList({
 
   return (
     <div className="space-y-4">
-      {/* Header với nút thêm */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">
-          Danh sách thành viên ({total})
-        </h2>
-        <button
-          onClick={() => navigate('/thanhvien/create')}
-          className="btn-primary inline-flex items-center gap-2"
-        >
-          <FiPlus />
-          Thêm mới
-        </button>
-      </div>
-
       {/* Table */}
       <div className="table-wrapper card">
         <table className="w-full">
@@ -130,8 +116,8 @@ export default function ThanhVienList({
                     onClick={() => onPageChange(pageNum)}
                     disabled={isLoading}
                     className={`px-3 py-1 rounded ${pageNum === page
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
                       }`}
                   >
                     {pageNum}

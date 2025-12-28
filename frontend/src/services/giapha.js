@@ -62,7 +62,7 @@ class GiaPhaService {
             const relationships = [];
             for (const member of members) {
                 try {
-                    const response = await apiClient.get(`/users/quanhe/chame/${member.MaTV}`);
+                    const response = await apiClient.get(`/users/quanhecon/chame/${member.MaTV}`);
                     if (response.data.result) {
                         relationships.push({
                             MaTV: member.MaTV,
@@ -93,7 +93,7 @@ class GiaPhaService {
 
             for (const member of members) {
                 try {
-                    const response = await apiClient.get(`/users/quanhe/honnhan/${member.MaTV}`);
+                    const response = await apiClient.get(`/users/honnhan/${member.MaTV}`);
                     const spouses = response.data.result || [];
 
                     spouses.forEach(spouse => {
@@ -137,6 +137,114 @@ class GiaPhaService {
         } catch (error) {
             console.error('Error loading tree data:', error);
             return { members: [], relationships: [] };
+        }
+    }
+
+    // ==================== CRUD METHODS ====================
+
+    /**
+     * Tạo gia phả mới
+     * POST /caygiapha
+     */
+    async create(data) {
+        try {
+            const response = await apiClient.post('/caygiapha', data);
+            return response.data.result || response.data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Cập nhật gia phả
+     * PUT /caygiapha/:MaGiaPha
+     */
+    async update(MaGiaPha, data) {
+        try {
+            const response = await apiClient.put(`/caygiapha/${MaGiaPha}`, data);
+            return response.data.result || response.data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Xóa gia phả
+     * DELETE /caygiapha/:MaGiaPha
+     */
+    async delete(MaGiaPha) {
+        try {
+            const response = await apiClient.delete(`/caygiapha/${MaGiaPha}`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Thêm thành viên vào gia phả
+     * PUT /caygiapha/:MaGiaPha/add-member
+     */
+    async addMember(MaGiaPha, MaTV) {
+        try {
+            const response = await apiClient.put(`/caygiapha/${MaGiaPha}/add-member`, { MaTV });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Xóa thành viên khỏi gia phả
+     * PUT /caygiapha/:MaGiaPha/remove-member
+     */
+    async removeMember(MaGiaPha, MaTV) {
+        try {
+            const response = await apiClient.put(`/caygiapha/${MaGiaPha}/remove-member`, { MaTV });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Lấy danh sách thành viên của gia phả
+     * GET /caygiapha/:MaGiaPha/members
+     */
+    async getMembers(MaGiaPha) {
+        try {
+            const response = await apiClient.get(`/caygiapha/${MaGiaPha}/members`);
+            return response.data.result || [];
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Tìm kiếm thành viên theo tên (autocomplete)
+     * GET /caygiapha/search-members?name=abc
+     */
+    async searchMembers(name) {
+        try {
+            const response = await apiClient.get('/caygiapha/search-members', {
+                params: { name }
+            });
+            return response.data.result || [];
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Thêm thành viên vào gia phả bằng email
+     * POST /caygiapha/:MaGiaPha/add-member-by-email
+     */
+    async addMemberByEmail(MaGiaPha, email) {
+        try {
+            const response = await apiClient.post(`/caygiapha/${MaGiaPha}/add-member-by-email`, { email });
+            return response.data;
+        } catch (error) {
+            throw error;
         }
     }
 }
