@@ -4,7 +4,12 @@ import {
   loginController,
   logoutController,
   refreshTokenController,
-  getMeController
+  getMeController,
+  forgotPasswordController,
+  getPasswordRequestsController,
+  approvePasswordRequestController,
+  verifyResetPermissionController,
+  resetPasswordController
 } from '~/controllers/users.controllers';
 import {
   registerValidator,
@@ -12,6 +17,7 @@ import {
   accessTokenValidator,
   refreshTokenValidator
 } from '~/middlewares/users.middlewares';
+import { requireAdmin } from '~/middlewares/authorization.middlewares';
 import { wrapAsync } from '~/utils/handlers';
 import thanhvienRouter from './thanhvien.routes';
 import thanhTichRouter from './thanhtich.routes';
@@ -63,6 +69,38 @@ usersRouter.post('/refresh-token', wrapAsync(refreshTokenController));
  * Headers: { Authorization: Bearer <access_token> }
  */
 usersRouter.get('/me', accessTokenValidator, wrapAsync(getMeController));
+
+// ==================== PASSWORD RESET ROUTES ====================
+
+/**
+ * 1. Tạo yêu cầu đặt lại mật khẩu (Public)
+ * POST /users/forgot-password
+ */
+usersRouter.post('/forgot-password', wrapAsync(forgotPasswordController));
+
+/**
+ * 2. Lấy danh sách yêu cầu (Admin)
+ * GET /users/password-requests
+ */
+usersRouter.get('/password-requests', accessTokenValidator, requireAdmin, wrapAsync(getPasswordRequestsController));
+
+/**
+ * 3. Duyệt yêu cầu (Admin)
+ * POST /users/password-requests/:id/approve
+ */
+usersRouter.post('/password-requests/:id/approve', accessTokenValidator, requireAdmin, wrapAsync(approvePasswordRequestController));
+
+/**
+ * 4. Kiểm tra quyền Reset (Public)
+ * POST /users/verify-reset-permission
+ */
+usersRouter.post('/verify-reset-permission', wrapAsync(verifyResetPermissionController));
+
+/**
+ * 5. Đặt lại mật khẩu (Public)
+ * POST /users/reset-password
+ */
+usersRouter.post('/reset-password', wrapAsync(resetPasswordController));
 
 // 🔍 DEBUG: Log khi route được đăng ký
 console.log('✅ Đang đăng ký nested routes...');

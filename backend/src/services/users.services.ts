@@ -338,7 +338,12 @@ class UsersService {
     await databaseService.query(insertRefreshTokenSql, [refresh_token, user_id, expDate]);
 
     // 5. Lấy thông tin user
-    const userSql = 'SELECT TenDangNhap, MaTV, MaLoaiTK FROM TAIKHOAN WHERE TenDangNhap = ?';
+    const userSql = `
+      SELECT tk.TenDangNhap, tk.MaTV, tk.MaLoaiTK, tv.HoTen 
+      FROM TAIKHOAN tk
+      LEFT JOIN THANHVIEN tv ON tk.MaTV = tv.MaTV
+      WHERE tk.TenDangNhap = ?
+    `;
     const userRows = await databaseService.query<TaiKhoanRow[]>(userSql, [user_id]);
 
     return {
@@ -347,7 +352,8 @@ class UsersService {
       user: userRows.length > 0 ? {
         TenDangNhap: userRows[0].TenDangNhap,
         MaTV: userRows[0].MaTV,
-        MaLoaiTK: userRows[0].MaLoaiTK
+        MaLoaiTK: userRows[0].MaLoaiTK,
+        HoTen: (userRows[0] as any).HoTen // Cast as any because TaiKhoanRow might not have HoTen yet
       } : null
     };
   }
@@ -539,6 +545,146 @@ class UsersService {
     };
   }
 
+
+  // ==================== PASSWORD RESET (ADMIN APPROVAL) ====================
+
+  /**
+   * 1. Tạo yêu cầu đặt lại mật khẩu (Public)
+   */
+  async forgotPassword(email: string) {
+    // Check if user exists (TenDangNhap is the email)
+    const userExists = await this.checkEmailExist(email);
+    if (!userExists) {
+      throw new ErrorWithStatus({
+        message: 'Email không tồn tại trong hệ thống',
+        status: HTTP_STATUS.NOT_FOUND
+      });
+    }
+
+    // Check pending requests
+    const checkSql = `
+      SELECT * FROM YEU_CAU_MAT_KHAU 
+      WHERE Email = ? AND TrangThai = 'ChoDuyet'
+    `;
+    const pendingRequests = await databaseService.query<RowDataPacket[]>(checkSql, [email]);
+    if (pendingRequests.length > 0) {
+      throw new ErrorWithStatus({
+        message: 'Bạn đã có yêu cầu đang chờ duyệt. Vui lòng đợi Admin xử lý.',
+        status: HTTP_STATUS.CONFLICT
+      });
+    }
+
+    // Create request
+    // MaTK references TAIKHOAN(TenDangNhap), which IS the email in this system
+    const sql = `
+      INSERT INTO YEU_CAU_MAT_KHAU (MaTK, Email, TrangThai)
+      VALUES (?, ?, 'ChoDuyet')
+    `;
+    await databaseService.query(sql, [email, email]);
+
+    return {
+      message: 'Đã gửi yêu cầu đặt lại mật khẩu. Vui lòng đợi Admin phê duyệt.'
+    };
+  }
+
+  /**
+   * 2. Lấy danh sách yêu cầu (Admin)
+   */
+  async getPasswordRequests() {
+    const sql = `
+      SELECT * FROM YEU_CAU_MAT_KHAU 
+      ORDER BY FIELD(TrangThai, 'ChoDuyet', 'DaDuyet', 'DaDoi'), NgayYeuCau DESC
+    `;
+    const rows = await databaseService.query<RowDataPacket[]>(sql);
+    return rows;
+  }
+
+  /**
+   * 3. Duyệt yêu cầu (Admin)
+   */
+  async approvePasswordRequest(id: number) {
+    const checkSql = 'SELECT * FROM YEU_CAU_MAT_KHAU WHERE MaYeuCau = ?';
+    const rows = await databaseService.query<RowDataPacket[]>(checkSql, [id]);
+
+    if (rows.length === 0) {
+      throw new ErrorWithStatus({
+        message: 'Yêu cầu không tồn tại',
+        status: HTTP_STATUS.NOT_FOUND
+      });
+    }
+
+    const request = rows[0];
+    if (request.TrangThai !== 'ChoDuyet') {
+      throw new ErrorWithStatus({
+        message: 'Yêu cầu này đã được xử lý',
+        status: HTTP_STATUS.BAD_REQUEST
+      });
+    }
+
+    const updateSql = `
+      UPDATE YEU_CAU_MAT_KHAU 
+      SET TrangThai = 'DaDuyet', NgayDuyet = NOW() 
+      WHERE MaYeuCau = ?
+    `;
+    await databaseService.query(updateSql, [id]);
+
+    return {
+      message: 'Đã phê duyệt yêu cầu. Người dùng có thể đặt lại mật khẩu ngay bây giờ.'
+    };
+  }
+
+  /**
+   * 4. Kiểm tra quyền đặt lại mật khẩu (Public - Verify Reset Permission)
+   */
+  async verifyResetPermission(email: string) {
+    const sql = `
+      SELECT * FROM YEU_CAU_MAT_KHAU 
+      WHERE Email = ? AND TrangThai = 'DaDuyet'
+      ORDER BY NgayDuyet DESC LIMIT 1
+    `;
+    const rows = await databaseService.query<RowDataPacket[]>(sql, [email]);
+
+    if (rows.length === 0) {
+      throw new ErrorWithStatus({
+        message: 'Bạn chưa có yêu cầu nào được duyệt hoặc liên kết đã hết hạn (chuyển sang trạng thái đã đổi).',
+        status: HTTP_STATUS.FORBIDDEN
+      });
+    }
+
+    return {
+      message: 'Hợp lệ',
+      MaYeuCau: rows[0].MaYeuCau
+    };
+  }
+
+  /**
+   * 5. Đặt mật khẩu mới (Public - Reset Password)
+   */
+  async resetPassword(email: string, newPassword: string) {
+    // Verify permission again
+    const request = await this.verifyResetPermission(email);
+    // Cast to any because TS might trigger error on implicit type from previous method return
+    const maYeuCau = (request as any).MaYeuCau;
+
+    // Hash new password
+    const hashedPassword = hashPassword(newPassword);
+
+    // Update password
+    const updatePassSql = 'UPDATE TAIKHOAN SET MatKhau = ? WHERE TenDangNhap = ?';
+    await databaseService.query(updatePassSql, [hashedPassword, email]);
+
+    // Update request status
+    const updateReqSql = `
+      UPDATE YEU_CAU_MAT_KHAU 
+      SET TrangThai = 'DaDoi' 
+      WHERE MaYeuCau = ?
+    `;
+    await databaseService.query(updateReqSql, [maYeuCau]);
+
+    return {
+      message: 'Đã đổi mật khẩu thành công. Vui lòng đăng nhập lại với mật khẩu mới.'
+    };
+  }
 
 }
 

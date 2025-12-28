@@ -27,10 +27,10 @@ export default function GiaPhaDetailPage() {
             setIsLoading(true);
             setError(null);
             try {
-                // Get gia pha info from store
-                const found = cayGiaPha?.find(gp => gp.MaGiaPha === MaGiaPha);
-                if (found) {
-                    setGiaPha(found);
+                // Fetch Gia Pha Detail directly
+                const gpDetail = await giaPhaService.getDetail(MaGiaPha);
+                if (gpDetail) {
+                    setGiaPha(gpDetail);
                 }
 
                 // Get tree data (members + relationships)
@@ -48,7 +48,7 @@ export default function GiaPhaDetailPage() {
         if (MaGiaPha) {
             loadData();
         }
-    }, [MaGiaPha, cayGiaPha]);
+    }, [MaGiaPha]); // Removed cayGiaPha dependency
 
     // Check if member is deceased
     const isDeceased = (tv) => {
@@ -113,6 +113,7 @@ export default function GiaPhaDetailPage() {
                                 <h1 className="text-3xl font-bold text-neutral-800 mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>
                                     {giaPha?.TenGiaPha || `Gia phả ${MaGiaPha}`}
                                 </h1>
+                                <p className="text-neutral-500 text-sm mb-4">Mã gia phả: {MaGiaPha}</p>
 
                                 <div className="flex flex-wrap gap-4 text-sm text-neutral-500">
                                     <span className="flex items-center gap-1">

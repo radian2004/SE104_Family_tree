@@ -41,6 +41,7 @@ export const getAllThanhVienController = async (req: Request, res: Response) => 
     search: req.query.search as string,
     sortBy: req.query.sortBy as string,
     sortOrder: req.query.sortOrder as string,
+    MaGiaPha: req.query.MaGiaPha as string,
   };
 
   try {

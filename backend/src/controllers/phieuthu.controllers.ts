@@ -83,7 +83,11 @@ export const xacNhanChiTietController = async (req: Request, res: Response) => {
     const { MaPhieuThu, MaDMT } = req.params;
     const userInfo = req.userInfo!;
 
-    const result = await phieuThuService.xacNhanChiTiet(MaPhieuThu, MaDMT, userInfo.MaTV);
+    // Truyền userInfo để service kiểm tra quyền Admin/Owner
+    const result = await phieuThuService.xacNhanChiTiet(MaPhieuThu, MaDMT, {
+      MaLoaiTK: userInfo.MaLoaiTK,
+      MaTV: userInfo.MaTV
+    });
 
     return res.status(HTTP_STATUS.OK).json({
       message: PHIEUTHU_MESSAGES.XACNHAN_SUCCESS,
@@ -129,7 +133,11 @@ export const huyXacNhanChiTietController = async (req: Request, res: Response) =
 export const getPendingConfirmationsController = async (req: Request, res: Response) => {
   try {
     const userInfo = req.userInfo!;
-    const result = await phieuThuService.getPendingConfirmations(userInfo.MaTV);
+    // Truyền userInfo để service biết Admin/Owner xem tất cả, User chỉ xem của mình
+    const result = await phieuThuService.getPendingConfirmations({
+      MaLoaiTK: userInfo.MaLoaiTK,
+      MaTV: userInfo.MaTV
+    });
 
     return res.status(HTTP_STATUS.OK).json({
       message: PHIEUTHU_MESSAGES.GET_SUCCESS,
@@ -247,7 +255,7 @@ export const traCuuDanhMucController = async (req: Request, res: Response) => {
 
     if (namParam) {
       nam = parseInt(namParam as string, 10);
-      
+
       // Validate năm
       if (isNaN(nam) || nam < 1900 || nam > 2100) {
         return res.status(400).json({

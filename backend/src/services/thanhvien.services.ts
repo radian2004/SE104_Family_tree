@@ -107,13 +107,21 @@ class ThanhVienService {
   }
 
   // Lấy tất cả thành viên với filter/sort
+  // Lấy tất cả thành viên với filter/sort
   async getAllThanhVien(filters?: {
     search?: string;
     sortBy?: string;
     sortOrder?: string;
+    MaGiaPha?: string;
   }) {
     let sql = 'SELECT * FROM THANHVIEN WHERE 1=1';
     const params: any[] = [];
+
+    // Filter by Gia Pha
+    if (filters?.MaGiaPha) {
+      sql += ' AND MaGiaPha = ?';
+      params.push(filters.MaGiaPha);
+    }
 
     // Search filter
     if (filters?.search) {

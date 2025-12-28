@@ -185,3 +185,34 @@ export const getMeController = async (
     });
   }
 };
+
+// ==================== PASSWORD RESET CONTROLLERS ====================
+
+export const forgotPasswordController = async (req: Request, res: Response) => {
+  const { email } = req.body;
+  const result = await usersService.forgotPassword(email);
+  return res.status(HTTP_STATUS.OK).json({ result });
+};
+
+export const getPasswordRequestsController = async (req: Request, res: Response) => {
+  const result = await usersService.getPasswordRequests();
+  return res.status(HTTP_STATUS.OK).json({ result });
+};
+
+export const approvePasswordRequestController = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const result = await usersService.approvePasswordRequest(Number(id));
+  return res.status(HTTP_STATUS.OK).json({ result });
+};
+
+export const verifyResetPermissionController = async (req: Request, res: Response) => {
+  const { email } = req.body;
+  const result = await usersService.verifyResetPermission(email);
+  return res.status(HTTP_STATUS.OK).json({ result });
+};
+
+export const resetPasswordController = async (req: Request, res: Response) => {
+  const { email, newPassword } = req.body;
+  const result = await usersService.resetPassword(email, newPassword);
+  return res.status(HTTP_STATUS.OK).json({ result });
+};

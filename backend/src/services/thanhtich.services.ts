@@ -112,13 +112,27 @@ class ThanhTichService {
 
     const params: any[] = [];
 
-    // ✅ PHÂN QUYỀN: Nếu không phải Admin, chỉ tra cứu trong gia phả
-    if (userInfo && userInfo.MaLoaiTK !== 'LTK01') {
-      if (!userInfo.MaGiaPha) {
-        throw new Error('Bạn chưa thuộc gia phả nào');
+    // ✅ PHÂN QUYỀN: 
+    // - Admin (LTK01): xem tất cả
+    // - Owner (LTK02): xem tất cả nếu MaGiaPha = NULL, hoặc chỉ gia phả của mình
+    // - User (LTK03): chỉ xem trong gia phả
+    if (userInfo) {
+      if (userInfo.MaLoaiTK === 'LTK01') {
+        // Admin: xem tất cả, không filter
+      } else if (userInfo.MaLoaiTK === 'LTK02') {
+        // Owner: nếu có MaGiaPha thì filter, không thì xem tất cả
+        if (userInfo.MaGiaPha) {
+          sql += ' AND tv.MaGiaPha = ?';
+          params.push(userInfo.MaGiaPha);
+        }
+      } else {
+        // User: bắt buộc phải có MaGiaPha
+        if (!userInfo.MaGiaPha) {
+          throw new Error('Bạn chưa thuộc gia phả nào');
+        }
+        sql += ' AND tv.MaGiaPha = ?';
+        params.push(userInfo.MaGiaPha);
       }
-      sql += ' AND tv.MaGiaPha = ?';
-      params.push(userInfo.MaGiaPha);
     }
 
     // Thêm điều kiện filter
@@ -276,13 +290,27 @@ class ThanhTichService {
 
     const params: any[] = [NamBatDau, NamKetThuc];
 
-    // PHÂN QUYỀN: Nếu không phải Admin, chỉ thống kê gia phả của mình
-    if (userInfo && userInfo.MaLoaiTK !== 'LTK01') {
-      if (!userInfo.MaGiaPha) {
-        throw new Error('Bạn chưa thuộc gia phả nào');
+    // PHÂN QUYỀN:
+    // - Admin (LTK01): xem tất cả
+    // - Owner (LTK02): xem tất cả nếu MaGiaPha = NULL, hoặc chỉ gia phả của mình
+    // - User (LTK03): chỉ xem trong gia phả
+    if (userInfo) {
+      if (userInfo.MaLoaiTK === 'LTK01') {
+        // Admin: xem tất cả
+      } else if (userInfo.MaLoaiTK === 'LTK02') {
+        // Owner: nếu có MaGiaPha thì filter, không thì xem tất cả
+        if (userInfo.MaGiaPha) {
+          sql += ' AND tv.MaGiaPha = ?';
+          params.push(userInfo.MaGiaPha);
+        }
+      } else {
+        // User: bắt buộc phải có MaGiaPha
+        if (!userInfo.MaGiaPha) {
+          throw new Error('Bạn chưa thuộc gia phả nào');
+        }
+        sql += ' AND tv.MaGiaPha = ?';
+        params.push(userInfo.MaGiaPha);
       }
-      sql += ' AND tv.MaGiaPha = ?';
-      params.push(userInfo.MaGiaPha);
     }
 
     sql += `

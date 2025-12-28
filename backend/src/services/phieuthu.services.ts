@@ -55,7 +55,7 @@ class PhieuThuService {
    */
   async createPhieuThu(data: CreatePhieuThuReqBody) {
     const connection = await databaseService.getConnection();
-    
+
     try {
       await connection.beginTransaction();
 
@@ -125,7 +125,7 @@ class PhieuThuService {
   /**
    * Lấy danh sách phiếu thu
    * - Admin: xem tất cả
-   * - Owner: xem gia phả của mình
+   * - Owner: xem gia phả của mình (hoặc tất cả nếu chưa có gia phả)
    * - User: xem của mình
    */
   async getPhieuThuList(userInfo: { MaLoaiTK: string; MaTV: string; MaGiaPha: string | null }) {
@@ -146,12 +146,19 @@ class PhieuThuService {
       // Admin: xem tất cả
     } else if (userInfo.MaLoaiTK === 'LTK02') {
       // Owner: xem gia phả của mình
-      sql += ' WHERE tv.MaGiaPha = ?';
-      params.push(userInfo.MaGiaPha);
+      // Nếu MaGiaPha là null, hiển thị tất cả (chưa được link với gia phả cụ thể)
+      if (userInfo.MaGiaPha) {
+        sql += ' WHERE tv.MaGiaPha = ?';
+        params.push(userInfo.MaGiaPha);
+      }
+      // Else: show all (no filter)
     } else {
       // User: xem của mình
-      sql += ' WHERE pt.MaTV = ?';
-      params.push(userInfo.MaTV);
+      if (userInfo.MaTV) {
+        sql += ' WHERE pt.MaTV = ?';
+        params.push(userInfo.MaTV);
+      }
+      // Else: show all (no filter when MaTV is null)
     }
 
     sql += ' ORDER BY pt.NgayThu DESC';
@@ -215,9 +222,10 @@ class PhieuThuService {
 
   /**
    * Xác nhận chi tiết phiếu thu
-   * Chỉ người đảm nhận danh mục mới được xác nhận
+   * - Admin/Owner: có thể xác nhận bất kỳ phiếu nào
+   * - User: chỉ xác nhận danh mục họ đảm nhận
    */
-  async xacNhanChiTiet(MaPhieuThu: string, MaDMT: string, currentUserMaTV: string) {
+  async xacNhanChiTiet(MaPhieuThu: string, MaDMT: string, userInfo: { MaLoaiTK: string; MaTV: string | null }) {
     // Kiểm tra chi tiết phiếu có tồn tại không
     const chiTietRows = await databaseService.query<RowDataPacket[]>(
       `SELECT ct.*, dm.NguoiDamNhan 
@@ -236,10 +244,13 @@ class PhieuThuService {
 
     const chiTiet = chiTietRows[0];
 
-    // Kiểm tra quyền xác nhận (chỉ người đảm nhận danh mục)
-    if (chiTiet.NguoiDamNhan !== currentUserMaTV) {
+    // Kiểm tra quyền xác nhận
+    // Admin/Owner có thể xác nhận bất kỳ phiếu nào
+    // User chỉ có thể xác nhận danh mục họ đảm nhận
+    const isAdminOrOwner = userInfo.MaLoaiTK === 'LTK01' || userInfo.MaLoaiTK === 'LTK02';
+    if (!isAdminOrOwner && chiTiet.NguoiDamNhan !== userInfo.MaTV) {
       throw new ErrorWithStatus({
-        message: 'Chỉ người đảm nhận danh mục mới có quyền xác nhận',
+        message: 'Chỉ người đảm nhận danh mục hoặc Admin/Trưởng tộc mới có quyền xác nhận',
         status: HTTP_STATUS.FORBIDDEN
       });
     }
@@ -316,10 +327,11 @@ class PhieuThuService {
 
   /**
    * Lấy danh sách chi tiết phiếu thu chờ xác nhận
-   * Dành cho người đảm nhận danh mục
+   * - Admin/Owner: xem TẤT CẢ phiếu chờ xác nhận
+   * - User: chỉ xem danh mục họ đảm nhận
    */
-  async getPendingConfirmations(currentUserMaTV: string) {
-    const sql = `
+  async getPendingConfirmations(userInfo: { MaLoaiTK: string; MaTV: string | null }) {
+    let sql = `
       SELECT 
         ct.MaPhieuThu,
         ct.MaDMT,
@@ -332,11 +344,20 @@ class PhieuThuService {
       JOIN DANHMUC dm ON ct.MaDMT = dm.MaDM
       JOIN PHIEUTHUQUY pt ON ct.MaPhieuThu = pt.MaPhieuThu
       JOIN THANHVIEN tv ON pt.MaTV = tv.MaTV
-      WHERE dm.NguoiDamNhan = ? AND ct.TinhHopLe = FALSE
-      ORDER BY pt.NgayThu DESC
+      WHERE ct.TinhHopLe = FALSE
     `;
 
-    const rows = await databaseService.query<PendingConfirmRow[]>(sql, [currentUserMaTV]);
+    const params: any[] = [];
+
+    // Admin/Owner xem tất cả, User chỉ xem danh mục mình đảm nhận
+    if (userInfo.MaLoaiTK !== 'LTK01' && userInfo.MaLoaiTK !== 'LTK02') {
+      sql += ' AND dm.NguoiDamNhan = ?';
+      params.push(userInfo.MaTV);
+    }
+
+    sql += ' ORDER BY pt.NgayThu DESC';
+
+    const rows = await databaseService.query<PendingConfirmRow[]>(sql, params);
     return rows;
   }
 
@@ -524,11 +545,11 @@ class PhieuThuService {
       message: 'Xóa danh mục thành công'
     };
   }
-    /**
-   * Tra cứu danh mục thu chi theo năm
-   * @param nam - Năm cần tra cứu
-   * @returns Danh sách danh mục với tổng thu/chi trong năm đó
-   */
+  /**
+ * Tra cứu danh mục thu chi theo năm
+ * @param nam - Năm cần tra cứu
+ * @returns Danh sách danh mục với tổng thu/chi trong năm đó
+ */
   async traCuuDanhMucThuChi(nam: number): Promise<TraCuuDanhMucResponse> {
     // SQL Query: Lấy tất cả danh mục với tổng thu/chi THEO NĂM
     const sql = `

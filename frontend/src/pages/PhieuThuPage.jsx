@@ -248,21 +248,21 @@ export default function PhieuThuPage() {
                     >
                         📋 Danh sách phiếu thu
                     </button>
-                    {pendingList.length > 0 && (
-                        <button
-                            onClick={() => setActiveTab('pending')}
-                            className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${activeTab === 'pending'
-                                ? 'bg-orange-500 text-white shadow-lg'
-                                : 'bg-white text-neutral-600 hover:bg-neutral-50'
-                                }`}
-                        >
-                            <FiClock className="w-4 h-4" />
-                            Chờ xác nhận
+                    <button
+                        onClick={() => setActiveTab('pending')}
+                        className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${activeTab === 'pending'
+                            ? 'bg-orange-500 text-white shadow-lg'
+                            : 'bg-white text-neutral-600 hover:bg-neutral-50'
+                            }`}
+                    >
+                        <FiClock className="w-4 h-4" />
+                        Chờ xác nhận
+                        {pendingList.length > 0 && (
                             <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
                                 {pendingList.length}
                             </span>
-                        </button>
-                    )}
+                        )}
+                    </button>
                     {canRecordIncome && (
                         <button
                             onClick={() => setActiveTab('create')}
@@ -384,13 +384,15 @@ export default function PhieuThuPage() {
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <button
-                                                    onClick={() => handleXacNhan(item.MaPhieuThu, item.MaDMT)}
-                                                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
-                                                >
-                                                    <FiCheck className="w-4 h-4" />
-                                                    Xác nhận
-                                                </button>
+                                                {(isAdmin || isOwner) && (
+                                                    <button
+                                                        onClick={() => handleXacNhan(item.MaPhieuThu, item.MaDMT)}
+                                                        className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+                                                    >
+                                                        <FiCheck className="w-4 h-4" />
+                                                        Xác nhận
+                                                    </button>
+                                                )}
                                             </div>
                                         ))}
                                     </div>
@@ -601,8 +603,8 @@ export default function PhieuThuPage() {
                                                                     </td>
                                                                     <td className="px-4 py-3 text-center">
                                                                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.TrangThai === 'Dư' ? 'bg-blue-100 text-blue-700' :
-                                                                                item.TrangThai === 'Thiếu' ? 'bg-orange-100 text-orange-700' :
-                                                                                    'bg-neutral-100 text-neutral-600'
+                                                                            item.TrangThai === 'Thiếu' ? 'bg-orange-100 text-orange-700' :
+                                                                                'bg-neutral-100 text-neutral-600'
                                                                             }`}>
                                                                             {item.TrangThai}
                                                                         </span>

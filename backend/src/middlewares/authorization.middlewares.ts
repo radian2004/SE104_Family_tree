@@ -131,7 +131,30 @@ export const checkUpdateMemberPermission = async (req: Request, res: Response, n
 
     // Owner: chỉ sửa được thành viên trong gia phả
     if (userInfo.MaLoaiTK === 'LTK02') {
-      if (memberInfo.MaGiaPha !== userInfo.MaGiaPha) {
+      // ⚠️ FIX: Defensive check to prevent "Cannot read properties of undefined"
+      if (!memberInfo) {
+        console.error('[checkUpdateMemberPermission] Member Info is missing');
+        throw new ErrorWithStatus({
+          message: 'Không tìm thấy thông tin thành viên (Internal Error)',
+          status: HTTP_STATUS.INTERNAL_SERVER_ERROR
+        });
+      }
+
+      // Allow if MaGiaPha is null for both (e.g. Owner taking over a new member?)
+      // Or strict check?
+      // Note: userInfo.MaGiaPha might be null if Owner has no tree.
+
+      const userGP = userInfo.MaGiaPha;
+      const memberGP = memberInfo.MaGiaPha;
+
+      // Debugging log (can be removed later)
+      console.log(`[Permission] Owner Check used_id=${user_id}: UserGP=${userGP}, MemberGP=${memberGP}`);
+
+      if (memberGP !== userGP) {
+        // Special case: If Owner has no tree (MaGiaPha=null) they shouldn't edit members of other trees?
+        // If memberGP is not null, deny.
+        // If memberGP is null, and userGP is null -> Allow.
+
         throw new ErrorWithStatus({
           message: 'Bạn chỉ có quyền sửa thành viên trong gia phả của mình',
           status: HTTP_STATUS.FORBIDDEN
@@ -557,7 +580,11 @@ export const checkUpdateDeleteKetThucPermission = async (req: Request, res: Resp
         });
       }
 
-      if (memberRows[0].MaGiaPha !== userInfo.MaGiaPha) {
+      // Defensive Check
+      const memberGP = memberRows[0].MaGiaPha;
+      const userGP = userInfo.MaGiaPha;
+
+      if (memberGP !== userGP) {
         throw new ErrorWithStatus({
           message: 'Bạn chỉ có quyền sửa/xóa kết thúc của thành viên trong gia phả của mình',
           status: HTTP_STATUS.FORBIDDEN
@@ -580,6 +607,8 @@ export const checkUpdateDeleteKetThucPermission = async (req: Request, res: Resp
 export const attachUserInfo = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { user_id } = req.decoded_authorization as TokenPayload;
+    if (!user_id) throw new Error('User ID missing in token');
+
     const userInfo = await getUserInfo(user_id);
     req.userInfo = userInfo;
     next();

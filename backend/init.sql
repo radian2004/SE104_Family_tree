@@ -6,6 +6,11 @@ SET CHARACTER SET utf8mb4;
 SET character_set_client = utf8mb4;
 SET character_set_connection = utf8mb4;
 SET character_set_results = utf8mb4;
+
+-- Set timezone to GMT+7 (Vietnam)
+SET GLOBAL time_zone = '+07:00';
+SET time_zone = '+07:00';
+
 DROP DATABASE IF EXISTS app;
 CREATE DATABASE app CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -754,7 +759,13 @@ INSERT INTO GHINHANTHANHTICH (MaLTT, MaTV, NgayPhatSinh) VALUES -- GHINHAN THANH
 UPDATE THANHVIEN SET MaNguyenNhanMat = 'NNM01', NgayGioMat = '2020-01-15 10:30:00', MaDiaDiem = 'DD02' WHERE MaTV = 'TV01'; -- TV01 mất
 
 INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, MaLoaiTK) VALUES 
-('admin@example.com', SHA2(CONCAT('Admin@123', 'secret'), 256), 'LTK01');
+('admin@example.com', SHA2(CONCAT('Test@123', 'secret'), 256), 'LTK01');
+
+INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, MaLoaiTK) VALUES 
+('truongtoc@example.com', SHA2(CONCAT('Test@123', 'secret'), 256), 'LTK02');
+
+INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, MaLoaiTK) VALUES 
+('user@example.com', SHA2(CONCAT('Test@123', 'secret'), 256), 'LTK03');
 
 INSERT INTO DANHMUC (MaDM, TenDM, NguoiDamNhan, TongThu, TongChi) VALUES
 ('DM01', 'Quỹ khuyến học', 'TV02', 0, 0),
@@ -782,11 +793,5 @@ SELECT * FROM PHIEUTHUQUY; -- Kiểm tra dữ liệu phiếu thu
 SELECT * FROM CT_PHIEUTHU; -- Kiểm tra dữ liệu chi tiết phiếu thu
 SELECT * FROM DANHMUC; -- Kiểm tra dữ liệu danh mục
 -- Insert tài khoản (Đã có LoạiTK ở trên)
-INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, MaLoaiTK) VALUES 
-('admin@example.com', SHA2(CONCAT('Test@123', 'secret'), 256), 'LTK01');
+-- Hash được tính bằng Node.js: crypto.createHash('sha256').update('Test@123' + 'secret').digest('hex')
 
-INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, MaLoaiTK) VALUES 
-('truongtoc@example.com', SHA2(CONCAT('Test@123', 'secret'), 256), 'LTK02');
-
-INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, MaLoaiTK) VALUES 
-('user@example.com', SHA2(CONCAT('Test@123', 'secret'), 256), 'LTK03');

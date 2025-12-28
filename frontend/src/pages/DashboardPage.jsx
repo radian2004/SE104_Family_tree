@@ -5,6 +5,7 @@
  * ============================================
  */
 
+import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { usePermissions } from '../hooks/usePermissions';
 import { useNavigate } from 'react-router-dom';
@@ -23,11 +24,16 @@ import {
   FiBook,
   FiDollarSign
 } from 'react-icons/fi';
+import AdminPasswordRequests from '../components/admin/AdminPasswordRequests';
+import UserProfileModal from '../components/UserProfileModal';
+
 
 export default function DashboardPage() {
   const { user, handleLogout } = useAuth();
   const { isAdmin, isOwner, isUser, roleName, roleIcon } = usePermissions();
   const navigate = useNavigate();
+  const [showProfileModal, setShowProfileModal] = useState(false);
+
 
   const handleLogoutClick = async () => {
     await handleLogout();
@@ -134,12 +140,15 @@ export default function DashboardPage() {
               <span className="text-sm font-medium text-neutral-600">{roleName}</span>
             </div>
 
-            <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-white/50 rounded-full">
+            <button
+              onClick={() => setShowProfileModal(true)}
+              className="hidden md:flex items-center gap-2 px-4 py-2 bg-white/50 rounded-full cursor-pointer hover:bg-white/80 transition-colors border-none"
+            >
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center text-white text-sm font-bold shadow">
                 {user?.TenDangNhap?.charAt(0)?.toUpperCase() || user?.HoTen?.charAt(0)?.toUpperCase() || 'U'}
               </div>
               <span className="font-medium text-neutral-700">{user?.HoTen || user?.TenDangNhap}</span>
-            </div>
+            </button>
             <button onClick={handleLogoutClick} className="btn btn-ghost btn-small group">
               <FiLogOut className="w-4 h-4 group-hover:text-red-500 transition-colors" />
               <span className="hidden md:inline">Đăng xuất</span>
@@ -186,6 +195,11 @@ export default function DashboardPage() {
                   Truy cập <FiChevronRight className="w-5 h-5" />
                 </div>
               </div>
+            </div>
+
+            {/* Admin Password Requests */}
+            <div className="mt-8">
+              <AdminPasswordRequests />
             </div>
           </div>
         )}
@@ -238,7 +252,8 @@ export default function DashboardPage() {
               </button>
             </div>
           </div>
-        )}
+        )
+        }
 
         {/* Main Feature Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
@@ -361,7 +376,14 @@ export default function DashboardPage() {
           <p>© 2025 Gia Phả Management System. Designed by SE104 team</p>
         </footer>
       </main>
+
+      {/* User Profile Modal */}
+      {showProfileModal && (
+        <UserProfileModal
+          user={user}
+          onClose={() => setShowProfileModal(false)}
+        />
+      )}
     </div>
   );
 }
-

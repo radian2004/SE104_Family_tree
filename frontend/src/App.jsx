@@ -27,6 +27,9 @@ import QuanHeConCaiPage from './pages/QuanHeConCaiPage';
 import PhieuThuPage from './pages/PhieuThuPage';
 import PhieuChiPage from './pages/PhieuChiPage';
 
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
+
 // Admin Pages
 import QuanLyTaiKhoanPage from './pages/admin/QuanLyTaiKhoanPage';
 
@@ -44,6 +47,8 @@ export default function App() {
         {/* ==================== PUBLIC ROUTES ==================== */}
         <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
         <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+        <Route path="/forgot-password" element={<PublicRoute><ForgotPasswordPage /></PublicRoute>} />
+        <Route path="/reset-password" element={<PublicRoute><ResetPasswordPage /></PublicRoute>} />
 
         {/* ==================== PROTECTED ROUTES ==================== */}
         <Route

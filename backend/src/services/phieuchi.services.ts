@@ -42,7 +42,7 @@ class PhieuChiService {
    */
   async createPhieuChi(data: CreatePhieuChiReqBody, userInfo: UserInfo) {
     const connection = await databaseService.getConnection();
-    
+
     try {
       await connection.beginTransaction();
 
@@ -116,7 +116,7 @@ class PhieuChiService {
   /**
    * Lấy danh sách phiếu chi
    * - Admin: xem tất cả
-   * - Owner: xem gia phả của mình
+   * - Owner: xem gia phả của mình (hoặc tất cả nếu chưa có gia phả)
    * - User: xem phiếu do mình lập
    */
   async getPhieuChiList(userInfo: UserInfo) {
@@ -141,12 +141,17 @@ class PhieuChiService {
       // Admin: xem tất cả
     } else if (userInfo.MaLoaiTK === 'LTK02') {
       // Owner: xem gia phả của mình
-      sql += ' WHERE tv.MaGiaPha = ?';
-      params.push(userInfo.MaGiaPha);
+      // Nếu MaGiaPha là null, hiển thị tất cả
+      if (userInfo.MaGiaPha) {
+        sql += ' WHERE tv.MaGiaPha = ?';
+        params.push(userInfo.MaGiaPha);
+      }
     } else {
       // User: xem phiếu do mình lập
-      sql += ' WHERE pc.MaTV = ?';
-      params.push(userInfo.MaTV);
+      if (userInfo.MaTV) {
+        sql += ' WHERE pc.MaTV = ?';
+        params.push(userInfo.MaTV);
+      }
     }
 
     sql += ' ORDER BY pc.NgayChi DESC';
@@ -276,7 +281,7 @@ class PhieuChiService {
    */
   async updatePhieuChi(MaPhieuChi: string, data: UpdatePhieuChiReqBody, userInfo: UserInfo) {
     const connection = await databaseService.getConnection();
-    
+
     try {
       await connection.beginTransaction();
 
