@@ -38,7 +38,6 @@ usersRouter.post('/register', registerValidator, wrapAsync(registerController));
  * Body: { email: string, password: string }
  */
 usersRouter.post('/login', loginValidator, wrapAsync(loginController));
-
 /**
  * Description: Đăng xuất
  * Path: /users/logout
@@ -49,29 +48,20 @@ usersRouter.post('/login', loginValidator, wrapAsync(loginController));
 usersRouter.post('/logout', accessTokenValidator, refreshTokenValidator, wrapAsync(logoutController));
 
 /**
- * Description: Refresh access token
+ * Description: Làm mới access token và refresh token
  * Path: /users/refresh-token
  * Method: POST
- * Cookies: refresh_token
+ * Body: { refresh_token: string }
  */
-usersRouter.post('/refresh-token', wrapAsync(refreshTokenController));
+usersRouter.post('/refresh-token', refreshTokenValidator, wrapAsync(refreshTokenController));
 
 /**
- * Description: Lấy thông tin người dùng hiện tại
- * Path: /users/me
+ * Description: Lấy thông tin cá nhân của tài khoản đang đăng nhập
+ * Path: /users/get-me
  * Method: GET
  * Headers: { Authorization: Bearer <access_token> }
  */
-usersRouter.get('/me', accessTokenValidator, wrapAsync(getMeController));
-
-// 🔍 DEBUG: Log khi route được đăng ký
-console.log('✅ Đang đăng ký nested routes...');
-console.log('  - /thanhvien');
-console.log('  - /thanhtich');
-console.log('  - /ketthuc');
-console.log('  - /quanhe');
-console.log('  - /phieuthu');
-console.log('  - /phieuchi');
+usersRouter.get('/get-me', accessTokenValidator, wrapAsync(getMeController));
 
 usersRouter.use('/thanhvien', accessTokenValidator, thanhvienRouter);
 usersRouter.use('/thanhtich', accessTokenValidator, thanhTichRouter);
@@ -79,7 +69,6 @@ usersRouter.use('/ketthuc', accessTokenValidator, ketthucRouter);
 usersRouter.use('/honnhan', accessTokenValidator, honNhanRouter);
 usersRouter.use('/quanhecon', accessTokenValidator, quanHeConRouter);
 usersRouter.use('/phieuthu', accessTokenValidator, phieuThuRouter);
+usersRouter.use('/danhmuc', accessTokenValidator, phieuThuRouter);
 usersRouter.use('/phieuchi', accessTokenValidator, phieuChiRouter);
-console.log('✅ Đã đăng ký xong nested routes!');
-
 export default usersRouter;

@@ -20,7 +20,8 @@ import {
   FiShield,
   FiUserPlus,
   FiSettings,
-  FiBook
+  FiBook,
+  FiDollarSign
 } from 'react-icons/fi';
 
 export default function DashboardPage() {
@@ -88,6 +89,14 @@ export default function DashboardPage() {
 
     // All roles: Tra cứu
     actions.push({ title: 'Tra cứu thành viên', icon: <FiBook />, path: '/thanhvien', color: 'text-indigo-500' });
+
+    // All roles: Thu quỹ
+    actions.push({ title: 'Thu quỹ họ', icon: <FiDollarSign />, path: '/phieuthu', color: 'text-emerald-500' });
+
+    // Admin & Owner: Chi quỹ
+    if (isAdmin || isOwner) {
+      actions.push({ title: 'Chi quỹ họ', icon: <FiDollarSign />, path: '/phieuchi', color: 'text-red-500' });
+    }
 
     return actions;
   };

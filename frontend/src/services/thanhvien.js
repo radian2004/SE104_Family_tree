@@ -27,6 +27,21 @@ class ThanhVienService {
   }
 
   /**
+   * Lấy tất cả thành viên (không phân trang)
+   * GET /users/thanhvien
+   * @returns {Promise<Array>} Danh sách thành viên
+   */
+  async getAll() {
+    try {
+      const response = await apiClient.get('/users/thanhvien');
+      return response.data.result || response.data || [];
+    } catch (error) {
+      console.error('Error getting all members:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Lấy chi tiết thành viên
    * GET /users/thanhvien/:MaTV
    * @param {string} MaTV - Mã thành viên

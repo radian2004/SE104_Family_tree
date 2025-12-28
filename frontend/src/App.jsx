@@ -24,6 +24,8 @@ import GiaPhaDetailPage from './pages/GiaPhaDetailPage';
 import BaoCaoPage from './pages/BaoCaoPage';
 import QuanHeHonNhanPage from './pages/QuanHeHonNhanPage';
 import QuanHeConCaiPage from './pages/QuanHeConCaiPage';
+import PhieuThuPage from './pages/PhieuThuPage';
+import PhieuChiPage from './pages/PhieuChiPage';
 
 // Admin Pages
 import QuanLyTaiKhoanPage from './pages/admin/QuanLyTaiKhoanPage';
@@ -129,6 +131,24 @@ export default function App() {
           element={
             <ProtectedRoute>
               <QuanHeConCaiPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Thu chi routes */}
+        <Route
+          path="/phieuthu"
+          element={
+            <ProtectedRoute>
+              <PhieuThuPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/phieuchi"
+          element={
+            <ProtectedRoute>
+              <PhieuChiPage />
             </ProtectedRoute>
           }
         />

@@ -28,16 +28,16 @@ const getUserInfo = async (user_id: string): Promise<TaiKhoanInfo> => {
     LEFT JOIN THANHVIEN tv ON tk.MaTV = tv.MaTV
     WHERE tk.TenDangNhap = ?
   `;
-  
+
   const rows = await databaseService.query<TaiKhoanInfo[]>(sql, [user_id]);
-  
+
   if (!rows || rows.length === 0) {
     throw new ErrorWithStatus({
       message: 'Không tìm thấy thông tin tài khoản',
       status: HTTP_STATUS.UNAUTHORIZED
     });
   }
-  
+
   return rows[0];
 };
 
@@ -72,19 +72,19 @@ export const requireAdminOrOwner = async (req: Request, res: Response, next: Nex
   try {
     const { user_id } = req.decoded_authorization as TokenPayload;
     const userInfo = await getUserInfo(user_id);
-    
+
     // Admin có toàn quyền
     if (userInfo.MaLoaiTK === 'LTK01') {
       req.userInfo = userInfo;
       return next();
     }
-    
+
     // Owner (TruongToc)
     if (userInfo.MaLoaiTK === 'LTK02') {
       req.userInfo = userInfo;
       return next();
     }
-    
+
     throw new ErrorWithStatus({
       message: 'Chỉ Admin hoặc Trưởng tộc mới có quyền thực hiện hành động này',
       status: HTTP_STATUS.FORBIDDEN
@@ -104,31 +104,31 @@ export const checkUpdateMemberPermission = async (req: Request, res: Response, n
   try {
     const { user_id } = req.decoded_authorization as TokenPayload;
     console.log(user_id);
-    
+
     const userInfo = await getUserInfo(user_id);
     const { MaTV } = req.params;  // MaTV của thành viên cần sửa
-    
+
     // Admin có toàn quyền
     if (userInfo.MaLoaiTK === 'LTK01') {
       req.userInfo = userInfo;
       return next();
     }
-    
+
     // Lấy thông tin thành viên cần sửa
     const [memberRows] = await databaseService.query<RowDataPacket[]>(
       'SELECT MaTV, MaGiaPha FROM THANHVIEN WHERE MaTV = ?',
       [MaTV]
     );
-    
+
     if (memberRows.length === 0) {
       throw new ErrorWithStatus({
         message: 'Không tìm thấy thành viên',
         status: HTTP_STATUS.NOT_FOUND
       });
     }
-    
+
     const memberInfo = memberRows[0];
-    
+
     // Owner: chỉ sửa được thành viên trong gia phả
     if (userInfo.MaLoaiTK === 'LTK02') {
       if (memberInfo.MaGiaPha !== userInfo.MaGiaPha) {
@@ -140,7 +140,7 @@ export const checkUpdateMemberPermission = async (req: Request, res: Response, n
       req.userInfo = userInfo;
       return next();
     }
-    
+
     // User: chỉ sửa được chính mình
     if (userInfo.MaLoaiTK === 'LTK03') {
       if (userInfo.MaTV !== MaTV) {
@@ -152,13 +152,13 @@ export const checkUpdateMemberPermission = async (req: Request, res: Response, n
       req.userInfo = userInfo;
       return next();
     }
-    
+
     throw new ErrorWithStatus({
       message: 'Không có quyền truy cập',
       status: HTTP_STATUS.FORBIDDEN
     });
   } catch (error) {
-    console.log("lỗi nè");    
+    console.log("lỗi nè");
     next(error);
   }
 };
@@ -174,13 +174,13 @@ export const checkDeleteMemberPermission = async (req: Request, res: Response, n
     const { user_id } = req.decoded_authorization as TokenPayload;
     const userInfo = await getUserInfo(user_id);
     const { MaTV } = req.params;
-    
+
     // Admin có toàn quyền
     if (userInfo.MaLoaiTK === 'LTK01') {
       req.userInfo = userInfo;
       return next();
     }
-    
+
     // User không có quyền xóa
     if (userInfo.MaLoaiTK === 'LTK03') {
       throw new ErrorWithStatus({
@@ -188,32 +188,32 @@ export const checkDeleteMemberPermission = async (req: Request, res: Response, n
         status: HTTP_STATUS.FORBIDDEN
       });
     }
-    
+
     // Owner: chỉ xóa được thành viên trong gia phả
     if (userInfo.MaLoaiTK === 'LTK02') {
       const [memberRows] = await databaseService.query<RowDataPacket[]>(
         'SELECT MaTV, MaGiaPha FROM THANHVIEN WHERE MaTV = ?',
         [MaTV]
       );
-      
+
       if (memberRows.length === 0) {
         throw new ErrorWithStatus({
           message: 'Không tìm thấy thành viên',
           status: HTTP_STATUS.NOT_FOUND
         });
       }
-      
+
       if (memberRows[0].MaGiaPha !== userInfo.MaGiaPha) {
         throw new ErrorWithStatus({
           message: 'Bạn chỉ có quyền xóa thành viên trong gia phả của mình',
           status: HTTP_STATUS.FORBIDDEN
         });
       }
-      
+
       req.userInfo = userInfo;
       return next();
     }
-    
+
     throw new ErrorWithStatus({
       message: 'Không có quyền truy cập',
       status: HTTP_STATUS.FORBIDDEN
@@ -232,7 +232,7 @@ export const attachUserInfoMiddleware = async (req: Request, res: Response, next
   try {
     const { user_id } = req.decoded_authorization as TokenPayload;
     const userInfo = await getUserInfo(user_id);
-    
+
     // Gán thông tin user vào request
     req.userInfo = userInfo;
     next();
@@ -252,28 +252,28 @@ export const checkGhiNhanThanhTichPermission = async (req: Request, res: Respons
     const { user_id } = req.decoded_authorization as TokenPayload;
     const userInfo = await getUserInfo(user_id);
     const { MaTV } = req.body;  // MaTV của thành viên được ghi nhận thành tích
-    
+
     // Admin có toàn quyền
     if (userInfo.MaLoaiTK === 'LTK01') {
       req.userInfo = userInfo;
       return next();
     }
-    
+
     // Lấy thông tin thành viên được ghi nhận
     const memberRows = await databaseService.query<RowDataPacket[]>(
       'SELECT MaTV, MaGiaPha FROM THANHVIEN WHERE MaTV = ?',
       [MaTV]
     );
-    
+
     if (!memberRows || memberRows.length === 0) {
       throw new ErrorWithStatus({
         message: 'Không tìm thấy thành viên',
         status: HTTP_STATUS.NOT_FOUND
       });
     }
-    
+
     const memberInfo = memberRows[0];
-    
+
     // Owner: chỉ ghi nhận cho thành viên trong gia phả
     if (userInfo.MaLoaiTK === 'LTK02') {
       if (memberInfo.MaGiaPha !== userInfo.MaGiaPha) {
@@ -285,7 +285,7 @@ export const checkGhiNhanThanhTichPermission = async (req: Request, res: Respons
       req.userInfo = userInfo;
       return next();
     }
-    
+
     // User: chỉ ghi nhận cho chính mình
     if (userInfo.MaLoaiTK === 'LTK03') {
       if (userInfo.MaTV !== MaTV) {
@@ -297,7 +297,7 @@ export const checkGhiNhanThanhTichPermission = async (req: Request, res: Respons
       req.userInfo = userInfo;
       return next();
     }
-    
+
     throw new ErrorWithStatus({
       message: 'Không có quyền truy cập',
       status: HTTP_STATUS.FORBIDDEN
@@ -318,26 +318,26 @@ export const checkDeleteThanhTichPermission = async (req: Request, res: Response
     const { user_id } = req.decoded_authorization as TokenPayload;
     const userInfo = await getUserInfo(user_id);
     const { MaTV } = req.body;  // MaTV trong body
-    
+
     // Admin có toàn quyền
     if (userInfo.MaLoaiTK === 'LTK01') {
       req.userInfo = userInfo;
       return next();
     }
-    
+
     // Lấy thông tin thành viên
     const memberRows = await databaseService.query<RowDataPacket[]>(
       'SELECT MaTV, MaGiaPha FROM THANHVIEN WHERE MaTV = ?',
       [MaTV]
     );
-    
+
     if (!memberRows || memberRows.length === 0) {
       throw new ErrorWithStatus({
         message: 'Không tìm thấy thành viên',
         status: HTTP_STATUS.NOT_FOUND
       });
     }
-    
+
     // Owner và User: chỉ xóa được thành tích trong gia phả
     if (userInfo.MaLoaiTK === 'LTK02' || userInfo.MaLoaiTK === 'LTK03') {
       if (!userInfo.MaGiaPha) {
@@ -346,18 +346,18 @@ export const checkDeleteThanhTichPermission = async (req: Request, res: Response
           status: HTTP_STATUS.FORBIDDEN
         });
       }
-      
+
       if (memberRows[0].MaGiaPha !== userInfo.MaGiaPha) {
         throw new ErrorWithStatus({
           message: 'Bạn chỉ có quyền xóa thành tích của thành viên trong gia phả của mình',
           status: HTTP_STATUS.FORBIDDEN
         });
       }
-      
+
       req.userInfo = userInfo;
       return next();
     }
-    
+
     throw new ErrorWithStatus({
       message: 'Không có quyền truy cập',
       status: HTTP_STATUS.FORBIDDEN
@@ -378,28 +378,28 @@ export const checkUpdateThanhTichPermission = async (req: Request, res: Response
     const { user_id } = req.decoded_authorization as TokenPayload;
     const userInfo = await getUserInfo(user_id);
     const { MaTV } = req.body;  // MaTV trong body
-    
+
     // Admin có toàn quyền
     if (userInfo.MaLoaiTK === 'LTK01') {
       req.userInfo = userInfo;
       return next();
     }
-    
+
     // Lấy thông tin thành viên
     const memberRows = await databaseService.query<RowDataPacket[]>(
       'SELECT MaTV, MaGiaPha FROM THANHVIEN WHERE MaTV = ?',
       [MaTV]
     );
-    
+
     if (!memberRows || memberRows.length === 0) {
       throw new ErrorWithStatus({
         message: 'Không tìm thấy thành viên',
         status: HTTP_STATUS.NOT_FOUND
       });
     }
-    
+
     const memberInfo = memberRows[0];
-    
+
     // Owner: chỉ sửa được thành tích trong gia phả
     if (userInfo.MaLoaiTK === 'LTK02') {
       if (!userInfo.MaGiaPha) {
@@ -408,18 +408,18 @@ export const checkUpdateThanhTichPermission = async (req: Request, res: Response
           status: HTTP_STATUS.FORBIDDEN
         });
       }
-      
+
       if (memberInfo.MaGiaPha !== userInfo.MaGiaPha) {
         throw new ErrorWithStatus({
           message: 'Bạn chỉ có quyền sửa thành tích của thành viên trong gia phả của mình',
           status: HTTP_STATUS.FORBIDDEN
         });
       }
-      
+
       req.userInfo = userInfo;
       return next();
     }
-    
+
     // User: chỉ sửa được thành tích của chính mình
     if (userInfo.MaLoaiTK === 'LTK03') {
       if (userInfo.MaTV !== MaTV) {
@@ -428,11 +428,11 @@ export const checkUpdateThanhTichPermission = async (req: Request, res: Response
           status: HTTP_STATUS.FORBIDDEN
         });
       }
-      
+
       req.userInfo = userInfo;
       return next();
     }
-    
+
     throw new ErrorWithStatus({
       message: 'Không có quyền truy cập',
       status: HTTP_STATUS.FORBIDDEN
@@ -453,13 +453,13 @@ export const checkGhiNhanKetThucPermission = async (req: Request, res: Response,
     const { user_id } = req.decoded_authorization as TokenPayload;
     const userInfo = await getUserInfo(user_id);
     const { MaTV } = req.body;  // MaTV của thành viên cần ghi nhận kết thúc
-    
+
     // Admin có toàn quyền
     if (userInfo.MaLoaiTK === 'LTK01') {
       req.userInfo = userInfo;
       return next();
     }
-    
+
     // User không có quyền ghi nhận kết thúc
     if (userInfo.MaLoaiTK === 'LTK03') {
       throw new ErrorWithStatus({
@@ -467,7 +467,7 @@ export const checkGhiNhanKetThucPermission = async (req: Request, res: Response,
         status: HTTP_STATUS.FORBIDDEN
       });
     }
-    
+
     // Owner: chỉ ghi nhận được thành viên trong gia phả
     if (userInfo.MaLoaiTK === 'LTK02') {
       if (!userInfo.MaGiaPha) {
@@ -476,31 +476,31 @@ export const checkGhiNhanKetThucPermission = async (req: Request, res: Response,
           status: HTTP_STATUS.FORBIDDEN
         });
       }
-      
+
       // Kiểm tra thành viên có trong gia phả không
       const memberRows = await databaseService.query<RowDataPacket[]>(
         'SELECT MaTV, MaGiaPha FROM THANHVIEN WHERE MaTV = ?',
         [MaTV]
       );
-      
+
       if (!memberRows || memberRows.length === 0) {
         throw new ErrorWithStatus({
           message: 'Không tìm thấy thành viên',
           status: HTTP_STATUS.NOT_FOUND
         });
       }
-      
+
       if (memberRows[0].MaGiaPha !== userInfo.MaGiaPha) {
         throw new ErrorWithStatus({
           message: 'Bạn chỉ có quyền ghi nhận kết thúc cho thành viên trong gia phả của mình',
           status: HTTP_STATUS.FORBIDDEN
         });
       }
-      
+
       req.userInfo = userInfo;
       return next();
     }
-    
+
     throw new ErrorWithStatus({
       message: 'Không có quyền truy cập',
       status: HTTP_STATUS.FORBIDDEN
@@ -521,13 +521,13 @@ export const checkUpdateDeleteKetThucPermission = async (req: Request, res: Resp
     const { user_id } = req.decoded_authorization as TokenPayload;
     const userInfo = await getUserInfo(user_id);
     const { MaTV } = req.params;  // MaTV trong URL params
-    
+
     // Admin có toàn quyền
     if (userInfo.MaLoaiTK === 'LTK01') {
       req.userInfo = userInfo;
       return next();
     }
-    
+
     // User không có quyền sửa/xóa
     if (userInfo.MaLoaiTK === 'LTK03') {
       throw new ErrorWithStatus({
@@ -535,7 +535,7 @@ export const checkUpdateDeleteKetThucPermission = async (req: Request, res: Resp
         status: HTTP_STATUS.FORBIDDEN
       });
     }
-    
+
     // Owner: chỉ sửa/xóa được thành viên trong gia phả
     if (userInfo.MaLoaiTK === 'LTK02') {
       if (!userInfo.MaGiaPha) {
@@ -544,34 +544,45 @@ export const checkUpdateDeleteKetThucPermission = async (req: Request, res: Resp
           status: HTTP_STATUS.FORBIDDEN
         });
       }
-      
+
       const memberRows = await databaseService.query<RowDataPacket[]>(
         'SELECT MaTV, MaGiaPha FROM THANHVIEN WHERE MaTV = ?',
         [MaTV]
       );
-      
+
       if (!memberRows || memberRows.length === 0) {
         throw new ErrorWithStatus({
           message: 'Không tìm thấy thành viên',
           status: HTTP_STATUS.NOT_FOUND
         });
       }
-      
+
       if (memberRows[0].MaGiaPha !== userInfo.MaGiaPha) {
         throw new ErrorWithStatus({
           message: 'Bạn chỉ có quyền sửa/xóa kết thúc của thành viên trong gia phả của mình',
           status: HTTP_STATUS.FORBIDDEN
         });
       }
-      
+
       req.userInfo = userInfo;
       return next();
     }
-    
+
     throw new ErrorWithStatus({
       message: 'Không có quyền truy cập',
       status: HTTP_STATUS.FORBIDDEN
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const attachUserInfo = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { user_id } = req.decoded_authorization as TokenPayload;
+    const userInfo = await getUserInfo(user_id);
+    req.userInfo = userInfo;
+    next();
   } catch (error) {
     next(error);
   }
