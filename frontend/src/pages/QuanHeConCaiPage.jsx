@@ -9,6 +9,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { FiArrowLeft, FiUsers, FiSave } from 'react-icons/fi';
 import quanheService from '../services/quanhe.js';
 import thanhvienService from '../services/thanhvien.js';
+import DateInput from '../components/common/DateInput';
 
 export default function QuanHeConCaiPage() {
     const navigate = useNavigate();
@@ -290,8 +291,7 @@ export default function QuanHeConCaiPage() {
                             <label className="block text-sm font-semibold text-neutral-700 mb-2">
                                 Ngày phát sinh (không bắt buộc)
                             </label>
-                            <input
-                                type="date"
+                            <DateInput
                                 name="NgayPhatSinh"
                                 value={formData.NgayPhatSinh}
                                 onChange={handleChange}

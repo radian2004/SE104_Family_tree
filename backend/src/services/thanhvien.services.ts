@@ -523,8 +523,9 @@ class ThanhVienService {
       ]);
 
       // [5] Lấy MaTV của thành viên vừa tạo (trigger tự gen)
+      // Sử dụng MAX(MaTV) thay vì ORDER BY TGTaoMoi vì TGTaoMoi là DATE không có giờ:phút:giây
       const [newMemberRows] = await connection.query<ThanhVienRow[]>(
-        'SELECT * FROM THANHVIEN ORDER BY TGTaoMoi DESC LIMIT 1'
+        'SELECT * FROM THANHVIEN ORDER BY CAST(SUBSTRING(MaTV, 3) AS UNSIGNED) DESC LIMIT 1'
       );
       const newMember = newMemberRows[0];
 

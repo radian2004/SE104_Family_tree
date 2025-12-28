@@ -8,7 +8,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useEffect } from 'react';
 import { useAuthStore } from './store/authStore';
 import { ProtectedRoute, PublicRoute } from './components/common/ProtectedRoute';
-import { AdminRoute } from './components/common/AdminRoute';
+import { AdminRoute, OwnerRoute } from './components/common/AdminRoute';
 
 // Pages
 import LoginPage from './pages/LoginPage';
@@ -32,6 +32,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 
 // Admin Pages
 import QuanLyTaiKhoanPage from './pages/admin/QuanLyTaiKhoanPage';
+import DanhMucPage from './pages/DanhMucPage';
 
 export default function App() {
   const checkAuth = useAuthStore((state) => state.checkAuth);
@@ -159,6 +160,26 @@ export default function App() {
         />
 
         {/* ==================== ADMIN ROUTES ==================== */}
+        <Route
+          path="/admin/users"
+          element={
+            <AdminRoute>
+              <QuanLyTaiKhoanPage />
+            </AdminRoute>
+          }
+        />
+
+        {/* Quản lý danh mục (Admin + Trưởng tộc) */}
+        <Route
+          path="/danhmuc"
+          element={
+            <OwnerRoute>
+              <DanhMucPage />
+            </OwnerRoute>
+          }
+        />
+
+
         <Route
           path="/admin/taikhoan"
           element={

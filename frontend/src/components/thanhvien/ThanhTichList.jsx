@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { FiAward, FiPlus, FiTrash2, FiCalendar, FiEdit2, FiX, FiCheck } from 'react-icons/fi';
 import thanhTichService from '../../services/thanhtich';
 import { useLookupsStore } from '../../store/lookupsStore';
+import DateInput from '../common/DateInput';
 
 export default function ThanhTichList({ MaTV }) {
     const loaithanhtich = useLookupsStore((state) => state.loaithanhtich);
@@ -209,8 +210,7 @@ export default function ThanhTichList({ MaTV }) {
                         <div>
                             <label className="form-label">Ngày phát sinh</label>
                             <div className="relative">
-                                <input
-                                    type="date"
+                                <DateInput
                                     className="input-field"
                                     value={ngayPhatSinh}
                                     onChange={e => setNgayPhatSinh(e.target.value)}

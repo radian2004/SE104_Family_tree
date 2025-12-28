@@ -76,6 +76,7 @@ export default function DashboardPage() {
 
     // Admin & Owner: Tiếp nhận thành viên
     if (isAdmin || isOwner) {
+      actions.push({ title: 'Quản lý danh mục', icon: <FiSettings />, path: '/danhmuc', color: 'text-gray-600' });
       actions.push({ title: 'Thêm thành viên', icon: <FiUserPlus />, path: '/thanhvien/create', color: 'text-orange-500' });
     }
 
