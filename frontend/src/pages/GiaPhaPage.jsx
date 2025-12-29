@@ -39,8 +39,9 @@ export default function GiaPhaPage() {
         try {
             let data = await giaPhaService.getAll();
 
-            // ⭐ FILTER FOR OWNER: Only show their own gia phả
-            if (isOwner && !isAdmin && user?.MaGiaPha) {
+            // ⭐ FILTER FOR OWNER/USER: Only show their own gia phả
+            // Admin can see all, Owner/User can only see their own
+            if (!isAdmin && user?.MaGiaPha) {
                 data = data.filter(gp => gp.MaGiaPha === user.MaGiaPha);
             }
 

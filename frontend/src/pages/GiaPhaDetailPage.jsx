@@ -1,18 +1,20 @@
 /**
  * ============================================
  * GIA PHẢ DETAIL PAGE - Chi tiết cây gia phả
- * Với chức năng thêm/sửa/xóa thành viên
+ * Với chức năng thêm/sửa/xóa thành viên và quan hệ
  * ============================================
  */
 
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiUsers, FiCalendar, FiUserPlus, FiRefreshCw } from 'react-icons/fi';
+import { FiArrowLeft, FiUsers, FiCalendar, FiUserPlus, FiRefreshCw, FiHeart, FiX, FiCheck } from 'react-icons/fi';
 import giaPhaService from '../services/giapha.js';
 import thanhvienService from '../services/thanhvien.js';
+import quanheService from '../services/quanhe.js';
 import { useLookupsStore } from '../store/lookupsStore.js';
 import { usePermissions } from '../hooks/usePermissions';
 import FamilyTreeView from '../components/giapha/FamilyTreeView.jsx';
+import DateInput from '../components/common/DateInput';
 
 export default function GiaPhaDetailPage() {
     const { MaGiaPha } = useParams();
@@ -26,6 +28,26 @@ export default function GiaPhaDetailPage() {
     const [relationships, setRelationships] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [successMsg, setSuccessMsg] = useState(null);
+
+    // ===== MODAL STATES =====
+    // Marriage Modal
+    const [showMarriageModal, setShowMarriageModal] = useState(false);
+    const [marriageForm, setMarriageForm] = useState({
+        MaChong: '',
+        MaVo: '',
+        NgayBatDau: new Date().toISOString().split('T')[0]
+    });
+    const [isSubmittingMarriage, setIsSubmittingMarriage] = useState(false);
+
+    // Parent-Child Modal
+    const [showParentChildModal, setShowParentChildModal] = useState(false);
+    const [parentChildForm, setParentChildForm] = useState({
+        MaCon: '',
+        MaTVCha: '',
+        MaTVMe: ''
+    });
+    const [isSubmittingParentChild, setIsSubmittingParentChild] = useState(false);
 
     // Load gia phả detail and members
     const loadData = async () => {
@@ -56,6 +78,14 @@ export default function GiaPhaDetailPage() {
         }
     }, [MaGiaPha]);
 
+    // Clear success message after 3 seconds
+    useEffect(() => {
+        if (successMsg) {
+            const timer = setTimeout(() => setSuccessMsg(null), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [successMsg]);
+
     // Check if member is deceased
     const isDeceased = (tv) => {
         const status = (tv.TrangThai || '').toLowerCase();
@@ -75,14 +105,81 @@ export default function GiaPhaDetailPage() {
 
         try {
             await thanhvienService.delete(MaTV);
-            alert('Đã xóa thành viên thành công!');
-            // Reload data
+            setSuccessMsg('Đã xóa thành viên thành công!');
             loadData();
         } catch (err) {
             console.error('Delete error:', err);
-            alert(err.response?.data?.message || 'Lỗi xóa thành viên');
+            setError(err.response?.data?.message || 'Lỗi xóa thành viên');
         }
     };
+
+    // ===== MARRIAGE HANDLERS =====
+    const handleSubmitMarriage = async (e) => {
+        e.preventDefault();
+        if (!marriageForm.MaChong || !marriageForm.MaVo) {
+            setError('Vui lòng chọn cả chồng và vợ');
+            return;
+        }
+        if (marriageForm.MaChong === marriageForm.MaVo) {
+            setError('Chồng và vợ không thể là cùng một người');
+            return;
+        }
+
+        setIsSubmittingMarriage(true);
+        setError(null);
+        try {
+            await quanheService.createHonNhan({
+                MaChong: marriageForm.MaChong,
+                MaVo: marriageForm.MaVo,
+                NgayBatDau: marriageForm.NgayBatDau
+            });
+            setSuccessMsg('Đã thêm quan hệ hôn nhân thành công!');
+            setShowMarriageModal(false);
+            setMarriageForm({ MaChong: '', MaVo: '', NgayBatDau: new Date().toISOString().split('T')[0] });
+            loadData();
+        } catch (err) {
+            console.error('Marriage error:', err);
+            setError(err.response?.data?.message || 'Lỗi thêm quan hệ hôn nhân');
+        } finally {
+            setIsSubmittingMarriage(false);
+        }
+    };
+
+    // ===== PARENT-CHILD HANDLERS =====
+    const handleSubmitParentChild = async (e) => {
+        e.preventDefault();
+        if (!parentChildForm.MaCon) {
+            setError('Vui lòng chọn con');
+            return;
+        }
+        if (!parentChildForm.MaTVCha && !parentChildForm.MaTVMe) {
+            setError('Vui lòng chọn ít nhất cha hoặc mẹ');
+            return;
+        }
+
+        setIsSubmittingParentChild(true);
+        setError(null);
+        try {
+            await quanheService.createQuanHeCon({
+                MaTV: parentChildForm.MaCon,
+                MaTVCha: parentChildForm.MaTVCha || null,
+                MaTVMe: parentChildForm.MaTVMe || null
+            });
+            setSuccessMsg('Đã thêm quan hệ cha-mẹ-con thành công!');
+            setShowParentChildModal(false);
+            setParentChildForm({ MaCon: '', MaTVCha: '', MaTVMe: '' });
+            loadData();
+        } catch (err) {
+            console.error('Parent-child error:', err);
+            setError(err.response?.data?.message || 'Lỗi thêm quan hệ cha-mẹ-con');
+        } finally {
+            setIsSubmittingParentChild(false);
+        }
+    };
+
+    // Get members filtered by gender
+    const maleMembers = thanhVienList.filter(tv => tv.GioiTinh === 'Nam');
+    const femaleMembers = thanhVienList.filter(tv => tv.GioiTinh === 'Nữ');
 
     return (
         <div className="min-h-screen">
@@ -115,13 +212,33 @@ export default function GiaPhaDetailPage() {
                         </button>
 
                         {canManage && (
-                            <Link
-                                to={`/thanhvien/create?MaGiaPha=${MaGiaPha}`}
-                                className="btn btn-primary flex items-center gap-2"
-                            >
-                                <FiUserPlus className="w-4 h-4" />
-                                <span>Thêm thành viên</span>
-                            </Link>
+                            <>
+                                {/* Add Marriage Button */}
+                                <button
+                                    onClick={() => setShowMarriageModal(true)}
+                                    className="btn btn-outline flex items-center gap-2 border-pink-300 text-pink-600 hover:bg-pink-50"
+                                >
+                                    <FiHeart className="w-4 h-4" />
+                                    <span className="hidden md:inline">Thêm hôn nhân</span>
+                                </button>
+
+                                {/* Add Parent-Child Button */}
+                                <button
+                                    onClick={() => setShowParentChildModal(true)}
+                                    className="btn btn-outline flex items-center gap-2 border-emerald-300 text-emerald-600 hover:bg-emerald-50"
+                                >
+                                    <span>👶</span>
+                                    <span className="hidden md:inline">Thêm con cái</span>
+                                </button>
+
+                                <Link
+                                    to={`/thanhvien/create?MaGiaPha=${MaGiaPha}`}
+                                    className="btn btn-primary flex items-center gap-2"
+                                >
+                                    <FiUserPlus className="w-4 h-4" />
+                                    <span>Thêm thành viên</span>
+                                </Link>
+                            </>
                         )}
                     </div>
                 </div>
@@ -129,11 +246,22 @@ export default function GiaPhaDetailPage() {
 
             {/* Main Content */}
             <main className="max-w-7xl mx-auto px-6 py-8">
+                {/* Success Message */}
+                {successMsg && (
+                    <div className="mb-6 p-4 bg-emerald-100 text-emerald-700 rounded-xl flex items-center gap-2 animate-fade-in">
+                        <FiCheck className="w-5 h-5" />
+                        {successMsg}
+                    </div>
+                )}
+
                 {/* Error Alert */}
                 {error && (
                     <div className="alert alert-danger mb-6 animate-fade-in">
                         <span className="text-lg">⚠️</span>
                         <p>{error}</p>
+                        <button onClick={() => setError(null)} className="ml-auto">
+                            <FiX className="w-4 h-4" />
+                        </button>
                     </div>
                 )}
 
@@ -222,6 +350,199 @@ export default function GiaPhaDetailPage() {
                     </div>
                 )}
             </main>
+
+            {/* ===== MARRIAGE MODAL ===== */}
+            {showMarriageModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl animate-fade-in">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-bold text-neutral-800 flex items-center gap-2">
+                                <FiHeart className="text-pink-500" />
+                                Thêm quan hệ hôn nhân
+                            </h3>
+                            <button
+                                onClick={() => setShowMarriageModal(false)}
+                                className="p-2 hover:bg-neutral-100 rounded-lg"
+                            >
+                                <FiX className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleSubmitMarriage} className="space-y-4">
+                            {/* Chồng */}
+                            <div>
+                                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                                    👨 Chọn Chồng *
+                                </label>
+                                <select
+                                    value={marriageForm.MaChong}
+                                    onChange={(e) => setMarriageForm(prev => ({ ...prev, MaChong: e.target.value }))}
+                                    className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                                    required
+                                >
+                                    <option value="">-- Chọn chồng --</option>
+                                    {maleMembers.map(m => (
+                                        <option key={m.MaTV} value={m.MaTV}>
+                                            {m.HoTen} (Đời {m.DOI || 0})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Vợ */}
+                            <div>
+                                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                                    👩 Chọn Vợ *
+                                </label>
+                                <select
+                                    value={marriageForm.MaVo}
+                                    onChange={(e) => setMarriageForm(prev => ({ ...prev, MaVo: e.target.value }))}
+                                    className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                                    required
+                                >
+                                    <option value="">-- Chọn vợ --</option>
+                                    {femaleMembers.map(m => (
+                                        <option key={m.MaTV} value={m.MaTV}>
+                                            {m.HoTen} (Đời {m.DOI || 0})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Ngày kết hôn */}
+                            <div>
+                                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                                    📅 Ngày kết hôn
+                                </label>
+                                <DateInput
+                                    value={marriageForm.NgayBatDau}
+                                    onChange={(e) => setMarriageForm(prev => ({ ...prev, NgayBatDau: e.target.value }))}
+                                    className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                                />
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex gap-3 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowMarriageModal(false)}
+                                    className="flex-1 px-4 py-3 border border-neutral-300 rounded-xl hover:bg-neutral-50 transition-colors"
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isSubmittingMarriage}
+                                    className="flex-1 px-4 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl hover:shadow-lg transition-all disabled:opacity-50"
+                                >
+                                    {isSubmittingMarriage ? 'Đang lưu...' : 'Thêm hôn nhân'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ===== PARENT-CHILD MODAL ===== */}
+            {showParentChildModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl animate-fade-in">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-bold text-neutral-800 flex items-center gap-2">
+                                👨‍👩‍👧 Thêm quan hệ cha-mẹ-con
+                            </h3>
+                            <button
+                                onClick={() => setShowParentChildModal(false)}
+                                className="p-2 hover:bg-neutral-100 rounded-lg"
+                            >
+                                <FiX className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleSubmitParentChild} className="space-y-4">
+                            {/* Con */}
+                            <div>
+                                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                                    👶 Chọn Con *
+                                </label>
+                                <select
+                                    value={parentChildForm.MaCon}
+                                    onChange={(e) => setParentChildForm(prev => ({ ...prev, MaCon: e.target.value }))}
+                                    className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                    required
+                                >
+                                    <option value="">-- Chọn con --</option>
+                                    {thanhVienList.map(m => (
+                                        <option key={m.MaTV} value={m.MaTV}>
+                                            {m.HoTen} ({m.GioiTinh}, Đời {m.DOI || 0})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Cha */}
+                            <div>
+                                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                                    👨 Chọn Cha
+                                </label>
+                                <select
+                                    value={parentChildForm.MaTVCha}
+                                    onChange={(e) => setParentChildForm(prev => ({ ...prev, MaTVCha: e.target.value }))}
+                                    className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                >
+                                    <option value="">-- Không chọn --</option>
+                                    {maleMembers.map(m => (
+                                        <option key={m.MaTV} value={m.MaTV} disabled={m.MaTV === parentChildForm.MaCon}>
+                                            {m.HoTen} (Đời {m.DOI || 0})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Mẹ */}
+                            <div>
+                                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                                    👩 Chọn Mẹ
+                                </label>
+                                <select
+                                    value={parentChildForm.MaTVMe}
+                                    onChange={(e) => setParentChildForm(prev => ({ ...prev, MaTVMe: e.target.value }))}
+                                    className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                >
+                                    <option value="">-- Không chọn --</option>
+                                    {femaleMembers.map(m => (
+                                        <option key={m.MaTV} value={m.MaTV} disabled={m.MaTV === parentChildForm.MaCon}>
+                                            {m.HoTen} (Đời {m.DOI || 0})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <p className="text-xs text-neutral-500 bg-neutral-50 p-3 rounded-lg">
+                                💡 Bạn cần chọn ít nhất một trong hai: cha hoặc mẹ
+                            </p>
+
+                            {/* Actions */}
+                            <div className="flex gap-3 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowParentChildModal(false)}
+                                    className="flex-1 px-4 py-3 border border-neutral-300 rounded-xl hover:bg-neutral-50 transition-colors"
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isSubmittingParentChild}
+                                    className="flex-1 px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl hover:shadow-lg transition-all disabled:opacity-50"
+                                >
+                                    {isSubmittingParentChild ? 'Đang lưu...' : 'Thêm quan hệ'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

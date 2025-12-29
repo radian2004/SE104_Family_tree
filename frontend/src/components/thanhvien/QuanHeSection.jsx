@@ -11,7 +11,7 @@ import { FiHeart, FiChevronRight, FiEdit2, FiTrash2, FiX, FiCheck } from 'react-
 import quanheService from '../../services/quanhe.js';
 import DateInput from '../common/DateInput';
 
-export default function QuanHeSection({ MaTV, memberName, memberGender }) {
+export default function QuanHeSection({ MaTV, memberName, memberGender, canEdit = false }) {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -283,23 +283,25 @@ export default function QuanHeSection({ MaTV, memberName, memberGender }) {
                                                 </div>
                                             </div>
                                         </div>
-                                        {/* Action buttons */}
-                                        <div className="flex items-center gap-2">
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); openEditMarriage(sp); }}
-                                                className="p-2 text-blue-500 hover:bg-blue-100 rounded-lg transition-colors"
-                                                title="Sửa (kết thúc hôn nhân)"
-                                            >
-                                                <FiEdit2 className="w-4 h-4" />
-                                            </button>
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); openDeleteModal(sp, 'spouse'); }}
-                                                className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors"
-                                                title="Xóa quan hệ"
-                                            >
-                                                <FiTrash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
+                                        {/* Action buttons - Only for Admin/Owner */}
+                                        {canEdit && (
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); openEditMarriage(sp); }}
+                                                    className="p-2 text-blue-500 hover:bg-blue-100 rounded-lg transition-colors"
+                                                    title="Sửa (kết thúc hôn nhân)"
+                                                >
+                                                    <FiEdit2 className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); openDeleteModal(sp, 'spouse'); }}
+                                                    className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors"
+                                                    title="Xóa quan hệ"
+                                                >
+                                                    <FiTrash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -334,14 +336,16 @@ export default function QuanHeSection({ MaTV, memberName, memberGender }) {
                                                 </div>
                                             </div>
                                         </div>
-                                        {/* Delete button */}
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); openDeleteModal(child, 'child'); }}
-                                            className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors"
-                                            title="Xóa quan hệ cha mẹ con"
-                                        >
-                                            <FiTrash2 className="w-4 h-4" />
-                                        </button>
+                                        {/* Delete button - Only for Admin/Owner */}
+                                        {canEdit && (
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); openDeleteModal(child, 'child'); }}
+                                                className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors"
+                                                title="Xóa quan hệ cha mẹ con"
+                                            >
+                                                <FiTrash2 className="w-4 h-4" />
+                                            </button>
+                                        )}
                                     </div>
                                 ))}
                             </div>

@@ -14,12 +14,19 @@ import thanhvienService from '../services/thanhvien.js';
 import ThanhTichList from '../components/thanhvien/ThanhTichList.jsx';
 import KetThucSection from '../components/thanhvien/KetThucSection.jsx';
 import QuanHeSection from '../components/thanhvien/QuanHeSection.jsx';
+import { usePermissions } from '../hooks/usePermissions';
+import { useAuth } from '../hooks/useAuth';
 
 export default function ThanhVienDetailPage() {
   const navigate = useNavigate();
   const { MaTV } = useParams();
   const { removeThanhVienFromList } = useThanhVienStore();
   const { setAllLookups, queQuan, ngheNghiep, cayGiaPha } = useLookupsStore();
+  const { user } = useAuth();
+  const { isAdmin, isOwner } = usePermissions();
+
+  // ✅ Permission: Only Admin/Owner can edit relationships
+  const canEditRelations = isAdmin || isOwner;
 
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
@@ -328,6 +335,7 @@ export default function ThanhVienDetailPage() {
                 MaTV={MaTV}
                 memberName={thanhvien?.HoTen}
                 memberGender={thanhvien?.GioiTinh}
+                canEdit={canEditRelations}
               />
             </div>
 

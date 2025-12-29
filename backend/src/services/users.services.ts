@@ -389,11 +389,9 @@ class UsersService {
       FROM THANHVIEN tv
       LEFT JOIN TAIKHOAN tk ON tv.MaTV = tk.MaTV
       LEFT JOIN QUEQUAN qq ON tv.MaQueQuan = qq.MaQueQuan
-      LEFT JOIN QUANHECON qhc_cha ON tv.MaTV = qhc_cha.MaCon AND qhc_cha.QuanHe = 'Con ruột'
-      LEFT JOIN THANHVIEN cha ON qhc_cha.MaCha = cha.MaTV
-      LEFT JOIN QUANHECON qhc_me ON tv.MaTV = qhc_me.MaCon AND qhc_me.QuanHe = 'Con ruột'
-      LEFT JOIN HONNHAN hn ON qhc_me.MaCha = hn.MaChong OR qhc_me.MaCha = hn.MaVo
-      LEFT JOIN THANHVIEN me ON (hn.MaVo = me.MaTV AND hn.MaChong = cha.MaTV) OR (hn.MaChong = me.MaTV AND hn.MaVo = cha.MaTV)
+      LEFT JOIN QUANHECON qhc ON tv.MaTV = qhc.MaTV
+      LEFT JOIN THANHVIEN cha ON qhc.MaTVCha = cha.MaTV
+      LEFT JOIN THANHVIEN me ON qhc.MaTVMe = me.MaTV
       WHERE tv.MaGiaPha = ? AND tk.TenDangNhap IS NULL
       ORDER BY tv.HoTen, tv.NgayGioSinh
     `;
