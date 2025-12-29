@@ -10,10 +10,12 @@ import { FiArrowLeft, FiPlus, FiCheck, FiX, FiDollarSign, FiCalendar, FiUser, Fi
 import phieuThuService from '../services/phieuthu';
 import thanhVienService from '../services/thanhvien';
 import { usePermissions } from '../hooks/usePermissions';
+import { useAuthStore } from '../store/authStore';
 import GiaPhaSelector from '../components/common/GiaPhaSelector';
 
 export default function PhieuThuPage() {
     const { canRecordIncome, isAdmin, isOwner } = usePermissions();
+    const user = useAuthStore(state => state.user);
 
     const [phieuThuList, setPhieuThuList] = useState([]);
     const [pendingList, setPendingList] = useState([]);
@@ -433,7 +435,7 @@ export default function PhieuThuPage() {
                                                         </span>
                                                     </div>
                                                 </div>
-                                                {(isAdmin || isOwner) && (
+                                                {(isOwner || (user?.MaTV === item.NguoiDamNhan)) && (
                                                     <button
                                                         onClick={() => handleXacNhan(item.MaPhieuThu, item.MaDMT)}
                                                         className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"

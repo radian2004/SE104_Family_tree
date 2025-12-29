@@ -152,7 +152,7 @@ class KetThucService {
         ROW_NUMBER() OVER (ORDER BY tv.NgayGioMat DESC) AS STT,
         tv.MaTV,
         tv.HoTen,
-        DATE_FORMAT(tv.NgayGioMat, '%d/%m/%Y %H:%i:%s') AS NgayGioMat,
+        DATE_FORMAT(tv.NgayGioMat, '%Y-%m-%d %H:%i:%s') AS NgayGioMat,
         COALESCE(nnm.TenNguyenNhanMat, 'Không rõ') AS TenNguyenNhanMat,
         COALESCE(dd.TenDiaDiem, 'Không rõ') AS TenDiaDiem
       FROM THANHVIEN tv

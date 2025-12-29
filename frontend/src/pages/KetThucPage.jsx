@@ -579,7 +579,12 @@ export default function KetThucPage() {
                                                     <div className="flex items-center gap-2 text-neutral-600">
                                                         <FiCalendar className="w-4 h-4 text-neutral-400" />
                                                         <span className="font-medium">
-                                                            {item.NgayGioMat ? new Date(item.NgayGioMat).toLocaleString('vi-VN') : '—'}
+                                                            {(() => {
+                                                                if (!item.NgayGioMat) return '—';
+                                                                const date = new Date(item.NgayGioMat);
+                                                                if (isNaN(date.getTime())) return '—';
+                                                                return date.toLocaleString('vi-VN');
+                                                            })()}
                                                         </span>
                                                     </div>
                                                 </td>

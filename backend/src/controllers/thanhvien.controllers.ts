@@ -290,10 +290,10 @@ export const ghiNhanThanhVienController = async (req: Request, res: Response) =>
     }
 
     // Validate loại quan hệ
-    if (payload.LoaiQuanHe !== 'Con cái' && payload.LoaiQuanHe !== 'Vợ/Chồng') {
+    if (payload.LoaiQuanHe !== 'Con cái' && payload.LoaiQuanHe !== 'Vợ/Chồng' && payload.LoaiQuanHe !== 'Cha') {
       return res.status(400).json({
         message: 'Loại quan hệ không hợp lệ',
-        error: 'Loại quan hệ phải là "Con cái" hoặc "Vợ/Chồng"'
+        error: 'Loại quan hệ phải là "Con cái", "Vợ/Chồng" hoặc "Cha"'
       });
     }
 

@@ -411,6 +411,74 @@ class UsersService {
   }
 
   /**
+   * Xác minh thành viên bằng mã gia phả và mã thành viên
+   * Trả về thông tin chi tiết nếu khớp, null nếu không
+   */
+  async verifyMemberForRegistration(MaGiaPha: string, MaTV: string) {
+    // Tìm thành viên với MaTV trong gia phả MaGiaPha và chưa có tài khoản
+    const sql = `
+      SELECT 
+        tv.MaTV, 
+        tv.HoTen, 
+        tv.NgayGioSinh,
+        tv.DOI,
+        tv.GioiTinh,
+        tv.DiaChi,
+        gp.TenGiaPha,
+        gp.MaGiaPha,
+        qq.TenQueQuan,
+        cha.HoTen AS TenCha,
+        me.HoTen AS TenMe
+      FROM THANHVIEN tv
+      INNER JOIN CAYGIAPHA gp ON tv.MaGiaPha = gp.MaGiaPha
+      LEFT JOIN TAIKHOAN tk ON tv.MaTV = tk.MaTV
+      LEFT JOIN QUEQUAN qq ON tv.MaQueQuan = qq.MaQueQuan
+      LEFT JOIN QUANHECON qhc ON tv.MaTV = qhc.MaTV
+      LEFT JOIN THANHVIEN cha ON qhc.MaTVCha = cha.MaTV
+      LEFT JOIN THANHVIEN me ON qhc.MaTVMe = me.MaTV
+      WHERE gp.MaGiaPha = ? AND tv.MaTV = ? AND tk.TenDangNhap IS NULL
+    `;
+
+    const rows = await databaseService.query<RowDataPacket[]>(sql, [MaGiaPha, MaTV]);
+
+    if (rows.length === 0) {
+      // Có thể đã có tài khoản hoặc không tồn tại
+      // Kiểm tra xem có tồn tại không
+      const checkSql = `
+        SELECT tv.MaTV, tk.TenDangNhap
+        FROM THANHVIEN tv
+        INNER JOIN CAYGIAPHA gp ON tv.MaGiaPha = gp.MaGiaPha
+        LEFT JOIN TAIKHOAN tk ON tv.MaTV = tk.MaTV
+        WHERE gp.MaGiaPha = ? AND tv.MaTV = ?
+      `;
+      const checkRows = await databaseService.query<RowDataPacket[]>(checkSql, [MaGiaPha, MaTV]);
+
+      if (checkRows.length > 0 && checkRows[0].TenDangNhap) {
+        throw new ErrorWithStatus({
+          message: 'Thành viên này đã có tài khoản',
+          status: HTTP_STATUS.BAD_REQUEST
+        });
+      }
+
+      return null; // Không tồn tại
+    }
+
+    const row = rows[0];
+    return {
+      MaTV: row.MaTV,
+      HoTen: row.HoTen,
+      NgayGioSinh: row.NgayGioSinh,
+      DOI: row.DOI,
+      GioiTinh: row.GioiTinh,
+      DiaChi: row.DiaChi || row.TenQueQuan,
+      TenGiaPha: row.TenGiaPha,
+      MaGiaPha: row.MaGiaPha,
+      TenCha: row.TenCha,
+      TenMe: row.TenMe
+    };
+  }
+
+  /**
    * Đăng nhập
    */
   async login(email: string, password: string) {

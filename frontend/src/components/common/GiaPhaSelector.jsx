@@ -11,7 +11,7 @@ import { FiSearch, FiGitBranch, FiX, FiChevronDown } from 'react-icons/fi';
 import giaPhaService from '../../services/giapha';
 import { usePermissions } from '../../hooks/usePermissions';
 
-export default function GiaPhaSelector({ value, onChange, showAll = true }) {
+export default function GiaPhaSelector({ value, onChange, showAll = true, inititalSelectFirst = false }) {
     const { isAdmin } = usePermissions();
     const [giaPhaList, setGiaPhaList] = useState([]);
     const [searchText, setSearchText] = useState('');
@@ -27,6 +27,11 @@ export default function GiaPhaSelector({ value, onChange, showAll = true }) {
             try {
                 const data = await giaPhaService.getAll();
                 setGiaPhaList(data || []);
+
+                // Auto select first if requested and no value exists
+                if (inititalSelectFirst && data && data.length > 0 && !value) {
+                    onChange(data[0].MaGiaPha);
+                }
             } catch (err) {
                 console.error('Error loading gia pha list:', err);
             } finally {

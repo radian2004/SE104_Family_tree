@@ -11,7 +11,8 @@ import {
   verifyResetPermissionController,
   resetPasswordController,
   getGenealogiesController,
-  getAvailableMembersController
+  getAvailableMembersController,
+  verifyMemberController
 } from '~/controllers/users.controllers';
 import {
   registerValidator,
@@ -44,6 +45,13 @@ usersRouter.get('/genealogies', wrapAsync(getGenealogiesController));
  * Method: GET
  */
 usersRouter.get('/available-members', wrapAsync(getAvailableMembersController));
+
+/**
+ * Description: Xác minh thành viên bằng mã gia phả và mã thành viên
+ * Path: /users/verify-member?MaGiaPha=<mã>&MaTV=<mã>
+ * Method: GET
+ */
+usersRouter.get('/verify-member', wrapAsync(verifyMemberController));
 
 /**
  * Description: Đăng ký tài khoản

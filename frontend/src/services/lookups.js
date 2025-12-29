@@ -177,9 +177,11 @@ class LookupsService {
    * Lấy danh sách danh mục thu chi
    * GET /danhmuc
    */
-  async getDanhMuc() {
+  async getDanhMuc(MaGiaPha = null) {
     try {
-      const response = await apiClient.get('/danhmuc');
+      const response = await apiClient.get('/danhmuc', {
+        params: { MaGiaPha }
+      });
       return response.data.result || response.data;
     } catch (error) {
       console.warn('API danhmuc chưa có, trả về mảng rỗng');

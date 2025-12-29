@@ -39,10 +39,12 @@ export default function GiaPhaPage() {
         try {
             let data = await giaPhaService.getAll();
 
-            // ⭐ FILTER FOR OWNER/USER: Only show their own gia phả
-            // Admin can see all, Owner/User can only see their own
+            // ⭐ REDIRECT FOR OWNER/USER: Go directly to their gia phả
+            // Admin can see all, Owner/User should be redirected to their own
             if (!isAdmin && user?.MaGiaPha) {
-                data = data.filter(gp => gp.MaGiaPha === user.MaGiaPha);
+                // Redirect directly to their GiaPha detail page
+                navigate(`/giapha/${user.MaGiaPha}`, { replace: true });
+                return;
             }
 
             // Fetch member counts for each gia pha (since backend doesn't return it correctly)

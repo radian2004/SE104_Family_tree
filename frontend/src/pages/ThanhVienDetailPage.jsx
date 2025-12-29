@@ -336,6 +336,7 @@ export default function ThanhVienDetailPage() {
                 memberName={thanhvien?.HoTen}
                 memberGender={thanhvien?.GioiTinh}
                 canEdit={canEditRelations}
+                MaGiaPha={thanhvien?.MaGiaPha}
               />
             </div>
 

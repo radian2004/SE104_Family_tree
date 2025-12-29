@@ -131,8 +131,7 @@ class ThanhVienService {
    */
   async getByGiaPha(MaGiaPha) {
     try {
-      const response = await apiClient.get(`/users/thanhvien/giaphat/${MaGiaPha}`);
-      return response.data.result || response.data;
+      return await this.getAll({ MaGiaPha });
     } catch (error) {
       throw error;
     }

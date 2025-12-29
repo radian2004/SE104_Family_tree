@@ -528,6 +528,25 @@ class ThanhVienService {
             `Không thể ghi nhận lại. Hãy sử dụng chức năng "Thêm quan hệ hôn nhân" nếu muốn kết nối.`
           );
         }
+      } else if (payload.LoaiQuanHe === 'Cha') {
+        // ✅ Thêm cha cho thành viên đã tồn tại
+        // Cha phải là nam
+        if (payload.GioiTinh !== 'Nam') {
+          throw new Error('Cha phải là giới tính Nam');
+        }
+
+        // Kiểm tra thành viên cũ (con) đã có cha chưa
+        const existingParents = await this.getChameMemberWithConnection(connection, payload.MaTVCu);
+        if (existingParents && existingParents.MaTVCha) {
+          throw new Error('Thành viên này đã có cha trong hệ thống');
+        }
+
+        // Ngày sinh cha phải trước ngày sinh con
+        const ngaySinhCha = new Date(payload.NgayGioSinh);
+        const ngaySinhCon = new Date(thanhvienCu.NgayGioSinh);
+        if (ngaySinhCha >= ngaySinhCon) {
+          throw new Error('Ngày sinh của cha phải trước ngày sinh của con');
+        }
       }
 
       // [3] Tính DOI và MaGiaPha cho thành viên mới
@@ -541,6 +560,20 @@ class ThanhVienService {
       } else if (payload.LoaiQuanHe === 'Vợ/Chồng') {
         // Vợ/chồng có DOI = DOI người kia (cùng đời)
         newDOI = thanhvienCu.DOI ?? 0;
+      } else if (payload.LoaiQuanHe === 'Cha') {
+        // Cha có DOI = DOI con - 1
+        const childDOI = thanhvienCu.DOI ?? 0;
+        newDOI = childDOI - 1;
+
+        // Nếu DOI < 0, shift tất cả DOI trong gia phả lên 1
+        if (newDOI < 0 && newMaGiaPha) {
+          await connection.execute(
+            'UPDATE THANHVIEN SET DOI = DOI + 1 WHERE MaGiaPha = ?',
+            [newMaGiaPha]
+          );
+          // Sau khi shift, cha sẽ có DOI = 0
+          newDOI = 0;
+        }
       }
 
       // [4] INSERT thành viên mới vào bảng THANHVIEN
@@ -611,6 +644,27 @@ class ThanhVienService {
           newMember.MaTV,     // Thành viên mới (vợ/chồng từ ngoài)
           payload.NgayPhatSinh // Ngày kết hôn
         ]);
+      } else if (payload.LoaiQuanHe === 'Cha') {
+        // Thành viên cũ là CON, thành viên mới là CHA
+        // Kiểm tra xem con đã có record QUANHECON chưa
+        const [existingQHC] = await connection.query<RowDataPacket[]>(
+          'SELECT * FROM QUANHECON WHERE MaTV = ?',
+          [payload.MaTVCu]
+        );
+
+        if (existingQHC.length > 0) {
+          // Đã có record, cập nhật MaTVCha
+          await connection.execute(
+            'UPDATE QUANHECON SET MaTVCha = ? WHERE MaTV = ?',
+            [newMember.MaTV, payload.MaTVCu]
+          );
+        } else {
+          // Chưa có record, tạo mới
+          await connection.execute(
+            'INSERT INTO QUANHECON (MaTV, MaTVCha, NgayPhatSinh) VALUES (?, ?, ?)',
+            [payload.MaTVCu, newMember.MaTV, payload.NgayPhatSinh]
+          );
+        }
       }
 
       // [7] Lấy lại thông tin thành viên mới (đã có DOI và MaGiaPha đúng)
@@ -672,6 +726,30 @@ class ThanhVienService {
     }
 
     return rows[0] as unknown as ThanhVienCuInfo;
+  }
+
+  /**
+   * Helper: Lấy thông tin cha mẹ của thành viên với connection (trong transaction)
+   */
+  private async getChameMemberWithConnection(
+    connection: PoolConnection,
+    MaTV: string
+  ): Promise<{ MaTVCha: string | null; MaTVMe: string | null } | null> {
+    const sql = `
+      SELECT MaTVCha, MaTVMe
+      FROM QUANHECON
+      WHERE MaTV = ?
+    `;
+    const [rows] = await connection.query<RowDataPacket[]>(sql, [MaTV]);
+
+    if (!rows || rows.length === 0) {
+      return null;
+    }
+
+    return {
+      MaTVCha: rows[0].MaTVCha || null,
+      MaTVMe: rows[0].MaTVMe || null
+    };
   }
 
   /**

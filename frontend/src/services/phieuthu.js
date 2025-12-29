@@ -115,12 +115,16 @@ class PhieuThuService {
 
     /**
      * Tra cứu danh mục thu chi theo năm
-     * GET /users/phieuthu/danhmuc/tra-cuu?nam=2025
+     * GET /users/phieuthu/danhmuc/tra-cuu?nam=2025&MaGiaPha=GP01
      */
-    async traCuuDanhMuc(nam) {
+    async traCuuDanhMuc(nam, MaGiaPha) {
         try {
+            const params = { nam };
+            if (MaGiaPha) {
+                params.MaGiaPha = MaGiaPha;
+            }
             const response = await apiClient.get('/users/phieuthu/danhmuc/tra-cuu', {
-                params: { nam }
+                params
             });
             return response.data.data || response.data;
         } catch (error) {

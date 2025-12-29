@@ -68,7 +68,7 @@ const CATEGORY_CONFIG = {
         idField: 'MaDM',
         nameField: 'TenDM',
         hasNguoiDamNhan: true,
-        loadFn: () => lookupsService.getDanhMuc(),
+        loadFn: (MaGiaPha) => lookupsService.getDanhMuc(MaGiaPha),
         addFn: (name, nguoiDamNhan) => lookupsService.addDanhMuc(name, nguoiDamNhan),
         updateFn: (id, name, nguoiDamNhan) => lookupsService.updateDanhMuc(id, name, nguoiDamNhan),
         deleteFn: (id) => lookupsService.deleteDanhMuc(id),
@@ -192,7 +192,7 @@ function MemberSearchInput({ value, onChange, memberList, placeholder = "Tìm v�
     );
 }
 
-export default function CategoryManagementModal({ isOpen, onClose, categoryType, onUpdate }) {
+export default function CategoryManagementModal({ isOpen, onClose, categoryType, onUpdate, MaGiaPha }) {
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(false);
     const [newItemName, setNewItemName] = useState('');
@@ -206,16 +206,22 @@ export default function CategoryManagementModal({ isOpen, onClose, categoryType,
 
     const config = CATEGORY_CONFIG[categoryType];
 
-    // Load member list for người đảm nhận
+    // Load member list for người đảm nhận - Filter by MaGiaPha
     const loadMemberList = useCallback(async () => {
         if (!config?.hasNguoiDamNhan) return;
         try {
-            const members = await thanhvienService.getAll();
+            // If MaGiaPha is selected, use getByGiaPha, otherwise getAll
+            let members = [];
+            if (MaGiaPha) {
+                members = await thanhvienService.getByGiaPha(MaGiaPha);
+            } else {
+                members = await thanhvienService.getAll();
+            }
             setMemberList(members || []);
         } catch (err) {
             console.error('Error loading member list:', err);
         }
-    }, [config]);
+    }, [config, MaGiaPha]);
 
     // Load danh sách
     const loadItems = useCallback(async () => {
@@ -223,7 +229,8 @@ export default function CategoryManagementModal({ isOpen, onClose, categoryType,
         setLoading(true);
         setError('');
         try {
-            const data = await config.loadFn();
+            // Pass MaGiaPha if available (mostly for 'danhmuc')
+            const data = await config.loadFn(MaGiaPha);
             setItems(data || []);
         } catch (err) {
             setError('Lỗi tải danh sách');
@@ -231,7 +238,7 @@ export default function CategoryManagementModal({ isOpen, onClose, categoryType,
         } finally {
             setLoading(false);
         }
-    }, [config]);
+    }, [config, MaGiaPha]);
 
     useEffect(() => {
         if (isOpen && config) {

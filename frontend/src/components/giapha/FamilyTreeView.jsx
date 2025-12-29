@@ -106,57 +106,153 @@ export default function FamilyTreeView({
         });
     };
 
-    // Build generations - Group families by DOI, avoiding duplicates
-    const generationData = useMemo(() => {
-        // Global set to track ALL processed members across all generations
-        const globalProcessed = new Set();
+    // Get parents of a member
+    const getParents = (maTV) => {
+        const rel = relationships.find(r => r.MaTV === maTV);
+        if (!rel) return { father: null, mother: null };
 
-        // Group members by DOI
-        const byDoi = {};
+        const father = rel.MaTVCha ? members.find(m => m.MaTV === rel.MaTVCha) : null;
+        const mother = rel.MaTVMe ? members.find(m => m.MaTV === rel.MaTVMe) : null;
+
+        return { father, mother };
+    };
+
+    // Build generations - Calculate generations dynamically from relationships
+    const generationData = useMemo(() => {
+        if (!members.length) return [];
+
+        // 1. Build adjacency list for parent -> children
+        const childrenMap = new Map();
+        members.forEach(m => childrenMap.set(m.MaTV, []));
+
+        relationships.forEach(rel => {
+            if (rel.MaTVCha) {
+                const list = childrenMap.get(rel.MaTVCha) || [];
+                if (!list.includes(rel.MaTV)) list.push(rel.MaTV);
+                childrenMap.set(rel.MaTVCha, list);
+            }
+            if (rel.MaTVMe) {
+                const list = childrenMap.get(rel.MaTVMe) || [];
+                if (!list.includes(rel.MaTV)) list.push(rel.MaTV);
+                childrenMap.set(rel.MaTVMe, list);
+            }
+        });
+
+        // 2. Calculate generation (DOI) for each member
+        // Initialize with explicit DOI if available, otherwise 1
+        const doiMap = new Map();
         members.forEach(m => {
-            const doi = m.DOI !== undefined && m.DOI !== null ? m.DOI : 1;
+            // Default to 0, will be adjusted relative to root
+            // Or trust DB DOI if present? Better to recalculate to ensure consistency
+            doiMap.set(m.MaTV, 0);
+        });
+
+        // Find roots (members with NO parents in the current list)
+        const hasParents = new Set();
+        relationships.forEach(rel => {
+            if (rel.MaTV) hasParents.add(rel.MaTV);
+        });
+
+        const roots = members.filter(m => !hasParents.has(m.MaTV));
+
+        // If no roots (circular or empty?), pick the oldest one or first one
+        const queue = roots.length > 0 ? roots.map(m => ({ id: m.MaTV, gen: 0 })) : [{ id: members[0].MaTV, gen: 0 }];
+        const visited = new Set();
+
+        // BFS to assign generations
+        // Note: This assumes simple tree structure. 
+        // For spouses, they should align with their partner's generation.
+
+        // Improved approach:
+        // 1. Assign explicit generation if known (e.g. root = 0)
+        // 2. Propagate down to children (gen + 1)
+        // 3. Spouses share generation? Usually yes.
+
+        // Let's use a simpler approach:
+        // Just rely on parent-child links. Spouses will be placed in the same row by render logic.
+
+        queue.forEach(item => {
+            visited.add(item.id);
+            doiMap.set(item.id, item.gen);
+        });
+
+        let head = 0;
+        while (head < queue.length) {
+            const { id, gen } = queue[head++];
+            const childrenId = childrenMap.get(id) || [];
+
+            childrenId.forEach(childId => {
+                // If child not visited or we found a "deeper" path?
+                // Usually generation is fixed. 
+                // Use Max generation if multiple paths (unlikely in tree)
+                // But avoid cycles.
+
+                // If not visited, enqueue
+                if (!visited.has(childId)) {
+                    visited.add(childId);
+                    doiMap.set(childId, gen + 1);
+                    queue.push({ id: childId, gen: gen + 1 });
+                }
+            });
+        }
+
+        // Handle unvisited members (disconnected branches)
+        // Treat them as separate roots (gen 0) or attach to default
+        members.forEach(m => {
+            if (!visited.has(m.MaTV)) {
+                // Determine generation for disconnected
+                doiMap.set(m.MaTV, 0);
+            }
+        });
+
+
+        // 3. Group by calculated DOI
+        const globalProcessed = new Set();
+        const byDoi = {};
+
+        // Normalize generations so min is 0 (or 1)
+        // const minGen = Math.min(...Array.from(doiMap.values()));
+        // Shift all to start at 0
+
+        members.forEach(m => {
+            const rawGen = doiMap.get(m.MaTV);
+            // We want 1-based indexing for display typically, or 0-based. 
+            // DB uses 'DOI' usually 0 or 1 based. Let's use 0-based internaally but display as "Đời X"
+            const doi = rawGen;
+
             if (!byDoi[doi]) byDoi[doi] = [];
             byDoi[doi].push(m);
         });
 
-        // Sort generations and build family groups
+        // 4. Sort and build families (same logic as before)
         const generations = Object.keys(byDoi)
             .sort((a, b) => Number(a) - Number(b))
-            .map(doi => {
+            .map(doiKey => {
+                const doi = Number(doiKey);
                 const genMembers = byDoi[doi];
                 const families = [];
 
-                // Sort members so those with more spouses/co-parents are processed first (as primary)
+                // Sort members so those with more spouses processed first
                 const sortedMembers = [...genMembers].sort((a, b) => {
                     const aSpouses = getAllSpouses(a.MaTV).length;
                     const bSpouses = getAllSpouses(b.MaTV).length;
-                    return bSpouses - aSpouses; // Descending - more spouses first
+                    return bSpouses - aSpouses;
                 });
 
                 sortedMembers.forEach(member => {
-                    // Skip if already processed (as primary of another family)
                     if (globalProcessed.has(member.MaTV)) return;
 
-                    // Get all spouses/co-parents of this member
                     const allSpouses = getAllSpouses(member.MaTV);
-
-                    // DO NOT filter out processed spouses - we want to show connections
-                    // even if the spouse is already in another family group
-                    // Just check if spouse exists
                     const validSpouses = allSpouses.filter(s => s.spouse);
 
-                    // Create family unit with all spouses (including already processed ones)
                     families.push({
                         primary: member,
                         spouses: validSpouses,
                         children: getChildren(member.MaTV)
                     });
 
-                    // Mark primary as processed
                     globalProcessed.add(member.MaTV);
 
-                    // Only mark UNPROCESSED spouses as processed 
-                    // (already processed ones should stay in their original family)
                     validSpouses.forEach(s => {
                         if (s.spouse && !globalProcessed.has(s.spouse.MaTV)) {
                             globalProcessed.add(s.spouse.MaTV);
@@ -165,7 +261,7 @@ export default function FamilyTreeView({
                 });
 
                 return {
-                    doi: Number(doi),
+                    doi: doi, // Use calculated DOI
                     families
                 };
             });
@@ -185,10 +281,14 @@ export default function FamilyTreeView({
     };
 
     // Member Card Component with action menu
-    const MemberCard = ({ member, size = 'normal' }) => {
+    const MemberCard = ({ member, size = 'normal', showParents = false }) => {
         if (!member) return null;
         const isSmall = size === 'small';
         const isMenuOpen = activeMenu === member.MaTV;
+
+        // Get parent info for this member
+        const parents = getParents(member.MaTV);
+        const hasParents = parents.father || parents.mother;
 
         return (
             <div className="relative group">
@@ -196,7 +296,7 @@ export default function FamilyTreeView({
                     onClick={() => navigate(`/thanhvien/${member.MaTV}`)}
                     className={`
                         cursor-pointer transition-all hover:scale-105 hover:shadow-lg
-                        rounded-xl flex items-center gap-2 border-2
+                        rounded-xl flex flex-col border-2
                         ${isSmall ? 'px-3 py-2' : 'px-4 py-3'}
                         ${isDeceased(member)
                             ? 'bg-gray-100 border-gray-300 text-gray-500'
@@ -206,12 +306,31 @@ export default function FamilyTreeView({
                         }
                     `}
                 >
-                    <span className={isSmall ? 'text-base' : 'text-xl'}>
-                        {member.GioiTinh === 'Nữ' ? '👩' : '👨'}
-                    </span>
-                    <span className={`font-semibold ${isSmall ? 'text-xs' : 'text-sm'} max-w-[120px] truncate`}>
-                        {member.HoTen}
-                    </span>
+                    <div className="flex items-center gap-2">
+                        <span className={isSmall ? 'text-base' : 'text-xl'}>
+                            {member.GioiTinh === 'Nữ' ? '👩' : '👨'}
+                        </span>
+                        <span className={`font-semibold ${isSmall ? 'text-xs' : 'text-sm'} max-w-[120px] truncate`}>
+                            {member.HoTen}
+                        </span>
+                    </div>
+
+                    {/* Show parent info if member has parents */}
+                    {showParents && hasParents && (
+                        <div className="text-[10px] text-neutral-500 mt-1 flex items-center gap-1 truncate max-w-[160px]">
+                            {parents.mother && (
+                                <span title={`Mẹ: ${parents.mother.HoTen}`}>
+                                    👩 {parents.mother.HoTen.split(' ').slice(-2).join(' ')}
+                                </span>
+                            )}
+                            {parents.father && parents.mother && <span>•</span>}
+                            {parents.father && (
+                                <span title={`Cha: ${parents.father.HoTen}`}>
+                                    👨 {parents.father.HoTen.split(' ').slice(-2).join(' ')}
+                                </span>
+                            )}
+                        </div>
+                    )}
 
                     {/* Action button - only show for managers */}
                     {canManage && (
@@ -292,11 +411,11 @@ export default function FamilyTreeView({
     };
 
     // Family Unit Component (primary + multiple spouses) - VERTICAL LAYOUT
-    const FamilyUnit = ({ primary, spouses = [] }) => (
+    const FamilyUnit = ({ primary, spouses = [], showParents = false }) => (
         <div className="inline-block">
             {/* Primary member at top */}
             <div className="mb-1">
-                <MemberCard member={primary} />
+                <MemberCard member={primary} showParents={showParents} />
             </div>
 
             {/* Spouses stacked below */}
@@ -311,7 +430,7 @@ export default function FamilyTreeView({
                                     hasSharedChildren={spouseInfo.hasSharedChildren}
                                     isCoParentOnly={spouseInfo.isCoParentOnly}
                                 />
-                                <MemberCard member={spouseInfo.spouse} />
+                                <MemberCard member={spouseInfo.spouse} showParents={showParents} />
                             </div>
                         )
                     ))}
@@ -346,6 +465,7 @@ export default function FamilyTreeView({
                                     key={family.primary.MaTV || idx}
                                     primary={family.primary}
                                     spouses={family.spouses}
+                                    showParents={doi > 0}
                                 />
                             ))}
                         </div>
@@ -355,48 +475,105 @@ export default function FamilyTreeView({
         </div>
     );
 
-    // Tree View - Hierarchical with connectors
-    const TreeView = () => (
-        <div className="overflow-x-auto py-4" onClick={handleClickOutside}>
-            <div className="flex flex-col items-center gap-8 min-w-max">
-                {generationData.map(({ doi, families }, genIndex) => (
-                    <div key={doi} className="flex flex-col items-center">
-                        {/* Generation label */}
-                        <div className="mb-3 px-4 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">
-                            Đời {doi}
+    // Tree View - Matching reference image layout
+    // - Generation labels on left
+    // - Red horizontal lines between generations  
+    // - Couples side by side, children directly below
+    const TreeView = () => {
+        // Render a single family unit with couple and connector to children
+        const renderFamilyUnit = (family, genIndex) => {
+            const { primary, spouses, children } = family;
+
+            // Render marriage connector based on status
+            const renderMarriageConnector = (spouseInfo) => {
+                if (spouseInfo.isCoParentOnly) {
+                    // Co-parent only (no marriage) - dashed line
+                    return (
+                        <div className="flex items-center px-1">
+                            <div className="w-3 h-0.5 border-t border-dashed border-gray-400"></div>
+                            <span className="text-gray-400 text-xs mx-0.5">👶</span>
+                            <div className="w-3 h-0.5 border-t border-dashed border-gray-400"></div>
                         </div>
+                    );
+                } else if (spouseInfo.isEnded) {
+                    // Ended marriage - crossed line
+                    return (
+                        <div className="flex items-center px-1">
+                            <div className="w-3 h-0.5 bg-gray-400"></div>
+                            <span className="text-gray-500 text-xs mx-0.5">✕</span>
+                            <div className="w-3 h-0.5 bg-gray-400"></div>
+                        </div>
+                    );
+                } else {
+                    // Active marriage - heart
+                    return (
+                        <div className="flex items-center px-1">
+                            <div className="w-3 h-0.5 bg-pink-400"></div>
+                            <span className="text-pink-500 text-sm mx-0.5">❤️</span>
+                            <div className="w-3 h-0.5 bg-pink-400"></div>
+                        </div>
+                    );
+                }
+            };
 
-                        {/* Connector from previous generation */}
-                        {genIndex > 0 && (
-                            <div className="w-0.5 h-4 bg-emerald-300 -mt-3 mb-2"></div>
-                        )}
+            return (
+                <div key={primary.MaTV} className="flex flex-col items-center mx-4">
+                    {/* Couple row */}
+                    <div className="flex items-start">
+                        {/* Primary member + spouse(s) */}
+                        <div className="flex items-center">
+                            <MemberCard member={primary} />
 
-                        {/* Families in this generation */}
-                        <div className="flex flex-wrap justify-center gap-6">
-                            {families.map((family, idx) => (
-                                <div key={family.primary.MaTV || idx} className="flex flex-col items-center">
-                                    <FamilyUnit primary={family.primary} spouses={family.spouses} />
-
-                                    {/* Children connector */}
-                                    {family.children.length > 0 && genIndex < generationData.length - 1 && (
-                                        <div className="w-0.5 h-4 bg-emerald-300 mt-2"></div>
-                                    )}
-                                </div>
+                            {spouses.map((spouseInfo, idx) => (
+                                spouseInfo.spouse && (
+                                    <div key={spouseInfo.spouse.MaTV || idx} className="flex items-center">
+                                        {/* Marriage connector with status icon */}
+                                        {renderMarriageConnector(spouseInfo)}
+                                        <MemberCard member={spouseInfo.spouse} />
+                                    </div>
+                                )
                             ))}
                         </div>
-
-                        {/* Horizontal connector for multiple families */}
-                        {families.length > 1 && genIndex < generationData.length - 1 && (
-                            <div
-                                className="h-0.5 bg-emerald-200 mt-2"
-                                style={{ width: `${Math.min(families.length * 200, 800)}px` }}
-                            ></div>
-                        )}
                     </div>
-                ))}
+
+                    {/* Arrow down to indicate children exist in next generation */}
+                    {children.length > 0 && (
+                        <div className="flex flex-col items-center mt-1">
+                            <div className="w-0.5 h-4 bg-blue-400"></div>
+                            <div className="text-blue-500 text-lg">↓</div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        return (
+            <div className="overflow-x-auto py-4" onClick={handleClickOutside}>
+                <div className="min-w-max">
+                    {generationData.map(({ doi, families }, genIndex) => (
+                        <div key={doi} className="relative">
+
+
+                            {/* Generation row: Label on left, families on right */}
+                            <div className="flex items-start mb-8">
+                                {/* Generation label - fixed on left */}
+                                <div className="flex-shrink-0 mr-6">
+                                    <div className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg text-sm font-bold shadow-md whitespace-nowrap">
+                                        Đời {doi}
+                                    </div>
+                                </div>
+
+                                {/* Families - horizontal scroll */}
+                                <div className="flex flex-wrap items-start gap-8">
+                                    {families.map((family, idx) => renderFamilyUnit(family, genIndex))}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     return (
         <div className="glass-card overflow-hidden">

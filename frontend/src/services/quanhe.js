@@ -130,6 +130,22 @@ class QuanHeService {
     }
   }
 
+  /**
+   * Cập nhật quan hệ cha mẹ con
+   * PUT /users/quanhecon/:MaTV
+   * @param {string} MaTV - Mã thành viên (con)
+   * @param {Object} payload - { MaTVCha?, MaTVMe?, NgayPhatSinh? }
+   * @returns {Promise<Object>} Kết quả
+   */
+  async updateQuanHeCon(MaTV, payload) {
+    try {
+      const response = await apiClient.put(`/users/quanhecon/${MaTV}`, payload);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   // ==================== ALIAS METHODS (backward compatibility) ====================
   // Giữ lại các tên cũ để không phá vỡ code hiện tại
 

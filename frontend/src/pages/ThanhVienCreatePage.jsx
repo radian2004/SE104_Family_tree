@@ -347,7 +347,7 @@ export default function ThanhVienCreatePage() {
               {formData.MaTVCu && (
                 <div className="mb-6 animate-fade-in">
                   <label className="form-label">Loại quan hệ *</label>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-3 gap-4">
                     <button
                       type="button"
                       onClick={() => setFormData(prev => ({ ...prev, LoaiQuanHe: 'Con cái' }))}
@@ -359,7 +359,7 @@ export default function ThanhVienCreatePage() {
                       <div className="text-2xl mb-2">👶</div>
                       <div className="font-semibold text-neutral-800">Con cái</div>
                       <div className="text-xs text-neutral-500 mt-1">
-                        Thành viên mới là CON của {selectedMember?.HoTen}
+                        Thêm CON của {selectedMember?.HoTen}
                       </div>
                       {formData.LoaiQuanHe === 'Con cái' && (
                         <div className="mt-2 text-xs text-emerald-600">
@@ -379,11 +379,32 @@ export default function ThanhVienCreatePage() {
                       <div className="text-2xl mb-2">💑</div>
                       <div className="font-semibold text-neutral-800">Vợ/Chồng</div>
                       <div className="text-xs text-neutral-500 mt-1">
-                        Thành viên mới là VỢ/CHỒNG của {selectedMember?.HoTen}
+                        Thêm VỢ/CHỒNG của {selectedMember?.HoTen}
                       </div>
                       {formData.LoaiQuanHe === 'Vợ/Chồng' && (
                         <div className="mt-2 text-xs text-pink-600">
                           → Kết hôn với {selectedMember?.HoTen}
+                        </div>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, LoaiQuanHe: 'Cha', GioiTinh: 'Nam' }))}
+                      className={`p-4 rounded-xl border-2 transition-all text-left ${formData.LoaiQuanHe === 'Cha'
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-neutral-200 hover:border-blue-300'
+                        }`}
+                    >
+                      <div className="text-2xl mb-2">👨</div>
+                      <div className="font-semibold text-neutral-800">Cha</div>
+                      <div className="text-xs text-neutral-500 mt-1">
+                        Thêm CHA của {selectedMember?.HoTen}
+                      </div>
+                      {formData.LoaiQuanHe === 'Cha' && (
+                        <div className="mt-2 text-xs text-blue-600">
+                          → Đời sẽ = {(selectedMember?.DOI ?? 0) - 1}
+                          {(selectedMember?.DOI ?? 0) === 0 && " (shift +1)"}
                         </div>
                       )}
                     </button>

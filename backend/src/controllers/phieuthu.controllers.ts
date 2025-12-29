@@ -162,7 +162,8 @@ export const getPendingConfirmationsController = async (req: Request, res: Respo
  */
 export const getDanhMucListController = async (req: Request, res: Response) => {
   try {
-    const result = await phieuThuService.getDanhMucList();
+    const MaGiaPha = req.query.MaGiaPha as string;
+    const result = await phieuThuService.getDanhMucList(MaGiaPha);
 
     return res.status(HTTP_STATUS.OK).json({
       message: PHIEUTHU_MESSAGES.GET_SUCCESS,
@@ -246,7 +247,7 @@ export const deleteDanhMucController = async (req: Request, res: Response) => {
 
 /**
  * Tra cứu danh mục thu chi theo năm
- * GET /users/danhmuc/tra-cuu?nam=2025
+ * GET /users/danhmuc/tra-cuu?nam=2025&MaGiaPha=GP01
  * Quyền: Tất cả người dùng đã đăng nhập
  */
 export const traCuuDanhMucController = async (req: Request, res: Response) => {
@@ -271,8 +272,17 @@ export const traCuuDanhMucController = async (req: Request, res: Response) => {
       nam = new Date().getFullYear();
     }
 
+    // ⭐ Lấy MaGiaPha từ query (ưu tiên) hoặc từ userInfo
+    const requestedMaGiaPha = req.query.MaGiaPha as string;
+
+    // Nếu có MaGiaPha từ request, sử dụng nó (admin/owner có thể xem nhiều gia phả)
+    // Nếu không, dùng MaGiaPha từ userInfo
+    const effectiveUserInfo = requestedMaGiaPha
+      ? { ...userInfo, MaGiaPha: requestedMaGiaPha }
+      : userInfo;
+
     // Gọi service với userInfo để lọc theo MaGiaPha
-    const result = await phieuThuService.traCuuDanhMucThuChi(nam, userInfo);
+    const result = await phieuThuService.traCuuDanhMucThuChi(nam, effectiveUserInfo);
 
     return res.status(200).json({
       message: 'Tra cứu danh mục thu chi thành công',

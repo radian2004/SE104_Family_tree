@@ -260,12 +260,12 @@ class PhieuThuService {
     const chiTiet = chiTietRows[0];
 
     // Kiểm tra quyền xác nhận
-    // Admin/Owner có thể xác nhận bất kỳ phiếu nào
-    // User chỉ có thể xác nhận danh mục họ đảm nhận
-    const isAdminOrOwner = userInfo.MaLoaiTK === 'LTK01' || userInfo.MaLoaiTK === 'LTK02';
-    if (!isAdminOrOwner && chiTiet.NguoiDamNhan !== userInfo.MaTV) {
+    // Chỉ Owner hoặc Người đảm nhận mới có quyền xác nhận
+    // Admin (LTK01) KHÔNG có quyền này
+    const isOwner = userInfo.MaLoaiTK === 'LTK02';
+    if (!isOwner && chiTiet.NguoiDamNhan !== userInfo.MaTV) {
       throw new ErrorWithStatus({
-        message: 'Chỉ người đảm nhận danh mục hoặc Admin/Trưởng tộc mới có quyền xác nhận',
+        message: 'Chỉ người đảm nhận danh mục hoặc Trưởng tộc mới có quyền xác nhận',
         status: HTTP_STATUS.FORBIDDEN
       });
     }
@@ -351,6 +351,7 @@ class PhieuThuService {
         ct.MaPhieuThu,
         ct.MaDMT,
         dm.TenDM,
+        dm.NguoiDamNhan,
         ct.SoTienThu,
         ct.SoThuTu,
         tv.HoTen AS HoTenNguoiDong,
@@ -384,8 +385,11 @@ class PhieuThuService {
   /**
    * Lấy danh sách danh mục
    */
-  async getDanhMucList() {
-    const sql = `
+  /**
+   * Lấy danh sách danh mục
+   */
+  async getDanhMucList(MaGiaPha?: string) {
+    let sql = `
       SELECT 
         dm.MaDM,
         dm.TenDM,
@@ -395,10 +399,19 @@ class PhieuThuService {
         dm.TongChi
       FROM DANHMUC dm
       LEFT JOIN THANHVIEN tv ON dm.NguoiDamNhan = tv.MaTV
-      ORDER BY dm.MaDM
+      WHERE 1=1
     `;
 
-    const rows = await databaseService.query<DanhMucRow[]>(sql);
+    const params: any[] = [];
+
+    if (MaGiaPha) {
+      sql += ' AND tv.MaGiaPha = ?';
+      params.push(MaGiaPha);
+    }
+
+    sql += ' ORDER BY dm.MaDM';
+
+    const rows = await databaseService.query<DanhMucRow[]>(sql, params);
     return rows;
   }
 
@@ -566,57 +579,95 @@ class PhieuThuService {
   /**
  * Tra cứu danh mục thu chi theo năm
  * @param nam - Năm cần tra cứu
- * @param userInfo - Thông tin user để lọc theo MaGiaPha (cho Owner)
+ * @param userInfo - Thông tin user để lọc theo MaGiaPha
  * @returns Danh sách danh mục với tổng thu/chi trong năm đó
  */
   async traCuuDanhMucThuChi(
     nam: number,
     userInfo?: { MaLoaiTK: string; MaGiaPha: string | null }
   ): Promise<TraCuuDanhMucResponse> {
-    // ⭐ BUILD SQL: Filter nguoi dam nhan theo MaGiaPha cho Owner
-    let whereClause = '';
-    const params: any[] = [nam, nam];
+    const params: any[] = [];
 
-    // Owner/User: Chỉ hiển thị danh mục có người đảm nhận thuộc gia phả của họ
-    if (userInfo && userInfo.MaLoaiTK !== 'LTK01') {
-      if (userInfo.MaGiaPha) {
-        whereClause = 'WHERE tv.MaGiaPha = ?';
-        params.push(userInfo.MaGiaPha);
-      }
+    // ⭐ Xác định MaGiaPha để filter
+    // Nếu có MaGiaPha (từ request hoặc userInfo) thì filter theo đó
+    const filterMaGiaPha = userInfo?.MaGiaPha || null;
+
+    // SQL Query phụ thuộc việc có filter MaGiaPha hay không
+    let sql: string;
+
+    if (filterMaGiaPha) {
+      // ⭐ CÓ MaGiaPha: Filter danh mục theo người đảm nhận, VÀ filter thu/chi theo gia phả
+      sql = `
+        SELECT 
+          dm.MaDM,
+          dm.TenDM,
+          dm.NguoiDamNhan,
+          tv.HoTen AS TenNguoiDamNhan,
+          
+          -- Tổng thu trong năm: CHỈ tính phiếu thu của thành viên TRONG GIA PHẢ này
+          COALESCE(
+            (SELECT SUM(ct.SoTienThu) 
+             FROM CT_PHIEUTHU ct
+             INNER JOIN PHIEUTHUQUY pt ON ct.MaPhieuThu = pt.MaPhieuThu
+             INNER JOIN THANHVIEN tvp ON pt.MaTV = tvp.MaTV
+             WHERE ct.MaDMT = dm.MaDM 
+               AND ct.TinhHopLe = TRUE 
+               AND YEAR(ct.NgayXacNhan) = ?
+               AND tvp.MaGiaPha = ?
+            ), 0
+          ) AS TongThuNam,
+          
+          -- Tổng chi trong năm: CHỈ tính phiếu chi của người lập TRONG GIA PHẢ này
+          COALESCE(
+            (SELECT SUM(pc.SoTienChi)
+             FROM PHIEUCHIQUY pc
+             INNER JOIN THANHVIEN tvc ON pc.MaTV = tvc.MaTV
+             WHERE pc.MaDMC = dm.MaDM
+               AND YEAR(pc.NgayChi) = ?
+               AND tvc.MaGiaPha = ?
+            ), 0
+          ) AS TongChiNam
+          
+        FROM DANHMUC dm
+        LEFT JOIN THANHVIEN tv ON dm.NguoiDamNhan = tv.MaTV
+        WHERE tv.MaGiaPha = ?
+        ORDER BY dm.MaDM
+      `;
+      params.push(nam, filterMaGiaPha, nam, filterMaGiaPha, filterMaGiaPha);
+    } else {
+      // ⭐ KHÔNG có MaGiaPha (Admin xem tất cả): Hiển thị tổng toàn hệ thống
+      sql = `
+        SELECT 
+          dm.MaDM,
+          dm.TenDM,
+          dm.NguoiDamNhan,
+          tv.HoTen AS TenNguoiDamNhan,
+          
+          -- Tổng thu trong năm (tất cả gia phả)
+          COALESCE(
+            (SELECT SUM(ct.SoTienThu) 
+             FROM CT_PHIEUTHU ct
+             WHERE ct.MaDMT = dm.MaDM 
+               AND ct.TinhHopLe = TRUE 
+               AND YEAR(ct.NgayXacNhan) = ?
+            ), 0
+          ) AS TongThuNam,
+          
+          -- Tổng chi trong năm (tất cả gia phả)
+          COALESCE(
+            (SELECT SUM(pc.SoTienChi)
+             FROM PHIEUCHIQUY pc
+             WHERE pc.MaDMC = dm.MaDM
+               AND YEAR(pc.NgayChi) = ?
+            ), 0
+          ) AS TongChiNam
+          
+        FROM DANHMUC dm
+        LEFT JOIN THANHVIEN tv ON dm.NguoiDamNhan = tv.MaTV
+        ORDER BY dm.MaDM
+      `;
+      params.push(nam, nam);
     }
-
-    // SQL Query: Lấy tất cả danh mục với tổng thu/chi THEO NĂM
-    const sql = `
-      SELECT 
-        dm.MaDM,
-        dm.TenDM,
-        dm.NguoiDamNhan,
-        tv.HoTen AS TenNguoiDamNhan,
-        
-        -- Tổng thu trong năm (chỉ tính các khoản đã xác nhận TinhHopLe = TRUE)
-        COALESCE(
-          (SELECT SUM(ct.SoTienThu) 
-           FROM CT_PHIEUTHU ct
-           WHERE ct.MaDMT = dm.MaDM 
-             AND ct.TinhHopLe = TRUE 
-             AND YEAR(ct.NgayXacNhan) = ?
-          ), 0
-        ) AS TongThuNam,
-        
-        -- Tổng chi trong năm
-        COALESCE(
-          (SELECT SUM(pc.SoTienChi)
-           FROM PHIEUCHIQUY pc
-           WHERE pc.MaDMC = dm.MaDM
-             AND YEAR(pc.NgayChi) = ?
-          ), 0
-        ) AS TongChiNam
-        
-      FROM DANHMUC dm
-      LEFT JOIN THANHVIEN tv ON dm.NguoiDamNhan = tv.MaTV
-      ${whereClause}
-      ORDER BY dm.MaDM
-    `;
 
     const rows = await databaseService.query<RowDataPacket[]>(sql, params);
 

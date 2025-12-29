@@ -9,9 +9,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiHeart, FiChevronRight, FiEdit2, FiTrash2, FiX, FiCheck } from 'react-icons/fi';
 import quanheService from '../../services/quanhe.js';
+import thanhVienService from '../../services/thanhvien.js';
 import DateInput from '../common/DateInput';
 
-export default function QuanHeSection({ MaTV, memberName, memberGender, canEdit = false }) {
+export default function QuanHeSection({ MaTV, memberName, memberGender, canEdit = false, MaGiaPha }) {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -21,6 +22,9 @@ export default function QuanHeSection({ MaTV, memberName, memberGender, canEdit 
     const [spouse, setSpouse] = useState([]);
     const [parents, setParents] = useState(null);
     const [children, setChildren] = useState([]);
+
+    // All members for dropdown
+    const [allMembers, setAllMembers] = useState([]);
 
     // Modal states
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -32,7 +36,12 @@ export default function QuanHeSection({ MaTV, memberName, memberGender, canEdit 
     const [showEditMarriage, setShowEditMarriage] = useState(false);
     const [editingSpouse, setEditingSpouse] = useState(null);
     const [endDate, setEndDate] = useState('');
+    const [startDate, setStartDate] = useState('');
     const [isUpdating, setIsUpdating] = useState(false);
+
+    // Edit parents modal
+    const [showEditParents, setShowEditParents] = useState(false);
+    const [editParentsData, setEditParentsData] = useState({ MaTVCha: '', MaTVMe: '', NgayPhatSinh: '' });
 
     // Load relationships
     const loadRelationships = async () => {
@@ -59,9 +68,23 @@ export default function QuanHeSection({ MaTV, memberName, memberGender, canEdit 
         }
     };
 
+    // Load all members for dropdown
+    const loadMembers = async () => {
+        if (!MaGiaPha) return;
+        try {
+            const data = await thanhVienService.getByGiaPha(MaGiaPha);
+            const memberList = Array.isArray(data) ? data : (data.items || data.result || []);
+            // Filter out current member
+            setAllMembers(memberList.filter(m => m.MaTV !== MaTV));
+        } catch (err) {
+            console.error('Error loading members:', err);
+        }
+    };
+
     useEffect(() => {
         loadRelationships();
-    }, [MaTV]);
+        loadMembers();
+    }, [MaTV, MaGiaPha]);
 
     // Navigate to member detail
     const goToMember = (maTV) => {
@@ -109,20 +132,24 @@ export default function QuanHeSection({ MaTV, memberName, memberGender, canEdit 
         }
     };
 
-    // Update marriage (end date) handler
+    // Update marriage handler
     const handleUpdateMarriage = async () => {
-        if (!editingSpouse || !endDate) return;
+        if (!editingSpouse) return;
 
         setIsUpdating(true);
         try {
-            await quanheService.updateHonNhan({
+            const payload = {
                 MaTV: MaTV,
-                MaTVVC: editingSpouse.MaTVVC,
-                NgayKetThuc: endDate
-            });
-            setSuccessMsg('Đã cập nhật ngày kết thúc hôn nhân');
+                MaTVVC: editingSpouse.MaTVVC
+            };
+            if (startDate) payload.NgayBatDau = startDate;
+            if (endDate) payload.NgayKetThuc = endDate;
+
+            await quanheService.updateHonNhan(payload);
+            setSuccessMsg('Đã cập nhật thông tin hôn nhân');
             setShowEditMarriage(false);
             setEditingSpouse(null);
+            setStartDate('');
             setEndDate('');
             await loadRelationships();
         } catch (err) {
@@ -142,8 +169,34 @@ export default function QuanHeSection({ MaTV, memberName, memberGender, canEdit 
     // Open edit marriage modal
     const openEditMarriage = (sp) => {
         setEditingSpouse(sp);
+        setStartDate(sp.NgayBatDau || '');
         setEndDate(sp.NgayKetThuc || '');
         setShowEditMarriage(true);
+    };
+
+    // Open edit parents modal
+    const openEditParents = () => {
+        setEditParentsData({
+            MaTVCha: parents?.MaTVCha || '',
+            MaTVMe: parents?.MaTVMe || '',
+            NgayPhatSinh: parents?.NgayPhatSinh ? new Date(parents.NgayPhatSinh).toISOString().split('T')[0] : ''
+        });
+        setShowEditParents(true);
+    };
+
+    // Handle update parents
+    const handleUpdateParents = async () => {
+        setIsUpdating(true);
+        try {
+            await quanheService.updateQuanHeCon(MaTV, editParentsData);
+            setSuccessMsg('Đã cập nhật quan hệ cha mẹ');
+            setShowEditParents(false);
+            await loadRelationships();
+        } catch (err) {
+            setError(err.response?.data?.message || 'Lỗi khi cập nhật');
+        } finally {
+            setIsUpdating(false);
+        }
     };
 
     // Clear messages after 3 seconds
@@ -203,9 +256,20 @@ export default function QuanHeSection({ MaTV, memberName, memberGender, canEdit 
                     {/* ==================== CHA MẸ ==================== */}
                     {parents && (parents.MaTVCha || parents.MaTVMe) && (
                         <div>
-                            <h4 className="text-sm font-semibold text-neutral-500 uppercase tracking-wide mb-3">
-                                👨‍👩‍👧 Cha mẹ
-                            </h4>
+                            <div className="flex items-center justify-between mb-3">
+                                <h4 className="text-sm font-semibold text-neutral-500 uppercase tracking-wide">
+                                    👨‍👩‍👧 Cha mẹ
+                                </h4>
+                                {canEdit && (
+                                    <button
+                                        onClick={openEditParents}
+                                        className="p-2 text-blue-500 hover:bg-blue-100 rounded-lg transition-colors"
+                                        title="Sửa quan hệ cha mẹ"
+                                    >
+                                        <FiEdit2 className="w-4 h-4" />
+                                    </button>
+                                )}
+                            </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 {/* Cha */}
                                 {parents.MaTVCha && (
@@ -406,15 +470,27 @@ export default function QuanHeSection({ MaTV, memberName, memberGender, canEdit 
                         <p className="text-neutral-600 mb-4">
                             Quan hệ với: <strong>{editingSpouse?.HoTenVC}</strong>
                         </p>
-                        <div className="mb-6">
-                            <label className="block text-sm font-medium text-neutral-700 mb-2">
-                                Ngày kết thúc (nếu đã ly hôn)
-                            </label>
-                            <DateInput
-                                value={endDate}
-                                onChange={(e) => setEndDate(e.target.value)}
-                                className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                            />
+                        <div className="space-y-4 mb-6">
+                            <div>
+                                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                                    💒 Ngày bắt đầu (kết hôn)
+                                </label>
+                                <DateInput
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                                    💔 Ngày kết thúc (ly hôn - để trống nếu còn)
+                                </label>
+                                <DateInput
+                                    value={endDate}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                                />
+                            </div>
                         </div>
                         <div className="flex gap-3 justify-end">
                             <button
@@ -425,8 +501,80 @@ export default function QuanHeSection({ MaTV, memberName, memberGender, canEdit 
                             </button>
                             <button
                                 onClick={handleUpdateMarriage}
-                                disabled={isUpdating || !endDate}
+                                disabled={isUpdating}
                                 className="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors disabled:opacity-50"
+                            >
+                                {isUpdating ? 'Đang lưu...' : 'Lưu'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ==================== EDIT PARENTS MODAL ==================== */}
+            {showEditParents && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
+                        <h3 className="text-lg font-bold text-neutral-800 mb-4">
+                            ✏️ Cập nhật quan hệ cha mẹ
+                        </h3>
+                        <div className="space-y-4 mb-6">
+                            <div>
+                                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                                    👨 Cha
+                                </label>
+                                <select
+                                    value={editParentsData.MaTVCha}
+                                    onChange={(e) => setEditParentsData({ ...editParentsData, MaTVCha: e.target.value })}
+                                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                >
+                                    <option value="">-- Không có --</option>
+                                    {allMembers.filter(m => m.GioiTinh === 'Nam').map(m => (
+                                        <option key={m.MaTV} value={m.MaTV}>
+                                            {m.HoTen} ({m.MaTV})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                                    👩 Mẹ
+                                </label>
+                                <select
+                                    value={editParentsData.MaTVMe}
+                                    onChange={(e) => setEditParentsData({ ...editParentsData, MaTVMe: e.target.value })}
+                                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                                >
+                                    <option value="">-- Không có --</option>
+                                    {allMembers.filter(m => m.GioiTinh === 'Nữ').map(m => (
+                                        <option key={m.MaTV} value={m.MaTV}>
+                                            {m.HoTen} ({m.MaTV})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                                    📅 Ngày phát sinh (khai sinh)
+                                </label>
+                                <DateInput
+                                    value={editParentsData.NgayPhatSinh}
+                                    onChange={(e) => setEditParentsData({ ...editParentsData, NgayPhatSinh: e.target.value })}
+                                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                />
+                            </div>
+                        </div>
+                        <div className="flex gap-3 justify-end">
+                            <button
+                                onClick={() => setShowEditParents(false)}
+                                className="px-4 py-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                onClick={handleUpdateParents}
+                                disabled={isUpdating}
+                                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
                             >
                                 {isUpdating ? 'Đang lưu...' : 'Lưu'}
                             </button>
