@@ -204,6 +204,25 @@ class ThanhVienService {
       throw new Error('Không có trường nào để cập nhật');
     }
 
+    // ⭐ VALIDATE: Ngày mất không thể trước ngày sinh
+    if (payload.NgayGioMat !== undefined || payload.NgayGioSinh !== undefined) {
+      // Lấy thông tin hiện tại của thành viên
+      const [currentRows] = await databaseService.query<RowDataPacket[]>(
+        'SELECT NgayGioSinh, NgayGioMat FROM THANHVIEN WHERE MaTV = ?',
+        [MaTV]
+      );
+
+      if (currentRows.length > 0) {
+        const current = currentRows[0];
+        const ngaySinh = payload.NgayGioSinh !== undefined ? new Date(payload.NgayGioSinh) : (current.NgayGioSinh ? new Date(current.NgayGioSinh) : null);
+        const ngayMat = payload.NgayGioMat !== undefined ? new Date(payload.NgayGioMat) : (current.NgayGioMat ? new Date(current.NgayGioMat) : null);
+
+        if (ngaySinh && ngayMat && ngayMat < ngaySinh) {
+          throw new Error('Ngày mất không thể trước ngày sinh');
+        }
+      }
+    }
+
     values.push(MaTV);
     const sql = `UPDATE THANHVIEN SET ${fields.join(', ')} WHERE MaTV = ?`;
     const result = await databaseService.query<ResultSetHeader>(sql, values);

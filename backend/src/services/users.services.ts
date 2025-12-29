@@ -809,12 +809,11 @@ class UsersService {
     }
 
     // Create request
-    // MaTK references TAIKHOAN(TenDangNhap), which IS the email in this system
     const sql = `
-      INSERT INTO YEU_CAU_MAT_KHAU (MaTK, Email, TrangThai)
-      VALUES (?, ?, 'ChoDuyet')
+      INSERT INTO YEU_CAU_MAT_KHAU (Email, TrangThai)
+      VALUES (?, 'ChoDuyet')
     `;
-    await databaseService.query(sql, [email, email]);
+    await databaseService.query(sql, [email]);
 
     return {
       message: 'Đã gửi yêu cầu đặt lại mật khẩu. Vui lòng đợi Admin phê duyệt.'

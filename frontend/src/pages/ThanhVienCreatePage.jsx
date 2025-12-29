@@ -459,6 +459,18 @@ export default function ThanhVienCreatePage() {
                         </p>
                       </div>
                     </>
+                  ) : formData.LoaiQuanHe === 'Cha' || formData.LoaiQuanHe === 'Mẹ' ? (
+                    <>
+                      <span className="text-2xl">{formData.LoaiQuanHe === 'Cha' ? '👨' : '👩'}</span>
+                      <div>
+                        <p className="font-medium text-blue-800">
+                          Thêm {formData.LoaiQuanHe.toUpperCase()} của {selectedMember?.HoTen}
+                        </p>
+                        <p className="text-sm text-blue-600">
+                          Thành viên mới sẽ thuộc Đời {Math.max(0, (selectedMember?.DOI ?? 1) - 1)}
+                        </p>
+                      </div>
+                    </>
                   ) : (
                     <>
                       <span className="text-2xl">💑</span>

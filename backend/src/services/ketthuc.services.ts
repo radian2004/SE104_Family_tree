@@ -42,6 +42,32 @@ class KetThucService {
       }
     }
 
+    // ⭐ VALIDATE: Ngày mất phải sau ngày sinh
+    const [memberRows] = await databaseService.query<RowDataPacket[]>(
+      'SELECT NgayGioSinh FROM THANHVIEN WHERE MaTV = ?',
+      [MaTV]
+    );
+
+    if (memberRows.length === 0) {
+      throw new ErrorWithStatus({
+        message: 'Không tìm thấy thành viên',
+        status: HTTP_STATUS.NOT_FOUND
+      });
+    }
+
+    const member = memberRows[0];
+    if (member.NgayGioSinh) {
+      const ngaySinh = new Date(member.NgayGioSinh);
+      const ngayMat = new Date(NgayGioMat);
+
+      if (ngayMat < ngaySinh) {
+        throw new ErrorWithStatus({
+          message: 'Ngày mất không thể trước ngày sinh',
+          status: HTTP_STATUS.BAD_REQUEST
+        });
+      }
+    }
+
     const query = `
       UPDATE THANHVIEN
       SET NgayGioMat = ?,

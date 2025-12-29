@@ -77,11 +77,11 @@ export const usePermissions = () => {
     // 10. Thêm danh mục thu/chi - Admin, Owner
     const canAddCategory = isAdmin || isOwner;
 
-    // 11. Ghi nhận thu quỹ họ - All
-    const canRecordIncome = true;
+    // 11. Ghi nhận thu quỹ họ - Owner + Check NguoiDamNhan in UI
+    const canRecordIncome = isOwner;
 
-    // 12. Ghi nhận chi quỹ họ - Admin, Owner
-    const canRecordExpense = isAdmin || isOwner;
+    // 12. Ghi nhận chi quỹ họ - Owner + Check NguoiDamNhan in UI
+    const canRecordExpense = isOwner;
 
     // 13. Tra cứu danh mục thu/chi - All
     const canSearchCategory = true;

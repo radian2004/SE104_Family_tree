@@ -41,6 +41,10 @@ export default function PhieuThuPage() {
     const [selectedDanhMuc, setSelectedDanhMuc] = useState('');
     const [soTienThu, setSoTienThu] = useState('');
 
+    // Kiểm tra xem user hiện tại có phải là "Người đảm nhận" của bất kỳ danh mục nào không
+    const isNguoiDamNhan = danhMucList.some(dm => dm.NguoiDamNhan === user?.MaTV);
+    const canCreateReceipt = canRecordIncome || isNguoiDamNhan;
+
     // Load data on mount
     useEffect(() => {
         loadData();
@@ -314,7 +318,7 @@ export default function PhieuThuPage() {
                             </span>
                         )}
                     </button>
-                    {canRecordIncome && (
+                    {canCreateReceipt && (
                         <button
                             onClick={() => setActiveTab('create')}
                             className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${activeTab === 'create'
@@ -452,7 +456,7 @@ export default function PhieuThuPage() {
                         )}
 
                         {/* Create Tab */}
-                        {activeTab === 'create' && canRecordIncome && (
+                        {activeTab === 'create' && canCreateReceipt && (
                             <div className="animate-fade-in">
                                 <form onSubmit={handleCreate} className="glass-card p-6">
                                     <h3 className="text-lg font-bold text-neutral-800 mb-6">Tạo phiếu thu mới</h3>
