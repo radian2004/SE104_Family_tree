@@ -200,8 +200,8 @@ export default function RegisterPage() {
             type="button"
             onClick={() => setMode('join')}
             className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${mode === 'join'
-                ? 'bg-white shadow text-emerald-600'
-                : 'text-neutral-500 hover:text-neutral-700'
+              ? 'bg-white shadow text-emerald-600'
+              : 'text-neutral-500 hover:text-neutral-700'
               }`}
           >
             <FiUsers className="w-4 h-4" />
@@ -211,8 +211,8 @@ export default function RegisterPage() {
             type="button"
             onClick={() => setMode('create')}
             className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${mode === 'create'
-                ? 'bg-white shadow text-emerald-600'
-                : 'text-neutral-500 hover:text-neutral-700'
+              ? 'bg-white shadow text-emerald-600'
+              : 'text-neutral-500 hover:text-neutral-700'
               }`}
           >
             <FiPlus className="w-4 h-4" />
@@ -344,7 +344,7 @@ export default function RegisterPage() {
                       <option value="">-- Chọn tên của bạn --</option>
                       {availableMembers.map(m => (
                         <option key={m.MaTV} value={m.MaTV}>
-                          {m.HoTen} (Đời {m.DOI || 1}{m.GioiTinh ? `, ${m.GioiTinh}` : ''})
+                          {m.HoTen} (Đời {m.DOI ?? 0}{m.GioiTinh ? `, ${m.GioiTinh}` : ''})
                         </option>
                       ))}
                     </select>
@@ -357,7 +357,7 @@ export default function RegisterPage() {
                       <p className="text-sm font-medium text-emerald-800 mb-2">Thông tin xác nhận:</p>
                       <div className="grid grid-cols-2 gap-2 text-xs text-emerald-700">
                         <div>Họ tên: <span className="font-medium">{selectedMember.HoTen}</span></div>
-                        <div>Đời: <span className="font-medium">{selectedMember.DOI || 1}</span></div>
+                        <div>Đời: <span className="font-medium">{selectedMember.DOI ?? 0}</span></div>
                         <div>Giới tính: <span className="font-medium">{selectedMember.GioiTinh || 'Chưa rõ'}</span></div>
                         <div>Cha: <span className="font-medium">{selectedMember.TenCha || 'Không rõ'}</span></div>
                       </div>

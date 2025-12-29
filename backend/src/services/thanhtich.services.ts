@@ -40,6 +40,17 @@ class ThanhTichService {
   }
 
   /**
+   * ⭐ Kiểm tra thành viên có thuộc gia phả không
+   * Dùng cho phân quyền ghi nhận thành tích/kết thúc
+   */
+  async verifyMemberInGiaPha(MaTV: string, MaGiaPha: string): Promise<boolean> {
+    const sql = 'SELECT MaTV FROM THANHVIEN WHERE MaTV = ? AND MaGiaPha = ?';
+    const rows = await databaseService.query<RowDataPacket[]>(sql, [MaTV, MaGiaPha]);
+    return rows.length > 0;
+  }
+
+
+  /**
    * Ghi nhận thành tích mới
    */
   async ghiNhanThanhTich(payload: {

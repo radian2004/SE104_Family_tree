@@ -93,10 +93,11 @@ class ThanhVienService {
   }
 
   // Tìm thành viên theo MaTV
+  // ⭐ FIX: Trả về rows[0] (single object) thay vì rows (array)
   async findByMaTV(MaTV: string) {
     const sql = 'SELECT * FROM THANHVIEN WHERE MaTV = ?';
-    const [rows] = await databaseService.query<ThanhVienRow[]>(sql, [MaTV]);
-    return rows;
+    const rows = await databaseService.query<ThanhVienRow[]>(sql, [MaTV]);
+    return rows[0] || null;  // Trả về thành viên đầu tiên hoặc null
   }
 
   // Tìm thành viên theo HoTen
@@ -516,15 +517,16 @@ class ThanhVienService {
       }
 
       // [3] Tính DOI và MaGiaPha cho thành viên mới
-      let newDOI = 1;
+      // ⭐ FIX: Đời đầu tiên là 0, không phải 1
+      let newDOI = 0;
       let newMaGiaPha = thanhvienCu.MaGiaPha || null;
 
       if (payload.LoaiQuanHe === 'Con cái') {
         // Con có DOI = DOI cha/mẹ + 1
-        newDOI = (thanhvienCu.DOI || 1) + 1;
+        newDOI = (thanhvienCu.DOI ?? 0) + 1;
       } else if (payload.LoaiQuanHe === 'Vợ/Chồng') {
         // Vợ/chồng có DOI = DOI người kia (cùng đời)
-        newDOI = thanhvienCu.DOI || 1;
+        newDOI = thanhvienCu.DOI ?? 0;
       }
 
       // [4] INSERT thành viên mới vào bảng THANHVIEN

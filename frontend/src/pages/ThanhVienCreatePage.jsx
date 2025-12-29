@@ -317,7 +317,7 @@ export default function ThanhVienCreatePage() {
                         <option value="">-- Chọn thành viên để liên kết --</option>
                         {thanhVienList.map(tv => (
                           <option key={tv.MaTV} value={tv.MaTV}>
-                            {tv.HoTen} (Đời {tv.DOI || 1}, {tv.GioiTinh})
+                            {tv.HoTen} (Đời {tv.DOI ?? 0}, {tv.GioiTinh})
                           </option>
                         ))}
                       </select>
@@ -332,7 +332,7 @@ export default function ThanhVienCreatePage() {
                             <div>
                               <p className="font-semibold text-neutral-800">{selectedMember.HoTen}</p>
                               <p className="text-sm text-neutral-500">
-                                Đời {selectedMember.DOI || 1} • {selectedMember.GioiTinh} • {selectedMember.MaTV}
+                                Đời {selectedMember.DOI ?? 0} • {selectedMember.GioiTinh} • {selectedMember.MaTV}
                               </p>
                             </div>
                           </div>
@@ -363,7 +363,7 @@ export default function ThanhVienCreatePage() {
                       </div>
                       {formData.LoaiQuanHe === 'Con cái' && (
                         <div className="mt-2 text-xs text-emerald-600">
-                          → Đời sẽ = {(selectedMember?.DOI || 1) + 1}
+                          → Đời sẽ = {(selectedMember?.DOI ?? 0) + 1}
                         </div>
                       )}
                     </button>
@@ -434,7 +434,7 @@ export default function ThanhVienCreatePage() {
                           Thêm CON của {selectedMember?.HoTen}
                         </p>
                         <p className="text-sm text-emerald-600">
-                          Thành viên mới sẽ thuộc Đời {(selectedMember?.DOI || 1) + 1}
+                          Thành viên mới sẽ thuộc Đời {(selectedMember?.DOI ?? 0) + 1}
                         </p>
                       </div>
                     </>

@@ -115,12 +115,13 @@ export const checkUpdateMemberPermission = async (req: Request, res: Response, n
     }
 
     // Lấy thông tin thành viên cần sửa
-    const [memberRows] = await databaseService.query<RowDataPacket[]>(
+    // ⭐ FIX: Không dùng destructuring vì query trả về rows trực tiếp
+    const memberRows = await databaseService.query<RowDataPacket[]>(
       'SELECT MaTV, MaGiaPha FROM THANHVIEN WHERE MaTV = ?',
       [MaTV]
     );
 
-    if (memberRows.length === 0) {
+    if (!memberRows || memberRows.length === 0) {
       throw new ErrorWithStatus({
         message: 'Không tìm thấy thành viên',
         status: HTTP_STATUS.NOT_FOUND

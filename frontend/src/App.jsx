@@ -26,6 +26,8 @@ import QuanHeHonNhanPage from './pages/QuanHeHonNhanPage';
 import QuanHeConCaiPage from './pages/QuanHeConCaiPage';
 import PhieuThuPage from './pages/PhieuThuPage';
 import PhieuChiPage from './pages/PhieuChiPage';
+import ThanhTichPage from './pages/ThanhTichPage';
+import KetThucPage from './pages/KetThucPage';
 
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
@@ -119,6 +121,26 @@ export default function App() {
           element={
             <ProtectedRoute>
               <BaoCaoPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Thành tích route */}
+        <Route
+          path="/thanhtich"
+          element={
+            <ProtectedRoute>
+              <ThanhTichPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Kết thúc route */}
+        <Route
+          path="/ketthuc"
+          element={
+            <ProtectedRoute>
+              <KetThucPage />
             </ProtectedRoute>
           }
         />

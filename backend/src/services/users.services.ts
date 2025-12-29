@@ -181,8 +181,9 @@ class UsersService {
       MaGiaPha = gpRows[0].MaGiaPha;
 
       // 3. Tạo thành viên mới (người lập gia phả)
+      // ⭐ FIX: Đời đầu tiên là 0, không phải 1
       await databaseService.getPool().execute<ResultSetHeader>(
-        'INSERT INTO THANHVIEN (MaGiaPha, HoTen, DOI, TrangThai) VALUES (?, ?, 1, ?)',
+        'INSERT INTO THANHVIEN (MaGiaPha, HoTen, DOI, TrangThai) VALUES (?, ?, 0, ?)',
         [MaGiaPha, name, 'Còn Sống']
       );
 

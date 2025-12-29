@@ -22,7 +22,8 @@ import {
   FiUserPlus,
   FiSettings,
   FiBook,
-  FiDollarSign
+  FiDollarSign,
+  FiAlertCircle
 } from 'react-icons/fi';
 import AdminPasswordRequests from '../components/admin/AdminPasswordRequests';
 import UserProfileModal from '../components/UserProfileModal';
@@ -82,7 +83,8 @@ export default function DashboardPage() {
 
     // Admin & Owner: Ghi nhận thành tích
     if (isAdmin || isOwner) {
-      actions.push({ title: 'Ghi nhận thành tích', icon: <FiAward />, path: '/thanhvien', color: 'text-yellow-500' });
+      actions.push({ title: 'Ghi nhận thành tích', icon: <FiAward />, path: '/thanhtich', color: 'text-yellow-500' });
+      actions.push({ title: 'Ghi nhận kết thúc', icon: <FiAlertCircle />, path: '/ketthuc', color: 'text-neutral-500' });
     }
 
     // Admin & Owner: Tạo quan hệ

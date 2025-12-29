@@ -27,9 +27,11 @@ export const getLoaiThanhTichController = async (req: Request, res: Response) =>
  * Controller ghi nhận thành tích mới
  * POST /thanhtich/ghinhan
  * Body: { MaTV, MaLTT, NgayPhatSinh? }
+ * ⭐ V2: Thêm phân quyền - chỉ cho phép ghi nhận cho thành viên trong gia phả của mình
  */
 export const ghiNhanThanhTichController = async (req: Request, res: Response) => {
   const { MaTV, MaLTT, NgayPhatSinh } = req.body;
+  const userInfo = req.userInfo;  // ⭐ Lấy từ middleware
 
   try {
     // Validate dữ liệu đầu vào
@@ -37,6 +39,23 @@ export const ghiNhanThanhTichController = async (req: Request, res: Response) =>
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         message: 'Thiếu thông tin bắt buộc: MaTV và MaLTT'
       });
+    }
+
+    // ⭐ PHÂN QUYỀN THEO GIA PHẢ
+    // Kiểm tra thành viên có thuộc gia phả của user không (cho Owner/User)
+    if (userInfo && userInfo.MaLoaiTK !== 'LTK01') {
+      if (!userInfo.MaGiaPha) {
+        return res.status(HTTP_STATUS.FORBIDDEN).json({
+          message: 'Bạn chưa thuộc gia phả nào'
+        });
+      }
+      // Verify member belongs to user's gia pha
+      const memberCheck = await thanhTichService.verifyMemberInGiaPha(MaTV, userInfo.MaGiaPha);
+      if (!memberCheck) {
+        return res.status(HTTP_STATUS.FORBIDDEN).json({
+          message: 'Thành viên này không thuộc gia phả của bạn'
+        });
+      }
     }
 
     const result = await thanhTichService.ghiNhanThanhTich({
@@ -62,6 +81,7 @@ export const ghiNhanThanhTichController = async (req: Request, res: Response) =>
     });
   }
 };
+
 
 /**
  * Controller tra cứu thành tích (CÓ PHÂN QUYỀN)

@@ -7,12 +7,40 @@ import { TaiKhoanInfo } from '~/middlewares/authorization.middlewares'
 
 class KetThucService {
   /**
+   * ⭐ Helper: Kiểm tra thành viên có thuộc gia phả không
+   */
+  async verifyMemberInGiaPha(MaTV: string, MaGiaPha: string): Promise<boolean> {
+    const sql = 'SELECT MaTV FROM THANHVIEN WHERE MaTV = ? AND MaGiaPha = ?';
+    const rows = await databaseService.query<RowDataPacket[]>(sql, [MaTV, MaGiaPha]);
+    return rows.length > 0;
+  }
+
+  /**
    * 1. Ghi nhận kết thúc (thành viên qua đời)
    * Cập nhật thông tin mất vào bảng THANHVIEN
    * Đồng thời cập nhật TrangThai → 'Mất'
+   * ⭐ V2: Thêm phân quyền - chỉ cho phép ghi nhận cho thành viên trong gia phả của mình
    */
   async ghiNhanKetThuc(payload: GhiNhanKetThucPayload, userInfo?: TaiKhoanInfo) {
     const { MaTV, NgayGioMat, MaNguyenNhanMat, MaDiaDiem } = payload
+
+    // ⭐ PHÂN QUYỀN THEO GIA PHẢ
+    if (userInfo && userInfo.MaLoaiTK !== 'LTK01') {
+      if (!userInfo.MaGiaPha) {
+        throw new ErrorWithStatus({
+          message: 'Bạn chưa thuộc gia phả nào',
+          status: HTTP_STATUS.FORBIDDEN
+        });
+      }
+      // Verify member belongs to user's gia pha
+      const memberCheck = await this.verifyMemberInGiaPha(MaTV, userInfo.MaGiaPha);
+      if (!memberCheck) {
+        throw new ErrorWithStatus({
+          message: 'Thành viên này không thuộc gia phả của bạn',
+          status: HTTP_STATUS.FORBIDDEN
+        });
+      }
+    }
 
     const query = `
       UPDATE THANHVIEN
@@ -38,6 +66,7 @@ class KetThucService {
       affectedRows: result.affectedRows
     }
   }
+
 
   /**
     * 2. Tra cứu danh sách thành viên đã kết thúc
