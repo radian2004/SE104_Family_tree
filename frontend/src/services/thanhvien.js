@@ -29,11 +29,14 @@ class ThanhVienService {
   /**
    * Lấy tất cả thành viên (không phân trang)
    * GET /users/thanhvien
+   * @param {Object} params - { MaGiaPha, ... } optional filters
    * @returns {Promise<Array>} Danh sách thành viên
    */
-  async getAll() {
+  async getAll(params = {}) {
     try {
-      const response = await apiClient.get('/users/thanhvien');
+      const queryString = createQueryString(params);
+      const url = queryString ? `/users/thanhvien?${queryString}` : '/users/thanhvien';
+      const response = await apiClient.get(url);
       return response.data.result || response.data || [];
     } catch (error) {
       console.error('Error getting all members:', error);

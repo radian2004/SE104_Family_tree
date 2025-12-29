@@ -17,6 +17,7 @@ import ketThucService from '../services/ketthuc';
 import thanhVienService from '../services/thanhvien';
 import lookupsService from '../services/lookups';
 import { usePermissions } from '../hooks/usePermissions';
+import GiaPhaSelector from '../components/common/GiaPhaSelector';
 
 export default function KetThucPage() {
     const { isAdmin, isOwner } = usePermissions();
@@ -39,6 +40,7 @@ export default function KetThucPage() {
     const [filterDiaDiem, setFilterDiaDiem] = useState('');
     const [filterTuNgay, setFilterTuNgay] = useState('');
     const [filterDenNgay, setFilterDenNgay] = useState('');
+    const [filterGiaPha, setFilterGiaPha] = useState('');
 
     // Sort state
     const [sortField, setSortField] = useState('NgayGioMat');
@@ -91,10 +93,13 @@ export default function KetThucPage() {
     }, []);
 
     // Load members for autocomplete (chỉ lấy thành viên còn sống)
+    // Load members for autocomplete - filtered by selected GiaPha
     useEffect(() => {
         const loadMembers = async () => {
             try {
-                const data = await thanhVienService.getAll();
+                // ✅ Filter members by selected GiaPha
+                const params = filterGiaPha ? { MaGiaPha: filterGiaPha } : {};
+                const data = await thanhVienService.getAll(params);
                 const memberList = Array.isArray(data) ? data : (data.items || []);
                 const livingMembers = memberList.filter(m => !m.NgayGioMat);
                 setMembers(livingMembers);
@@ -103,7 +108,7 @@ export default function KetThucPage() {
             }
         };
         loadMembers();
-    }, []);
+    }, [filterGiaPha]);  // ✅ Reload when GiaPha changes
 
     // Filter members for autocomplete
     useEffect(() => {
@@ -129,6 +134,7 @@ export default function KetThucPage() {
             if (filterDiaDiem) params.MaDiaDiem = filterDiaDiem;
             if (filterTuNgay) params.TuNgay = filterTuNgay;
             if (filterDenNgay) params.DenNgay = filterDenNgay;
+            if (filterGiaPha) params.MaGiaPha = filterGiaPha;
 
             const res = await ketThucService.traCuu(params);
             setKetThucs(res.data || res.result || res || []);
@@ -138,7 +144,7 @@ export default function KetThucPage() {
         } finally {
             setIsLoading(false);
         }
-    }, [searchName, filterNguyenNhan, filterDiaDiem, filterTuNgay, filterDenNgay]);
+    }, [searchName, filterNguyenNhan, filterDiaDiem, filterTuNgay, filterDenNgay, filterGiaPha]);
 
     useEffect(() => {
         loadKetThuc();
@@ -430,6 +436,11 @@ export default function KetThucPage() {
                         <FiFilter className="w-5 h-5 text-neutral-600" />
                         <h3 className="font-semibold text-neutral-800">Bộ lọc & Tìm kiếm</h3>
                     </div>
+                    {/* GiaPha Selector - Admin only - on separate row */}
+                    <div className="mb-4 max-w-sm">
+                        <GiaPhaSelector value={filterGiaPha} onChange={setFilterGiaPha} />
+                    </div>
+
                     <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-neutral-600 mb-2">Tên thành viên</label>

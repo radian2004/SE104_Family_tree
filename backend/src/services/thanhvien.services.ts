@@ -114,6 +114,8 @@ class ThanhVienService {
     sortBy?: string;
     sortOrder?: string;
     MaGiaPha?: string;
+    gioiTinh?: string;
+    trangThai?: string;
   }) {
     let sql = 'SELECT * FROM THANHVIEN WHERE 1=1';
     const params: any[] = [];
@@ -126,8 +128,20 @@ class ThanhVienService {
 
     // Search filter
     if (filters?.search) {
-      sql += ' AND (HoTen LIKE ? OR DiaChi LIKE ?)';
-      params.push(`%${filters.search}%`, `%${filters.search}%`);
+      sql += ' AND (HoTen LIKE ? OR DiaChi LIKE ? OR MaTV LIKE ?)';
+      params.push(`%${filters.search}%`, `%${filters.search}%`, `%${filters.search}%`);
+    }
+
+    // Gender filter (Giới tính)
+    if (filters?.gioiTinh) {
+      sql += ' AND GioiTinh = ?';
+      params.push(filters.gioiTinh);
+    }
+
+    // Status filter (Trạng thái)
+    if (filters?.trangThai) {
+      sql += ' AND TrangThai = ?';
+      params.push(filters.trangThai);
     }
 
     // Order by

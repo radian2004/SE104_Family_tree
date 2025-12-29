@@ -189,14 +189,17 @@ export default function BaoCaoPage() {
                 </div>
 
                 {/* Filters */}
-                <div className="glass-card p-4 mb-6">
-                    <div className="flex flex-wrap items-end gap-4">
-                        <div className="min-w-[200px]">
-                            <label className="block text-sm font-medium text-neutral-600 mb-1">Gia phả</label>
+                <div className="glass-card p-6 mb-6">
+                    {/* Row 1: GiaPha Selector - Full width row */}
+                    <div className="mb-5">
+                        <label className="block text-sm font-medium text-neutral-700 mb-2 flex items-center gap-2">
+                            🌳 Chọn Gia Phả
+                        </label>
+                        <div className="max-w-md">
                             <select
                                 value={selectedGiaPha}
                                 onChange={(e) => setSelectedGiaPha(e.target.value)}
-                                className="input w-full"
+                                className="w-full px-4 py-3 bg-white border-2 border-emerald-200 rounded-xl text-neutral-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all cursor-pointer"
                             >
                                 {giaPhaList.length === 0 && (
                                     <option value="">Đang tải...</option>
@@ -208,13 +211,17 @@ export default function BaoCaoPage() {
                                 ))}
                             </select>
                         </div>
+                    </div>
+
+                    {/* Row 2: Year filters + Submit button */}
+                    <div className="flex flex-wrap items-end gap-4">
                         <div>
                             <label className="block text-sm font-medium text-neutral-600 mb-1">Từ năm</label>
                             <input
                                 type="number"
                                 value={namBatDau}
                                 onChange={(e) => setNamBatDau(Number(e.target.value))}
-                                className="input w-32"
+                                className="input w-28"
                                 min="1900"
                                 max={currentYear}
                             />
@@ -225,7 +232,7 @@ export default function BaoCaoPage() {
                                 type="number"
                                 value={namKetThuc}
                                 onChange={(e) => setNamKetThuc(Number(e.target.value))}
-                                className="input w-32"
+                                className="input w-28"
                                 min="1900"
                                 max={currentYear}
                             />
@@ -233,9 +240,9 @@ export default function BaoCaoPage() {
                         <button
                             onClick={loadBaoCao}
                             disabled={isLoading || !selectedGiaPha}
-                            className="btn btn-primary"
+                            className="btn btn-primary px-6"
                         >
-                            {isLoading ? 'Đang tải...' : 'Xem báo cáo'}
+                            {isLoading ? 'Đang tải...' : '📊 Xem báo cáo'}
                         </button>
                     </div>
                 </div>

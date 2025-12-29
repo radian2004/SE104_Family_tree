@@ -123,12 +123,15 @@ class PhieuThuService {
   }
 
   /**
-   * Lấy danh sách phiếu thu
-   * - Admin: xem tất cả
-   * - Owner: xem gia phả của mình (hoặc tất cả nếu chưa có gia phả)
-   * - User: xem của mình
-   */
-  async getPhieuThuList(userInfo: { MaLoaiTK: string; MaTV: string; MaGiaPha: string | null }) {
+  * Lấy danh sách phiếu thu
+  * - Admin: xem tất cả (có thể filter theo MaGiaPha)
+  * - Owner: xem gia phả của mình (hoặc tất cả nếu chưa có gia phả)
+  * - User: xem của mình
+  */
+  async getPhieuThuList(
+    userInfo: { MaLoaiTK: string; MaTV: string; MaGiaPha: string | null },
+    filters?: { MaGiaPha?: string }
+  ) {
     let sql = `
       SELECT 
         pt.MaPhieuThu,
@@ -141,24 +144,32 @@ class PhieuThuService {
     `;
 
     const params: any[] = [];
+    const conditions: string[] = [];
 
     if (userInfo.MaLoaiTK === 'LTK01') {
       // Admin: xem tất cả
+      // ✅ Allow Admin to filter by MaGiaPha
+      if (filters?.MaGiaPha) {
+        conditions.push('tv.MaGiaPha = ?');
+        params.push(filters.MaGiaPha);
+      }
     } else if (userInfo.MaLoaiTK === 'LTK02') {
       // Owner: xem gia phả của mình
       // Nếu MaGiaPha là null, hiển thị tất cả (chưa được link với gia phả cụ thể)
       if (userInfo.MaGiaPha) {
-        sql += ' WHERE tv.MaGiaPha = ?';
+        conditions.push('tv.MaGiaPha = ?');
         params.push(userInfo.MaGiaPha);
       }
-      // Else: show all (no filter)
     } else {
       // User: xem của mình
       if (userInfo.MaTV) {
-        sql += ' WHERE pt.MaTV = ?';
+        conditions.push('pt.MaTV = ?');
         params.push(userInfo.MaTV);
       }
-      // Else: show all (no filter when MaTV is null)
+    }
+
+    if (conditions.length > 0) {
+      sql += ' WHERE ' + conditions.join(' AND ');
     }
 
     sql += ' ORDER BY pt.NgayThu DESC';

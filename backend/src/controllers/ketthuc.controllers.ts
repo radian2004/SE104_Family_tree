@@ -35,14 +35,15 @@ export const ghiNhanKetThucController = async (req: Request, res: Response, next
  */
 export const traCuuKetThucController = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { 
-      HoTen, 
+    const {
+      HoTen,
       MaNguyenNhanMat,
       TenNguyenNhanMat,
       MaDiaDiem,
       TenDiaDiem,
-      TuNgay, 
-      DenNgay 
+      TuNgay,
+      DenNgay,
+      MaGiaPha  // ✅ NEW: Extract MaGiaPha from query
     } = req.query;
     const userInfo = req.userInfo;  // ⭐ LẤY TỪ MIDDLEWARE
 
@@ -53,7 +54,8 @@ export const traCuuKetThucController = async (req: Request, res: Response, next:
       MaDiaDiem: MaDiaDiem as string | undefined,
       TenDiaDiem: TenDiaDiem as string | undefined,
       TuNgay: TuNgay as string | undefined,
-      DenNgay: DenNgay as string | undefined
+      DenNgay: DenNgay as string | undefined,
+      MaGiaPha: MaGiaPha as string | undefined  // ✅ NEW: Pass to service
     }, userInfo);  // ⭐ TRUYỀN THÊM userInfo
 
     res.status(HTTP_STATUS.OK).json({

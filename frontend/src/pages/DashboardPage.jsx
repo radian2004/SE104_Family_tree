@@ -223,28 +223,28 @@ export default function DashboardPage() {
               </button>
 
               <button
-                onClick={() => navigate('/quanhe/honnhan')}
-                className="flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all border-l-4 border-pink-500"
+                onClick={() => navigate('/thanhtich')}
+                className="flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all border-l-4 border-yellow-500"
               >
-                <div className="w-12 h-12 rounded-lg bg-pink-100 flex items-center justify-center text-pink-600">
-                  <FiHeart className="w-6 h-6" />
+                <div className="w-12 h-12 rounded-lg bg-yellow-100 flex items-center justify-center text-yellow-600">
+                  <FiAward className="w-6 h-6" />
                 </div>
                 <div className="text-left">
-                  <h4 className="font-bold text-neutral-800">Quan hệ hôn nhân</h4>
-                  <p className="text-sm text-neutral-500">Quản lý quan hệ vợ chồng</p>
+                  <h4 className="font-bold text-neutral-800">Ghi nhận thành tích</h4>
+                  <p className="text-sm text-neutral-500">Khen thưởng, giải thưởng</p>
                 </div>
               </button>
 
               <button
-                onClick={() => navigate('/quanhe/concai')}
-                className="flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all border-l-4 border-emerald-500"
+                onClick={() => navigate('/ketthuc')}
+                className="flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all border-l-4 border-neutral-400"
               >
-                <div className="w-12 h-12 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600">
-                  <FiUsers className="w-6 h-6" />
+                <div className="w-12 h-12 rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-600">
+                  <FiAlertCircle className="w-6 h-6" />
                 </div>
                 <div className="text-left">
-                  <h4 className="font-bold text-neutral-800">Quan hệ con cái</h4>
-                  <p className="text-sm text-neutral-500">Quản lý quan hệ cha mẹ - con</p>
+                  <h4 className="font-bold text-neutral-800">Ghi nhận kết thúc</h4>
+                  <p className="text-sm text-neutral-500">Qua đời, mai táng</p>
                 </div>
               </button>
             </div>

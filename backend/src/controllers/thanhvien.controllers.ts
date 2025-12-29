@@ -61,6 +61,8 @@ export const getAllThanhVienController = async (req: Request, res: Response) => 
     sortBy: req.query.sortBy as string,
     sortOrder: req.query.sortOrder as string,
     MaGiaPha: req.query.MaGiaPha as string,
+    gioiTinh: req.query.gioiTinh as string,
+    trangThai: req.query.trangThai as string,
   };
 
   try {

@@ -6,10 +6,11 @@
 
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiArrowLeft, FiPlus, FiTrash2, FiDollarSign, FiCalendar, FiUser, FiFileText } from 'react-icons/fi';
+import { FiArrowLeft, FiPlus, FiTrash2, FiDollarSign, FiCalendar, FiUser, FiFileText, FiFilter } from 'react-icons/fi';
 import phieuChiService from '../services/phieuchi';
 import phieuThuService from '../services/phieuthu';
 import { usePermissions } from '../hooks/usePermissions';
+import GiaPhaSelector from '../components/common/GiaPhaSelector';
 
 export default function PhieuChiPage() {
     const { canRecordExpense, isAdmin, isOwner } = usePermissions();
@@ -173,8 +174,15 @@ export default function PhieuChiPage() {
                     </div>
                 </div>
 
-                {/* Tab Navigation */}
-                <div className="flex gap-2 mb-6 animate-fade-in">
+                {/* Admin GiaPha Filter - on its own section with higher z-index */}
+                <div className="mb-6 animate-fade-in relative z-50">
+                    <div className="max-w-sm">
+                        <GiaPhaSelector value="" onChange={() => { }} />
+                    </div>
+                </div>
+
+                {/* Tab Navigation - lower z-index */}
+                <div className="flex gap-2 mb-6 animate-fade-in relative z-10">
                     <button
                         onClick={() => setActiveTab('list')}
                         className={`px-4 py-2 rounded-lg font-medium transition-all ${activeTab === 'list'

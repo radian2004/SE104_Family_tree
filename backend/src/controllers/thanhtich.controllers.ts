@@ -91,7 +91,7 @@ export const traCuuThanhTichController = async (req: Request, res: Response) => 
   const userInfo = req.userInfo!;  // Đã được gán bởi middleware
 
   try {
-    const { HoTen, TenLoaiThanhTich, TuNgay, DenNgay, MaTV } = req.query;
+    const { HoTen, TenLoaiThanhTich, TuNgay, DenNgay, MaTV, MaGiaPha } = req.query;
 
     const filters: any = {};
     if (MaTV) filters.MaTV = MaTV as string;  // Filter by member ID
@@ -99,6 +99,7 @@ export const traCuuThanhTichController = async (req: Request, res: Response) => 
     if (TenLoaiThanhTich) filters.TenLoaiThanhTich = TenLoaiThanhTich as string;
     if (TuNgay) filters.TuNgay = new Date(TuNgay as string);
     if (DenNgay) filters.DenNgay = new Date(DenNgay as string);
+    if (MaGiaPha) filters.MaGiaPha = MaGiaPha as string;  // ✅ NEW: Filter by GiaPha for Admin
 
     // Truyền userInfo vào service để filter theo gia phả
     const result = await thanhTichService.traCuuThanhTich(filters, userInfo);

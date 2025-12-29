@@ -12,9 +12,9 @@ class PhieuThuService {
      * Lấy danh sách phiếu thu
      * GET /users/phieuthu
      */
-    async getAll() {
+    async getAll(params) {
         try {
-            const response = await apiClient.get('/users/phieuthu');
+            const response = await apiClient.get('/users/phieuthu', { params });
             return response.data.result || [];
         } catch (error) {
             throw error;

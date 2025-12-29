@@ -94,7 +94,7 @@ class ThanhTichService {
 
   /**
    * Tra cứu thành tích với phân quyền
-   * - Admin: Tra cứu tất cả
+   * - Admin: Tra cứu tất cả (có thể filter theo MaGiaPha từ query params)
    * - Owner/User: Chỉ tra cứu trong gia phả
    */
   async traCuuThanhTich(
@@ -104,6 +104,7 @@ class ThanhTichService {
       TenLoaiThanhTich?: string;
       TuNgay?: Date;
       DenNgay?: Date;
+      MaGiaPha?: string;  // ✅ NEW: Admin có thể filter theo gia phả từ dropdown
     },
     userInfo?: { MaLoaiTK: string; MaGiaPha: string | null }
   ) {
@@ -124,12 +125,16 @@ class ThanhTichService {
     const params: any[] = [];
 
     // ✅ PHÂN QUYỀN: 
-    // - Admin (LTK01): xem tất cả
+    // - Admin (LTK01): xem tất cả, nhưng có thể filter theo MaGiaPha từ query
     // - Owner (LTK02): xem tất cả nếu MaGiaPha = NULL, hoặc chỉ gia phả của mình
     // - User (LTK03): chỉ xem trong gia phả
     if (userInfo) {
       if (userInfo.MaLoaiTK === 'LTK01') {
-        // Admin: xem tất cả, không filter
+        // Admin: nếu có MaGiaPha từ filter thì dùng, không thì xem tất cả
+        if (filters?.MaGiaPha) {
+          sql += ' AND tv.MaGiaPha = ?';
+          params.push(filters.MaGiaPha);
+        }
       } else if (userInfo.MaLoaiTK === 'LTK02') {
         // Owner: nếu có MaGiaPha thì filter, không thì xem tất cả
         if (userInfo.MaGiaPha) {

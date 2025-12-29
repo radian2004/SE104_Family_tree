@@ -37,7 +37,8 @@ export const createPhieuThuController = async (req: Request, res: Response) => {
 export const getPhieuThuListController = async (req: Request, res: Response) => {
   try {
     const userInfo = req.userInfo!;
-    const result = await phieuThuService.getPhieuThuList(userInfo);
+    const { MaGiaPha } = req.query;
+    const result = await phieuThuService.getPhieuThuList(userInfo, { MaGiaPha: MaGiaPha as string });
 
     return res.status(HTTP_STATUS.OK).json({
       message: PHIEUTHU_MESSAGES.GET_SUCCESS,

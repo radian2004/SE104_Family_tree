@@ -18,6 +18,7 @@ import thanhVienService from '../services/thanhvien';
 import { useLookupsStore } from '../store/lookupsStore';
 import { usePermissions } from '../hooks/usePermissions';
 import DateInput from '../components/common/DateInput';
+import GiaPhaSelector from '../components/common/GiaPhaSelector';
 
 export default function ThanhTichPage() {
     const { isAdmin, isOwner } = usePermissions();
@@ -36,6 +37,7 @@ export default function ThanhTichPage() {
     const [filterLoai, setFilterLoai] = useState('');
     const [filterTuNgay, setFilterTuNgay] = useState('');
     const [filterDenNgay, setFilterDenNgay] = useState('');
+    const [filterGiaPha, setFilterGiaPha] = useState('');
 
     // Sort state
     const [sortField, setSortField] = useState('NgayPhatSinh');
@@ -63,18 +65,20 @@ export default function ThanhTichPage() {
     const [editLoai, setEditLoai] = useState('');
     const [isUpdating, setIsUpdating] = useState(false);
 
-    // Load members for autocomplete
+    // Load members for autocomplete - filtered by selected GiaPha
     useEffect(() => {
         const loadMembers = async () => {
             try {
-                const data = await thanhVienService.getAll();
+                // ✅ Filter members by selected GiaPha
+                const params = filterGiaPha ? { MaGiaPha: filterGiaPha } : {};
+                const data = await thanhVienService.getAll(params);
                 setMembers(Array.isArray(data) ? data : (data.items || []));
             } catch (err) {
                 console.error('Error loading members:', err);
             }
         };
         loadMembers();
-    }, []);
+    }, [filterGiaPha]);  // ✅ Reload when GiaPha changes
 
     // Filter members for autocomplete
     useEffect(() => {
@@ -103,6 +107,7 @@ export default function ThanhTichPage() {
             }
             if (filterTuNgay) params.TuNgay = filterTuNgay;
             if (filterDenNgay) params.DenNgay = filterDenNgay;
+            if (filterGiaPha) params.MaGiaPha = filterGiaPha;
 
             const res = await thanhTichService.traCuu(params);
             setThanhTichs(res.data || res.result || res || []);
@@ -112,7 +117,7 @@ export default function ThanhTichPage() {
         } finally {
             setIsLoading(false);
         }
-    }, [searchName, filterLoai, filterTuNgay, filterDenNgay, loaithanhtich]);
+    }, [searchName, filterLoai, filterTuNgay, filterDenNgay, filterGiaPha, loaithanhtich]);
 
     useEffect(() => {
         loadThanhTich();
@@ -436,6 +441,11 @@ export default function ThanhTichPage() {
                         <FiFilter className="w-5 h-5 text-amber-600" />
                         <h3 className="font-semibold text-neutral-800">Bộ lọc & Tìm kiếm</h3>
                     </div>
+                    {/* GiaPha Selector - Admin only - on separate row */}
+                    <div className="mb-4 max-w-sm">
+                        <GiaPhaSelector value={filterGiaPha} onChange={setFilterGiaPha} />
+                    </div>
+
                     <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-neutral-600 mb-2">Tên thành viên</label>

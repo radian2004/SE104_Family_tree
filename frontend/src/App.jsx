@@ -170,6 +170,14 @@ export default function App() {
             </AdminRoute>
           }
         />
+        <Route
+          path="/admin/taikhoan"
+          element={
+            <AdminRoute>
+              <QuanLyTaiKhoanPage />
+            </AdminRoute>
+          }
+        />
 
         {/* Quản lý danh mục (Admin + Trưởng tộc) */}
         <Route

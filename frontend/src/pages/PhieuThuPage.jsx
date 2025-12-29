@@ -6,10 +6,11 @@
 
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiArrowLeft, FiPlus, FiCheck, FiX, FiDollarSign, FiCalendar, FiUser, FiClock, FiBarChart2 } from 'react-icons/fi';
+import { FiArrowLeft, FiPlus, FiCheck, FiX, FiDollarSign, FiCalendar, FiUser, FiClock, FiBarChart2, FiFilter } from 'react-icons/fi';
 import phieuThuService from '../services/phieuthu';
 import thanhVienService from '../services/thanhvien';
 import { usePermissions } from '../hooks/usePermissions';
+import GiaPhaSelector from '../components/common/GiaPhaSelector';
 
 export default function PhieuThuPage() {
     const { canRecordIncome, isAdmin, isOwner } = usePermissions();
@@ -21,6 +22,9 @@ export default function PhieuThuPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [activeTab, setActiveTab] = useState('list'); // 'list', 'pending', 'create', 'report'
+
+    // ✅ GiaPha filter state for Admin
+    const [filterGiaPha, setFilterGiaPha] = useState('');
 
     // Report state
     const [reportData, setReportData] = useState(null);
@@ -39,6 +43,40 @@ export default function PhieuThuPage() {
     useEffect(() => {
         loadData();
     }, []);
+
+    // ✅ Reload thành viên & receipts when GiaPha filter changes
+    useEffect(() => {
+        const loadFilteredData = async () => {
+            try {
+                const params = filterGiaPha ? { MaGiaPha: filterGiaPha } : {};
+
+                const [thanhVien, phieuThu] = await Promise.all([
+                    thanhVienService.getAll(params),
+                    phieuThuService.getAll(params)
+                ]);
+
+                setThanhVienList(thanhVien || []);
+                setPhieuThuList(phieuThu || []);
+            } catch (err) {
+                console.error('Error loading filtered data:', err);
+            }
+        };
+
+        // Skip initial load if desired, but here we want to react to changes.
+        // loadData() runs on mount and loads everything.
+        // This effect runs when filterGiaPha changes.
+        // To avoid double loading on mount (if filterGiaPha starts as ''), we could verify.
+        // But for simplicity and correctness when switching back to "All", just run it.
+        // However, on mount filterGiaPha is '', so this might duplicate loadData's work.
+        // We can check if data is already loaded or just let it be.
+        if (filterGiaPha !== '') {
+            loadFilteredData();
+        } else if (!isLoading) {
+            // Only reload 'all' if we are not in initial load state (approximated)
+            // or just let the user trigger it by clearing filter
+            loadFilteredData();
+        }
+    }, [filterGiaPha]);
 
     const loadData = async () => {
         setIsLoading(true);
@@ -235,10 +273,21 @@ export default function PhieuThuPage() {
                 </div>
             </nav>
 
+
             {/* Main Content */}
             <main className="max-w-7xl mx-auto px-6 py-8">
-                {/* Tab Navigation */}
-                <div className="flex gap-2 mb-6 animate-fade-in">
+                {/* Admin GiaPha Filter - on its own section with higher z-index */}
+                <div className="mb-6 animate-fade-in relative z-50">
+                    <div className="max-w-sm">
+                        <GiaPhaSelector
+                            value={filterGiaPha}
+                            onChange={(val) => setFilterGiaPha(val)}
+                        />
+                    </div>
+                </div>
+
+                {/* Tab Navigation - lower z-index */}
+                <div className="flex gap-2 mb-6 animate-fade-in relative z-10">
                     <button
                         onClick={() => setActiveTab('list')}
                         className={`px-4 py-2 rounded-lg font-medium transition-all ${activeTab === 'list'
@@ -629,8 +678,9 @@ export default function PhieuThuPage() {
                             </div>
                         )}
                     </>
-                )}
-            </main>
-        </div>
+                )
+                }
+            </main >
+        </div >
     );
 }

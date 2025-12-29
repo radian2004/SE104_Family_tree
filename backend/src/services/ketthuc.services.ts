@@ -70,6 +70,8 @@ class KetThucService {
 
   /**
     * 2. Tra cứu danh sách thành viên đã kết thúc
+    * - Admin: Xem tất cả (có thể filter theo MaGiaPha từ query params)
+    * - Owner/User: Chỉ xem trong gia phả
     */
   async traCuuKetThuc(filters?: {
     HoTen?: string
@@ -79,18 +81,29 @@ class KetThucService {
     TenDiaDiem?: string
     TuNgay?: string
     DenNgay?: string
+    MaGiaPha?: string  // ✅ NEW: Admin có thể filter theo gia phả từ dropdown
   }, userInfo?: TaiKhoanInfo): Promise<TraCuuKetThucResult[]> {
     let whereClauses: string[] = ["tv.TrangThai = 'Mất'"];
     const params: any[] = [];
 
-    // ⭐ FILTER THEO MaGiaPha (Owner/User chỉ xem trong gia phả)
-    if (userInfo && userInfo.MaLoaiTK !== 'LTK01') {
-      // Không phải Admin → giới hạn theo gia phả
-      if (!userInfo.MaGiaPha) {
-        throw new Error('Bạn chưa thuộc gia phả nào');
+    // ⭐ FILTER THEO MaGiaPha 
+    // - Admin (LTK01): Xem tất cả, nhưng có thể filter theo MaGiaPha từ query
+    // - Owner/User: Giới hạn theo gia phả của mình
+    if (userInfo) {
+      if (userInfo.MaLoaiTK === 'LTK01') {
+        // Admin: nếu có MaGiaPha từ filter thì dùng, không thì xem tất cả
+        if (filters?.MaGiaPha) {
+          whereClauses.push('tv.MaGiaPha = ?');
+          params.push(filters.MaGiaPha);
+        }
+      } else {
+        // Không phải Admin → giới hạn theo gia phả
+        if (!userInfo.MaGiaPha) {
+          throw new Error('Bạn chưa thuộc gia phả nào');
+        }
+        whereClauses.push('tv.MaGiaPha = ?');
+        params.push(userInfo.MaGiaPha);
       }
-      whereClauses.push('tv.MaGiaPha = ?');
-      params.push(userInfo.MaGiaPha);
     }
 
     // Lọc theo họ tên (LIKE search)
