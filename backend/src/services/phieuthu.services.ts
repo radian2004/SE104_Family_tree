@@ -548,9 +548,25 @@ class PhieuThuService {
   /**
  * Tra cứu danh mục thu chi theo năm
  * @param nam - Năm cần tra cứu
+ * @param userInfo - Thông tin user để lọc theo MaGiaPha (cho Owner)
  * @returns Danh sách danh mục với tổng thu/chi trong năm đó
  */
-  async traCuuDanhMucThuChi(nam: number): Promise<TraCuuDanhMucResponse> {
+  async traCuuDanhMucThuChi(
+    nam: number,
+    userInfo?: { MaLoaiTK: string; MaGiaPha: string | null }
+  ): Promise<TraCuuDanhMucResponse> {
+    // ⭐ BUILD SQL: Filter nguoi dam nhan theo MaGiaPha cho Owner
+    let whereClause = '';
+    const params: any[] = [nam, nam];
+
+    // Owner/User: Chỉ hiển thị danh mục có người đảm nhận thuộc gia phả của họ
+    if (userInfo && userInfo.MaLoaiTK !== 'LTK01') {
+      if (userInfo.MaGiaPha) {
+        whereClause = 'WHERE tv.MaGiaPha = ?';
+        params.push(userInfo.MaGiaPha);
+      }
+    }
+
     // SQL Query: Lấy tất cả danh mục với tổng thu/chi THEO NĂM
     const sql = `
       SELECT 
@@ -580,10 +596,11 @@ class PhieuThuService {
         
       FROM DANHMUC dm
       LEFT JOIN THANHVIEN tv ON dm.NguoiDamNhan = tv.MaTV
+      ${whereClause}
       ORDER BY dm.MaDM
     `;
 
-    const rows = await databaseService.query<RowDataPacket[]>(sql, [nam, nam]);
+    const rows = await databaseService.query<RowDataPacket[]>(sql, params);
 
     // Chuyển đổi kết quả
     const danhSach: DanhMucThuChiItem[] = rows.map((row, index) => {

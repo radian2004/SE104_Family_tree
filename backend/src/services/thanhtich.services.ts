@@ -285,18 +285,16 @@ class ThanhTichService {
       throw new Error(`Năm kết thúc không được vượt quá năm hiện tại (${currentYear})`);
     }
 
+    // ⭐ FIX: Query nhóm theo năm VÀ loại thành tích
     let sql = `
       SELECT 
-        ROW_NUMBER() OVER (ORDER BY SUM(g.cnt) DESC) AS STT,
+        YEAR(g.NgayPhatSinh) AS Nam,
         ltt.TenLTT AS LoaiThanhTich,
-        SUM(g.cnt) AS SoLuong
-      FROM (
-        SELECT 
-          g.MaLTT,
-          COUNT(*) as cnt
-        FROM GHINHANTHANHTICH g
-        INNER JOIN THANHVIEN tv ON g.MaTV = tv.MaTV
-        WHERE YEAR(g.NgayPhatSinh) BETWEEN ? AND ?
+        COUNT(*) AS SoLuong
+      FROM GHINHANTHANHTICH g
+      INNER JOIN THANHVIEN tv ON g.MaTV = tv.MaTV
+      INNER JOIN LOAITHANHTICH ltt ON g.MaLTT = ltt.MaLTT
+      WHERE YEAR(g.NgayPhatSinh) BETWEEN ? AND ?
     `;
 
     const params: any[] = [NamBatDau, NamKetThuc];
@@ -329,28 +327,33 @@ class ThanhTichService {
     }
 
     sql += `
-        GROUP BY g.MaLTT
-      ) g
-      INNER JOIN LOAITHANHTICH ltt ON g.MaLTT = ltt.MaLTT
-      GROUP BY g.MaLTT, ltt.TenLTT
-      HAVING SUM(g.cnt) > 0
-      ORDER BY SoLuong DESC
+      GROUP BY YEAR(g.NgayPhatSinh), g.MaLTT, ltt.TenLTT
+      HAVING COUNT(*) > 0
+      ORDER BY Nam ASC, SoLuong DESC
     `;
 
     interface BaoCaoRow extends RowDataPacket {
-      STT: number;
+      Nam: number;
       LoaiThanhTich: string;
       SoLuong: number;
     }
 
     const rows = await databaseService.query<BaoCaoRow[]>(sql, params);
 
+    // ⭐ Thêm STT
+    const rowsWithSTT = rows.map((row, index) => ({
+      STT: index + 1,
+      Nam: row.Nam,
+      LoaiThanhTich: row.LoaiThanhTich,
+      SoLuong: parseInt(row.SoLuong.toString())
+    }));
+
     return {
       NamBatDau,
       NamKetThuc,
       TongLoaiThanhTich: rows.length,
       TongSoLuong: rows.reduce((sum, row) => sum + parseInt(row.SoLuong.toString()), 0),
-      DanhSach: rows
+      DanhSach: rowsWithSTT
     };
   }
 

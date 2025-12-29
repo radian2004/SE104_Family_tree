@@ -37,7 +37,12 @@ export default function GiaPhaPage() {
         setIsLoading(true);
         setError(null);
         try {
-            const data = await giaPhaService.getAll();
+            let data = await giaPhaService.getAll();
+
+            // ⭐ FILTER FOR OWNER: Only show their own gia phả
+            if (isOwner && !isAdmin && user?.MaGiaPha) {
+                data = data.filter(gp => gp.MaGiaPha === user.MaGiaPha);
+            }
 
             // Fetch member counts for each gia pha (since backend doesn't return it correctly)
             const giaPhaWithCounts = await Promise.all(

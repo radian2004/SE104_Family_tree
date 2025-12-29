@@ -22,8 +22,6 @@ import ThanhVienEditPage from './pages/ThanhVienEditPage';
 import GiaPhaPage from './pages/GiaPhaPage';
 import GiaPhaDetailPage from './pages/GiaPhaDetailPage';
 import BaoCaoPage from './pages/BaoCaoPage';
-import QuanHeHonNhanPage from './pages/QuanHeHonNhanPage';
-import QuanHeConCaiPage from './pages/QuanHeConCaiPage';
 import PhieuThuPage from './pages/PhieuThuPage';
 import PhieuChiPage from './pages/PhieuChiPage';
 import ThanhTichPage from './pages/ThanhTichPage';
@@ -141,24 +139,6 @@ export default function App() {
           element={
             <ProtectedRoute>
               <KetThucPage />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Quan hệ routes */}
-        <Route
-          path="/quanhe/honnhan"
-          element={
-            <ProtectedRoute>
-              <QuanHeHonNhanPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/quanhe/concai"
-          element={
-            <ProtectedRoute>
-              <QuanHeConCaiPage />
             </ProtectedRoute>
           }
         />

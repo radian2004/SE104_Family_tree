@@ -87,12 +87,6 @@ export default function DashboardPage() {
       actions.push({ title: 'Ghi nhận kết thúc', icon: <FiAlertCircle />, path: '/ketthuc', color: 'text-neutral-500' });
     }
 
-    // Admin & Owner: Tạo quan hệ
-    if (isAdmin || isOwner) {
-      actions.push({ title: 'Tạo quan hệ hôn nhân', icon: <FiHeart />, path: '/quanhe/honnhan', color: 'text-pink-500' });
-      actions.push({ title: 'Tạo quan hệ con cái', icon: <FiUsers />, path: '/quanhe/concai', color: 'text-emerald-500' });
-    }
-
     // All roles: Báo cáo
     actions.push({ title: 'Xuất báo cáo', icon: <FiBarChart2 />, path: '/baocao', color: 'text-blue-500' });
 

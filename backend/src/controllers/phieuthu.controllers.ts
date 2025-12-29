@@ -249,6 +249,9 @@ export const deleteDanhMucController = async (req: Request, res: Response) => {
  */
 export const traCuuDanhMucController = async (req: Request, res: Response) => {
   try {
+    // Lấy userInfo để lọc theo MaGiaPha cho Owner
+    const userInfo = req.userInfo;
+
     // Lấy năm từ query parameter, mặc định là năm hiện tại
     const namParam = req.query.nam;
     let nam: number;
@@ -266,8 +269,8 @@ export const traCuuDanhMucController = async (req: Request, res: Response) => {
       nam = new Date().getFullYear();
     }
 
-    // Gọi service
-    const result = await phieuThuService.traCuuDanhMucThuChi(nam);
+    // Gọi service với userInfo để lọc theo MaGiaPha
+    const result = await phieuThuService.traCuuDanhMucThuChi(nam, userInfo);
 
     return res.status(200).json({
       message: 'Tra cứu danh mục thu chi thành công',

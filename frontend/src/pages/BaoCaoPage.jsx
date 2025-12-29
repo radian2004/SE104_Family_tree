@@ -11,9 +11,13 @@ import thanhvienService from '../services/thanhvien.js';
 import thanhtichService from '../services/thanhtich.js';
 import phieuThuService from '../services/phieuthu.js';
 import giaPhaService from '../services/giapha.js';
+import { usePermissions } from '../hooks/usePermissions';
+import { useAuth } from '../hooks/useAuth';
 
 export default function BaoCaoPage() {
     const currentYear = new Date().getFullYear();
+    const { user } = useAuth();
+    const { isAdmin, isOwner } = usePermissions();
 
     // State
     const [activeTab, setActiveTab] = useState('thanhvien'); // 'thanhvien' | 'thanhtich' | 'thuChi'
@@ -35,7 +39,13 @@ export default function BaoCaoPage() {
     useEffect(() => {
         const loadGiaPhaList = async () => {
             try {
-                const data = await giaPhaService.getAll();
+                let data = await giaPhaService.getAll();
+
+                // ⭐ FILTER FOR OWNER: Only show their own gia phả
+                if (isOwner && !isAdmin && user?.MaGiaPha) {
+                    data = data.filter(gp => gp.MaGiaPha === user.MaGiaPha);
+                }
+
                 setGiaPhaList(data);
                 // Select first gia pha by default if available
                 if (data.length > 0) {
@@ -46,7 +56,7 @@ export default function BaoCaoPage() {
             }
         };
         loadGiaPhaList();
-    }, []);
+    }, [isOwner, isAdmin, user?.MaGiaPha]);
 
     // Load báo cáo
     const loadBaoCao = async () => {
@@ -332,17 +342,17 @@ export default function BaoCaoPage() {
                                                     <td className="px-6 py-4 font-medium text-neutral-800">{row.Nam}</td>
                                                     <td className="px-6 py-4 text-center">
                                                         <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-emerald-100 text-emerald-700">
-                                                            +{row.SoLuongSinh || 0}
+                                                            +{row.SoSinh || 0}
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4 text-center">
                                                         <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-pink-100 text-pink-700">
-                                                            {row.SoLuongKetHon || 0}
+                                                            {row.SoKetHon || 0}
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4 text-center">
                                                         <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-neutral-100 text-neutral-600">
-                                                            -{row.SoLuongMat || 0}
+                                                            {row.SoMat || 0}
                                                         </span>
                                                     </td>
                                                 </tr>
@@ -407,7 +417,7 @@ export default function BaoCaoPage() {
                                             </thead>
                                             <tbody>
                                                 {baoCaoThanhTich.map((row, index) => (
-                                                    <tr key={`${row.Nam}-${row.TenLTT}-${index}`} className="border-b border-neutral-100 hover:bg-neutral-50">
+                                                    <tr key={`${row.Nam}-${row.LoaiThanhTich || row.TenLTT}-${index}`} className="border-b border-neutral-100 hover:bg-neutral-50">
                                                         <td className="px-6 py-4 text-sm text-neutral-500">{row.STT || index + 1}</td>
                                                         <td className="px-6 py-4 font-medium text-neutral-800">{row.Nam}</td>
                                                         <td className="px-6 py-4 text-neutral-700">{row.TenLTT || row.LoaiThanhTich || '-'}</td>
