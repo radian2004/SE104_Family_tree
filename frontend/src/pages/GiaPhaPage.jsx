@@ -209,7 +209,8 @@ export default function GiaPhaPage() {
                         </div>
                     </div>
 
-                    {canManage && (
+                    {/* Chỉ Admin mới có thể tạo gia phả mới */}
+                    {isAdmin && (
                         <button
                             onClick={() => setShowCreateModal(true)}
                             className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg shadow-lg hover:shadow-xl transition-all"

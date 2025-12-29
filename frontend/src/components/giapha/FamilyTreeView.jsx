@@ -28,25 +28,75 @@ export default function FamilyTreeView({
         return status.includes('mất') || status.includes('mat');
     };
 
-    // Get spouse of a member
-    const getSpouse = (maTV) => {
-        const marriage = relationships.find(r =>
+
+    // Get ALL spouses/partners of a member (including ended marriages AND co-parents without marriage)
+    const getAllSpouses = (maTV) => {
+        const spousesMap = new Map(); // Use Map to avoid duplicates
+
+        // 1. From HONNHAN table (marriages)
+        const marriages = relationships.filter(r =>
             (r.MaTV === maTV && r.MaTVVC) || (r.MaTVVC === maTV && r.MaTV)
         );
-        if (marriage) {
+
+        marriages.forEach(marriage => {
             const spouseId = marriage.MaTV === maTV ? marriage.MaTVVC : marriage.MaTV;
-            return members.find(m => m.MaTV === spouseId);
-        }
-        return null;
+            const spouse = members.find(m => m.MaTV === spouseId);
+            if (spouse && !spousesMap.has(spouseId)) {
+                spousesMap.set(spouseId, {
+                    spouse,
+                    NgayBatDau: marriage.NgayBatDau,
+                    NgayKetThuc: marriage.NgayKetThuc,
+                    isEnded: !!marriage.NgayKetThuc,
+                    hasSharedChildren: false,
+                    isCoParentOnly: false
+                });
+            }
+        });
+
+        // 2. From QUANHECON table - find co-parents (shared children without marriage record)
+        const member = members.find(m => m.MaTV === maTV);
+        const isMale = member?.GioiTinh === 'Nam';
+
+        // Find all children where this member is the father or mother
+        relationships.forEach(rel => {
+            if (rel.MaTVCha === maTV && rel.MaTVMe) {
+                // This member is father, find mother
+                const mother = members.find(m => m.MaTV === rel.MaTVMe);
+                if (mother && !spousesMap.has(rel.MaTVMe)) {
+                    spousesMap.set(rel.MaTVMe, {
+                        spouse: mother,
+                        NgayBatDau: null,
+                        NgayKetThuc: null,
+                        isEnded: true, // No marriage record = treat as "không còn quan hệ hôn nhân"
+                        hasSharedChildren: true,
+                        isCoParentOnly: true // Mark as co-parent only (no marriage)
+                    });
+                } else if (mother && spousesMap.has(rel.MaTVMe)) {
+                    // Already in map from marriage, just mark as having shared children
+                    spousesMap.get(rel.MaTVMe).hasSharedChildren = true;
+                }
+            } else if (rel.MaTVMe === maTV && rel.MaTVCha) {
+                // This member is mother, find father
+                const father = members.find(m => m.MaTV === rel.MaTVCha);
+                if (father && !spousesMap.has(rel.MaTVCha)) {
+                    spousesMap.set(rel.MaTVCha, {
+                        spouse: father,
+                        NgayBatDau: null,
+                        NgayKetThuc: null,
+                        isEnded: true,
+                        hasSharedChildren: true,
+                        isCoParentOnly: true
+                    });
+                } else if (father && spousesMap.has(rel.MaTVCha)) {
+                    spousesMap.get(rel.MaTVCha).hasSharedChildren = true;
+                }
+            }
+        });
+
+        return Array.from(spousesMap.values());
     };
 
-    // Get parents of a member
-    const getParents = (maTV) => {
-        const rel = relationships.find(r => r.MaTV === maTV && (r.MaTVCha || r.MaTVMe));
-        return rel;
-    };
-
-    // Get children of a couple/member
+    // Get children of a member (either as father or mother)
     const getChildren = (maTV) => {
         return members.filter(m => {
             const rel = relationships.find(r =>
@@ -56,8 +106,11 @@ export default function FamilyTreeView({
         });
     };
 
-    // Build generations - Group families by DOI
+    // Build generations - Group families by DOI, avoiding duplicates
     const generationData = useMemo(() => {
+        // Global set to track ALL processed members across all generations
+        const globalProcessed = new Set();
+
         // Group members by DOI
         const byDoi = {};
         members.forEach(m => {
@@ -71,26 +124,44 @@ export default function FamilyTreeView({
             .sort((a, b) => Number(a) - Number(b))
             .map(doi => {
                 const genMembers = byDoi[doi];
-
-                // Find "primary" members (not just spouses) - those who have parents in previous generation
-                // or are root if doi === 1
                 const families = [];
-                const processed = new Set();
 
-                genMembers.forEach(member => {
-                    if (processed.has(member.MaTV)) return;
+                // Sort members so those with more spouses/co-parents are processed first (as primary)
+                const sortedMembers = [...genMembers].sort((a, b) => {
+                    const aSpouses = getAllSpouses(a.MaTV).length;
+                    const bSpouses = getAllSpouses(b.MaTV).length;
+                    return bSpouses - aSpouses; // Descending - more spouses first
+                });
 
-                    const spouse = getSpouse(member.MaTV);
+                sortedMembers.forEach(member => {
+                    // Skip if already processed (as primary of another family)
+                    if (globalProcessed.has(member.MaTV)) return;
 
-                    // Create family unit
+                    // Get all spouses/co-parents of this member
+                    const allSpouses = getAllSpouses(member.MaTV);
+
+                    // DO NOT filter out processed spouses - we want to show connections
+                    // even if the spouse is already in another family group
+                    // Just check if spouse exists
+                    const validSpouses = allSpouses.filter(s => s.spouse);
+
+                    // Create family unit with all spouses (including already processed ones)
                     families.push({
                         primary: member,
-                        spouse: spouse,
+                        spouses: validSpouses,
                         children: getChildren(member.MaTV)
                     });
 
-                    processed.add(member.MaTV);
-                    if (spouse) processed.add(spouse.MaTV);
+                    // Mark primary as processed
+                    globalProcessed.add(member.MaTV);
+
+                    // Only mark UNPROCESSED spouses as processed 
+                    // (already processed ones should stay in their original family)
+                    validSpouses.forEach(s => {
+                        if (s.spouse && !globalProcessed.has(s.spouse.MaTV)) {
+                            globalProcessed.add(s.spouse.MaTV);
+                        }
+                    });
                 });
 
                 return {
@@ -185,19 +256,66 @@ export default function FamilyTreeView({
         );
     };
 
-    // Family Unit Component (couple + connector)
-    const FamilyUnit = ({ primary, spouse }) => (
-        <div className="flex items-center gap-1">
-            <MemberCard member={primary} />
-            {spouse && (
-                <>
-                    <div className="flex items-center px-1">
-                        <div className="w-2 h-0.5 bg-pink-300"></div>
-                        <FiHeart className="w-3 h-3 text-pink-400 mx-0.5" />
-                        <div className="w-2 h-0.5 bg-pink-300"></div>
-                    </div>
-                    <MemberCard member={spouse} />
-                </>
+    // Marriage Connector - shows different styles based on relationship type
+    // - Active marriage: heart + solid line
+    // - Ended marriage: X + gray line
+    // - Co-parents only (no marriage but shared children): dashed line
+    const MarriageConnector = ({ isEnded, hasSharedChildren, isCoParentOnly }) => {
+        // Co-parent only: show dashed line
+        if (isCoParentOnly && hasSharedChildren) {
+            return (
+                <div className="flex items-center px-1">
+                    <div className="w-6 h-0.5 border-t-2 border-dashed border-gray-400"></div>
+                </div>
+            );
+        }
+
+        // Ended marriage: gray line with X
+        if (isEnded) {
+            return (
+                <div className="flex items-center px-1">
+                    <div className="w-2 h-0.5 bg-gray-300"></div>
+                    <span className="text-gray-400 mx-0.5 text-xs">✕</span>
+                    <div className="w-2 h-0.5 bg-gray-300"></div>
+                </div>
+            );
+        }
+
+        // Active marriage: pink line with heart
+        return (
+            <div className="flex items-center px-1">
+                <div className="w-2 h-0.5 bg-pink-300"></div>
+                <FiHeart className="w-3 h-3 text-pink-400 mx-0.5" />
+                <div className="w-2 h-0.5 bg-pink-300"></div>
+            </div>
+        );
+    };
+
+    // Family Unit Component (primary + multiple spouses) - VERTICAL LAYOUT
+    const FamilyUnit = ({ primary, spouses = [] }) => (
+        <div className="inline-block">
+            {/* Primary member at top */}
+            <div className="mb-1">
+                <MemberCard member={primary} />
+            </div>
+
+            {/* Spouses stacked below */}
+            {spouses.length > 0 && (
+                <div className="ml-4 pl-2 border-l-2 border-gray-300 space-y-2">
+                    {spouses.map((spouseInfo, idx) => (
+                        spouseInfo.spouse && (
+                            <div key={spouseInfo.spouse.MaTV || idx} className="flex items-center -ml-2">
+                                {/* Horizontal connector */}
+                                <MarriageConnector
+                                    isEnded={spouseInfo.isEnded}
+                                    hasSharedChildren={spouseInfo.hasSharedChildren}
+                                    isCoParentOnly={spouseInfo.isCoParentOnly}
+                                />
+                                <MemberCard member={spouseInfo.spouse} />
+                            </div>
+                        )
+                    ))}
+                </div>
             )}
         </div>
     );
@@ -215,7 +333,7 @@ export default function FamilyTreeView({
                         <div>
                             <h3 className="font-bold text-neutral-800">Đời thứ {doi}</h3>
                             <p className="text-xs text-neutral-500">
-                                {families.reduce((sum, f) => sum + 1 + (f.spouse ? 1 : 0), 0)} thành viên
+                                {families.reduce((sum, f) => sum + 1 + f.spouses.filter(s => s.spouse).length, 0)} thành viên
                             </p>
                         </div>
                     </div>
@@ -227,7 +345,7 @@ export default function FamilyTreeView({
                                 <FamilyUnit
                                     key={family.primary.MaTV || idx}
                                     primary={family.primary}
-                                    spouse={family.spouse}
+                                    spouses={family.spouses}
                                 />
                             ))}
                         </div>
@@ -257,7 +375,7 @@ export default function FamilyTreeView({
                         <div className="flex flex-wrap justify-center gap-6">
                             {families.map((family, idx) => (
                                 <div key={family.primary.MaTV || idx} className="flex flex-col items-center">
-                                    <FamilyUnit primary={family.primary} spouse={family.spouse} />
+                                    <FamilyUnit primary={family.primary} spouses={family.spouses} />
 
                                     {/* Children connector */}
                                     {family.children.length > 0 && genIndex < generationData.length - 1 && (

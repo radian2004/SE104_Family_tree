@@ -155,14 +155,18 @@ class PhieuThuService {
       }
     } else if (userInfo.MaLoaiTK === 'LTK02') {
       // Owner: xem gia phả của mình
-      // Nếu MaGiaPha là null, hiển thị tất cả (chưa được link với gia phả cụ thể)
       if (userInfo.MaGiaPha) {
         conditions.push('tv.MaGiaPha = ?');
         params.push(userInfo.MaGiaPha);
       }
     } else {
-      // User: xem của mình
-      if (userInfo.MaTV) {
+      // User: xem các phiếu trong gia phả của mình (giống Owner)
+      // Không chỉ xem phiếu của bản thân mà xem tất cả phiếu trong gia phả
+      if (userInfo.MaGiaPha) {
+        conditions.push('tv.MaGiaPha = ?');
+        params.push(userInfo.MaGiaPha);
+      } else if (userInfo.MaTV) {
+        // Fallback: nếu không có MaGiaPha, xem phiếu của bản thân
         conditions.push('pt.MaTV = ?');
         params.push(userInfo.MaTV);
       }
@@ -338,10 +342,10 @@ class PhieuThuService {
 
   /**
    * Lấy danh sách chi tiết phiếu thu chờ xác nhận
-   * - Admin/Owner: xem TẤT CẢ phiếu chờ xác nhận
-   * - User: chỉ xem danh mục họ đảm nhận
+   * - Admin: xem TẤT CẢ phiếu chờ xác nhận
+   * - Owner/User: xem phiếu trong gia phả của mình
    */
-  async getPendingConfirmations(userInfo: { MaLoaiTK: string; MaTV: string | null }) {
+  async getPendingConfirmations(userInfo: { MaLoaiTK: string; MaTV: string | null; MaGiaPha: string | null }) {
     let sql = `
       SELECT 
         ct.MaPhieuThu,
@@ -360,10 +364,13 @@ class PhieuThuService {
 
     const params: any[] = [];
 
-    // Admin/Owner xem tất cả, User chỉ xem danh mục mình đảm nhận
-    if (userInfo.MaLoaiTK !== 'LTK01' && userInfo.MaLoaiTK !== 'LTK02') {
-      sql += ' AND dm.NguoiDamNhan = ?';
-      params.push(userInfo.MaTV);
+    // Admin xem tất cả, Owner/User xem trong gia phả của mình
+    if (userInfo.MaLoaiTK !== 'LTK01') {
+      // Owner và User: filter theo MaGiaPha
+      if (userInfo.MaGiaPha) {
+        sql += ' AND tv.MaGiaPha = ?';
+        params.push(userInfo.MaGiaPha);
+      }
     }
 
     sql += ' ORDER BY pt.NgayThu DESC';

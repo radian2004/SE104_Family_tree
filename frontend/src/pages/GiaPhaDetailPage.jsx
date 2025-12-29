@@ -94,7 +94,7 @@ export default function GiaPhaDetailPage() {
 
     // Handle edit member - navigate to edit page
     const handleEditMember = (MaTV) => {
-        navigate(`/thanhvien/edit/${MaTV}`);
+        navigate(`/thanhvien/${MaTV}/edit`);
     };
 
     // Handle delete member

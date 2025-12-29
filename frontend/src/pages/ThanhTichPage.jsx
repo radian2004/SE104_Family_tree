@@ -15,6 +15,7 @@ import {
 } from 'react-icons/fi';
 import thanhTichService from '../services/thanhtich';
 import thanhVienService from '../services/thanhvien';
+import lookupsService from '../services/lookups';
 import { useLookupsStore } from '../store/lookupsStore';
 import { usePermissions } from '../hooks/usePermissions';
 import DateInput from '../components/common/DateInput';
@@ -24,6 +25,7 @@ export default function ThanhTichPage() {
     const { isAdmin, isOwner } = usePermissions();
     const canEdit = isAdmin || isOwner;
     const loaithanhtich = useLookupsStore((state) => state.loaithanhtich);
+    const setLoaiThanhTich = useLookupsStore((state) => state.setLoaiThanhTich);
 
     // Data state
     const [thanhTichs, setThanhTichs] = useState([]);
@@ -79,6 +81,22 @@ export default function ThanhTichPage() {
         };
         loadMembers();
     }, [filterGiaPha]);  // ✅ Reload when GiaPha changes
+
+    // Load loại thành tích từ API
+    useEffect(() => {
+        const loadLoaiThanhTich = async () => {
+            try {
+                const data = await lookupsService.getLoaiThanhTich();
+                setLoaiThanhTich(data || []);
+            } catch (err) {
+                console.error('Error loading loai thanh tich:', err);
+            }
+        };
+        // Only load if not already loaded
+        if (!loaithanhtich || loaithanhtich.length === 0) {
+            loadLoaiThanhTich();
+        }
+    }, [loaithanhtich, setLoaiThanhTich]);
 
     // Filter members for autocomplete
     useEffect(() => {

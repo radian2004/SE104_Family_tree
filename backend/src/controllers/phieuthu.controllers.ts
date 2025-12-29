@@ -137,7 +137,8 @@ export const getPendingConfirmationsController = async (req: Request, res: Respo
     // Truyền userInfo để service biết Admin/Owner xem tất cả, User chỉ xem của mình
     const result = await phieuThuService.getPendingConfirmations({
       MaLoaiTK: userInfo.MaLoaiTK,
-      MaTV: userInfo.MaTV
+      MaTV: userInfo.MaTV,
+      MaGiaPha: userInfo.MaGiaPha
     });
 
     return res.status(HTTP_STATUS.OK).json({
