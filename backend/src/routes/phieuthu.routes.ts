@@ -12,7 +12,8 @@ import {
   createDanhMucController,
   updateDanhMucController,
   deleteDanhMucController,
-  traCuuDanhMucController
+  traCuuDanhMucController,
+  deletePhieuThuController
 } from '~/controllers/phieuthu.controllers';
 import {
   requireAdminOrOwner,
@@ -95,6 +96,13 @@ phieuThuRouter.put('/huyxacnhan/:MaPhieuThu/:MaDMT', attachUserInfo, wrapAsync(h
  * Quyền: Admin (tất cả), Owner (gia phả mình), User (của mình)
  */
 phieuThuRouter.get('/', attachUserInfo, wrapAsync(getPhieuThuListController));
+
+/**
+ * Xóa phiếu thu
+ * DELETE /users/phieuthu/:MaPhieuThu
+ * Quyền: Owner và người đảm nhận danh mục
+ */
+phieuThuRouter.delete('/:MaPhieuThu', attachUserInfo, wrapAsync(deletePhieuThuController));
 
 /**
  * Lấy chi tiết phiếu thu

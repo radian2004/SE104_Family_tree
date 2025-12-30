@@ -23,7 +23,8 @@ import {
   FiSettings,
   FiBook,
   FiDollarSign,
-  FiAlertCircle
+  FiAlertCircle,
+  FiFileText
 } from 'react-icons/fi';
 import AdminPasswordRequests from '../components/admin/AdminPasswordRequests';
 import UserProfileModal from '../components/UserProfileModal';
@@ -96,10 +97,8 @@ export default function DashboardPage() {
     // All roles: Thu quỹ
     actions.push({ title: 'Thu quỹ họ', icon: <FiDollarSign />, path: '/phieuthu', color: 'text-emerald-500' });
 
-    // Admin & Owner: Chi quỹ
-    if (isAdmin || isOwner) {
-      actions.push({ title: 'Chi quỹ họ', icon: <FiDollarSign />, path: '/phieuchi', color: 'text-red-500' });
-    }
+    // Chi quỹ họ (Quyền tạo sẽ được kiểm tra ở trang Chi tiết)
+    actions.push({ title: 'Chi quỹ họ', icon: <FiFileText />, path: '/phieuchi', color: 'text-rose-500' });
 
     return actions;
   };

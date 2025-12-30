@@ -297,3 +297,32 @@ export const traCuuDanhMucController = async (req: Request, res: Response) => {
     });
   }
 };
+
+/**
+ * Xóa phiếu thu
+ * DELETE /users/phieuthu/:MaPhieuThu
+ * Quyền: Owner và người đảm nhận danh mục
+ */
+export const deletePhieuThuController = async (req: Request, res: Response) => {
+  try {
+    const { MaPhieuThu } = req.params;
+    const userInfo = req.userInfo!;
+
+    const result = await phieuThuService.deletePhieuThu(MaPhieuThu, {
+      MaLoaiTK: userInfo.MaLoaiTK,
+      MaTV: userInfo.MaTV,
+      MaGiaPha: userInfo.MaGiaPha
+    });
+
+    return res.status(HTTP_STATUS.OK).json({
+      message: 'Xóa phiếu thu thành công',
+      result
+    });
+  } catch (error: any) {
+    console.error('Lỗi deletePhieuThu:', error);
+    return res.status(error.status || HTTP_STATUS.BAD_REQUEST).json({
+      message: 'Xóa phiếu thu thất bại',
+      error: error.message
+    });
+  }
+};

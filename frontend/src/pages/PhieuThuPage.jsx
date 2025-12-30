@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiArrowLeft, FiPlus, FiCheck, FiX, FiDollarSign, FiCalendar, FiUser, FiClock, FiBarChart2, FiFilter } from 'react-icons/fi';
+import { FiArrowLeft, FiPlus, FiCheck, FiX, FiDollarSign, FiCalendar, FiUser, FiClock, FiBarChart2, FiFilter, FiTrash2 } from 'react-icons/fi';
 import phieuThuService from '../services/phieuthu';
 import thanhVienService from '../services/thanhvien';
 import { usePermissions } from '../hooks/usePermissions';
@@ -218,6 +218,19 @@ export default function PhieuThuPage() {
         }
     };
 
+    // Xóa phiếu thu - Chỉ Owner và người đảm nhận danh mục
+    const handleDelete = async (MaPhieuThu) => {
+        if (!confirm('Bạn có chắc muốn xóa phiếu thu này? Hành động này không thể hoàn tác.')) return;
+        try {
+            await phieuThuService.delete(MaPhieuThu);
+            alert('Xóa phiếu thu thành công!');
+            loadData();
+        } catch (err) {
+            alert(err.response?.data?.message || 'Lỗi xóa phiếu thu');
+        }
+    };
+
+
     // Calculate total
     const calculateTotal = () => {
         return formData.chiTietPhieuThu.reduce((sum, ct) => sum + ct.SoTienThu, 0);
@@ -376,6 +389,9 @@ export default function PhieuThuPage() {
                                                     <th className="px-4 py-3 text-left text-sm font-semibold text-neutral-700">Người đóng</th>
                                                     <th className="px-4 py-3 text-left text-sm font-semibold text-neutral-700">Ngày thu</th>
                                                     <th className="px-4 py-3 text-right text-sm font-semibold text-neutral-700">Tổng thu</th>
+                                                    {canCreateReceipt && (
+                                                        <th className="px-4 py-3 text-center text-sm font-semibold text-neutral-700">Thao tác</th>
+                                                    )}
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-neutral-100">
@@ -401,6 +417,17 @@ export default function PhieuThuPage() {
                                                         <td className="px-4 py-3 text-right font-semibold text-emerald-600">
                                                             {formatCurrency(pt.TongThu)}
                                                         </td>
+                                                        {canCreateReceipt && (
+                                                            <td className="px-4 py-3 text-center">
+                                                                <button
+                                                                    onClick={() => handleDelete(pt.MaPhieuThu)}
+                                                                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                                    title="Xóa phiếu thu"
+                                                                >
+                                                                    <FiTrash2 className="w-4 h-4" />
+                                                                </button>
+                                                            </td>
+                                                        )}
                                                     </tr>
                                                 ))}
                                             </tbody>

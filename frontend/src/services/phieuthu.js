@@ -114,6 +114,20 @@ class PhieuThuService {
     }
 
     /**
+     * Xóa phiếu thu
+     * DELETE /users/phieuthu/:MaPhieuThu
+     */
+    async delete(MaPhieuThu) {
+        try {
+            const response = await apiClient.delete(`/users/phieuthu/${MaPhieuThu}`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+
+    /**
      * Tra cứu danh mục thu chi theo năm
      * GET /users/phieuthu/danhmuc/tra-cuu?nam=2025&MaGiaPha=GP01
      */

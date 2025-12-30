@@ -56,9 +56,12 @@ export default function ThanhVienCreatePage() {
   };
 
   // Form data
+  // For Owner (LTK02): auto-set to their gia pha if no preselected
+  const defaultMaGiaPha = preselectedMaGiaPha || (user?.MaLoaiTK === 'LTK02' ? user?.MaGiaPha : '') || '';
+
   const [formData, setFormData] = useState({
     // Step 1: Quan hệ
-    MaGiaPha: preselectedMaGiaPha || '',
+    MaGiaPha: defaultMaGiaPha,
     MaTVCu: '',
     LoaiQuanHe: '', // 'Con cái' hoặc 'Vợ/Chồng'
     NgayPhatSinh: new Date().toISOString().split('T')[0],
@@ -319,14 +322,24 @@ export default function ThanhVienCreatePage() {
                   value={formData.MaGiaPha}
                   onChange={handleChange}
                   className="input-field"
-                  disabled={!!preselectedMaGiaPha}
+                  disabled={!!preselectedMaGiaPha || (user?.MaLoaiTK === 'LTK02' && user?.MaGiaPha)}
                 >
                   <option value="">-- Chọn gia phả --</option>
-                  {cayGiaPha.map(gp => (
-                    <option key={gp.MaGiaPha} value={gp.MaGiaPha}>
-                      {gp.TenGiaPha} ({gp.MaGiaPha})
-                    </option>
-                  ))}
+                  {/* Filter gia pha: Admin sees all, Owner sees only their gia pha */}
+                  {cayGiaPha
+                    .filter(gp => {
+                      // Admin (LTK01) sees all
+                      if (user?.MaLoaiTK === 'LTK01') return true;
+                      // Owner (LTK02) sees only their gia pha
+                      if (user?.MaLoaiTK === 'LTK02') return gp.MaGiaPha === user?.MaGiaPha;
+                      // User (LTK03) sees their gia pha
+                      return gp.MaGiaPha === user?.MaGiaPha;
+                    })
+                    .map(gp => (
+                      <option key={gp.MaGiaPha} value={gp.MaGiaPha}>
+                        {gp.TenGiaPha} ({gp.MaGiaPha})
+                      </option>
+                    ))}
                 </select>
               </div>
 

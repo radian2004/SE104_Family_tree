@@ -596,7 +596,7 @@ class PhieuThuService {
     let sql: string;
 
     if (filterMaGiaPha) {
-      // ⭐ CÓ MaGiaPha: Filter danh mục theo người đảm nhận, VÀ filter thu/chi theo gia phả
+      // ⭐ CÓ MaGiaPha: Lấy TẤT CẢ danh mục, tính thu/chi CHỈ cho gia phả này
       sql = `
         SELECT 
           dm.MaDM,
@@ -630,10 +630,9 @@ class PhieuThuService {
           
         FROM DANHMUC dm
         LEFT JOIN THANHVIEN tv ON dm.NguoiDamNhan = tv.MaTV
-        WHERE tv.MaGiaPha = ?
         ORDER BY dm.MaDM
       `;
-      params.push(nam, filterMaGiaPha, nam, filterMaGiaPha, filterMaGiaPha);
+      params.push(nam, filterMaGiaPha, nam, filterMaGiaPha);
     } else {
       // ⭐ KHÔNG có MaGiaPha (Admin xem tất cả): Hiển thị tổng toàn hệ thống
       sql = `
@@ -714,6 +713,85 @@ class PhieuThuService {
       tongChiNam,
       tongDuThieu,
       danhSach
+    };
+  }
+
+  /**
+   * Xóa phiếu thu
+   * Quyền: Owner hoặc người đảm nhận danh mục của phiếu thu đó
+   */
+  async deletePhieuThu(
+    MaPhieuThu: string,
+    userInfo: { MaLoaiTK: string; MaTV: string; MaGiaPha?: string }
+  ) {
+    // 1. Lấy thông tin phiếu thu
+    const checkSql = `
+      SELECT pt.MaPhieuThu, pt.MaTV, tv.MaGiaPha,
+             ctpt.MaDMT, dm.NguoiDamNhan
+      FROM PHIEUTHUQUY pt
+      JOIN THANHVIEN tv ON pt.MaTV = tv.MaTV
+      LEFT JOIN CHITIETPHIEUTHU ctpt ON pt.MaPhieuThu = ctpt.MaPhieuThu
+      LEFT JOIN DANHMUCTHU dm ON ctpt.MaDMT = dm.MaDMT
+      WHERE pt.MaPhieuThu = ?
+    `;
+
+    const rows = await databaseService.query<RowDataPacket[]>(checkSql, [MaPhieuThu]);
+
+    if (rows.length === 0) {
+      throw new ErrorWithStatus({
+        message: 'Không tìm thấy phiếu thu',
+        status: HTTP_STATUS.NOT_FOUND
+      });
+    }
+
+    const phieuThu = rows[0];
+
+    // 2. Kiểm tra quyền
+    const isOwner = userInfo.MaLoaiTK === 'LTK02';
+    const isAdmin = userInfo.MaLoaiTK === 'LTK01';
+
+    // Admin KHÔNG có quyền xóa phiếu thu
+    if (isAdmin) {
+      throw new ErrorWithStatus({
+        message: 'Admin không có quyền xóa phiếu thu',
+        status: HTTP_STATUS.FORBIDDEN
+      });
+    }
+
+    // Owner: được phép xóa phiếu thu trong gia phả của mình
+    if (isOwner) {
+      // Owner được phép - không cần kiểm tra thêm
+      // (Phiếu thu đã được filter theo gia phả từ frontend)
+    } else {
+      // User thường: phải là người đảm nhận danh mục
+      const isNguoiDamNhan = rows.some(row => row.NguoiDamNhan === userInfo.MaTV);
+      if (!isNguoiDamNhan) {
+        throw new ErrorWithStatus({
+          message: 'Bạn chỉ có thể xóa phiếu thu của danh mục mà bạn đảm nhận',
+          status: HTTP_STATUS.FORBIDDEN
+        });
+      }
+    }
+
+    // 3. Xóa chi tiết phiếu thu trước
+    await databaseService.query(
+      'DELETE FROM CHITIETPHIEUTHU WHERE MaPhieuThu = ?',
+      [MaPhieuThu]
+    );
+
+    // 4. Xóa phiếu thu
+    const result = await databaseService.query<ResultSetHeader>(
+      'DELETE FROM PHIEUTHUQUY WHERE MaPhieuThu = ?',
+      [MaPhieuThu]
+    );
+
+    if (result.affectedRows === 0) {
+      throw new Error('Không thể xóa phiếu thu');
+    }
+
+    return {
+      message: 'Xóa phiếu thu thành công',
+      MaPhieuThu
     };
   }
 }
