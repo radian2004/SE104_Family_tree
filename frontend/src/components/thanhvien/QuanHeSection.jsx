@@ -142,8 +142,36 @@ export default function QuanHeSection({ MaTV, memberName, memberGender, canEdit 
                 MaTV: MaTV,
                 MaTVVC: editingSpouse.MaTVVC
             };
-            if (startDate) payload.NgayBatDau = startDate;
-            if (endDate) payload.NgayKetThuc = endDate;
+
+            // Validate dates
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Reset time to compare dates only
+
+            if (startDate) {
+                const start = new Date(startDate);
+                if (start > today) {
+                    setError('Ngày bắt đầu không được lớn hơn ngày hiện tại');
+                    setIsUpdating(false);
+                    return;
+                }
+            }
+
+            if (endDate) {
+                const end = new Date(endDate);
+                if (end > today) {
+                    setError('Ngày kết thúc không được lớn hơn ngày hiện tại');
+                    setIsUpdating(false);
+                    return;
+                }
+                if (startDate) {
+                    const start = new Date(startDate);
+                    if (end < start) {
+                        setError('Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu');
+                        setIsUpdating(false);
+                        return;
+                    }
+                }
+            }
 
             await quanheService.updateHonNhan(payload);
             setSuccessMsg('Đã cập nhật thông tin hôn nhân');
@@ -169,8 +197,8 @@ export default function QuanHeSection({ MaTV, memberName, memberGender, canEdit 
     // Open edit marriage modal
     const openEditMarriage = (sp) => {
         setEditingSpouse(sp);
-        setStartDate(sp.NgayBatDau || '');
-        setEndDate(sp.NgayKetThuc || '');
+        setStartDate(sp.NgayBatDau ? new Date(sp.NgayBatDau).toISOString().split('T')[0] : '');
+        setEndDate(sp.NgayKetThuc ? new Date(sp.NgayKetThuc).toISOString().split('T')[0] : '');
         setShowEditMarriage(true);
     };
 
@@ -186,6 +214,17 @@ export default function QuanHeSection({ MaTV, memberName, memberGender, canEdit 
 
     // Handle update parents
     const handleUpdateParents = async () => {
+        // Validate date
+        if (editParentsData.NgayPhatSinh) {
+            const date = new Date(editParentsData.NgayPhatSinh);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (date > today) {
+                setError('Ngày phát sinh không được lớn hơn ngày hiện tại');
+                return;
+            }
+        }
+
         setIsUpdating(true);
         try {
             await quanheService.updateQuanHeCon(MaTV, editParentsData);

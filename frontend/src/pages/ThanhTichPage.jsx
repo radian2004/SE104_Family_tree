@@ -243,6 +243,17 @@ export default function ThanhTichPage() {
             return;
         }
 
+        // Validate NgayPhatSinh against future
+        if (ngayPhatSinh) {
+            const date = new Date(ngayPhatSinh);
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+            if (date > now) {
+                setError('Ngày ghi nhận không được lớn hơn ngày hiện tại');
+                return;
+            }
+        }
+
         try {
             setIsAdding(true);
             setError(null);

@@ -178,6 +178,26 @@ export default function ThanhVienCreatePage() {
       return;
     }
 
+    // Validate dates against future
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (formData.NgayGioSinh) {
+      const dob = new Date(formData.NgayGioSinh);
+      if (dob > today) {
+        setError('Ngày sinh không được lớn hơn ngày hiện tại');
+        return;
+      }
+    }
+
+    if (formData.NgayPhatSinh) {
+      const pdate = new Date(formData.NgayPhatSinh);
+      if (pdate > today) {
+        setError('Ngày phát sinh quan hệ không được lớn hơn ngày hiện tại');
+        return;
+      }
+    }
+
     setIsLoading(true);
     try {
       const payload = {

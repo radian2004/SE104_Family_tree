@@ -252,6 +252,14 @@ export default function KetThucPage() {
             return;
         }
 
+        // Validate NgayGioMat against future
+        const deathDate = new Date(formData.NgayGioMat);
+        const now = new Date();
+        if (deathDate > now) {
+            setError('Ngày giờ mất không được lớn hơn thời điểm hiện tại');
+            return;
+        }
+
         try {
             setIsAdding(true);
             setError(null);
