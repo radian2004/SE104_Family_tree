@@ -181,27 +181,29 @@ export default function ThanhVienForm({ initialData, onSubmit, isLoading }) {
           )}
         </div>
 
-        {/* Gia phả */}
-        <div className="form-group">
-          <label className="form-label">Gia phả *</label>
-          <select
-            name="MaGiaPha"
-            value={formData.MaGiaPha}
-            onChange={handleChange}
-            className={`select-field ${formErrors.MaGiaPha ? 'input-field-error' : ''}`}
-            disabled={isLoading}
-          >
-            <option value="">-- Chọn gia phả --</option>
-            {cayGiaPha.map((item) => (
-              <option key={item.MaGiaPha} value={item.MaGiaPha}>
-                {item.TenGiaPha}
-              </option>
-            ))}
-          </select>
-          {formErrors.MaGiaPha && (
-            <p className="form-error">{formErrors.MaGiaPha}</p>
-          )}
-        </div>
+        {/* Gia phả - Only show in create mode, hide in edit mode */}
+        {!initialData && (
+          <div className="form-group">
+            <label className="form-label">Gia phả *</label>
+            <select
+              name="MaGiaPha"
+              value={formData.MaGiaPha}
+              onChange={handleChange}
+              className={`select-field ${formErrors.MaGiaPha ? 'input-field-error' : ''}`}
+              disabled={isLoading}
+            >
+              <option value="">-- Chọn gia phả --</option>
+              {cayGiaPha.map((item) => (
+                <option key={item.MaGiaPha} value={item.MaGiaPha}>
+                  {item.TenGiaPha}
+                </option>
+              ))}
+            </select>
+            {formErrors.MaGiaPha && (
+              <p className="form-error">{formErrors.MaGiaPha}</p>
+            )}
+          </div>
+        )}
 
         {/* Submit Button */}
         <div className="flex gap-3 pt-6">

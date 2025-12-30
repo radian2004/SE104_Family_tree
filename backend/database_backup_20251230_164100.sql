@@ -24,7 +24,7 @@ DROP TABLE IF EXISTS `BAOCAOTHANHTICH`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `BAOCAOTHANHTICH` (
   `Nam` int NOT NULL,
-  `MaLTT` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `MaLTT` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `SoLuong` int DEFAULT NULL,
   PRIMARY KEY (`Nam`,`MaLTT`),
   KEY `MaLTT` (`MaLTT`),
@@ -38,7 +38,7 @@ CREATE TABLE `BAOCAOTHANHTICH` (
 
 LOCK TABLES `BAOCAOTHANHTICH` WRITE;
 /*!40000 ALTER TABLE `BAOCAOTHANHTICH` DISABLE KEYS */;
-INSERT INTO `BAOCAOTHANHTICH` VALUES (2010,'LTT04',1),(2018,'LTT01',1),(2019,'LTT03',1),(2022,'LTT02',1),(2022,'LTT04',1),(2023,'LTT03',1),(2023,'LTT05',1),(2024,'LTT02',1),(2025,'LTT01',1),(2025,'LTT05',1),(2025,'LTT06',2);
+INSERT INTO `BAOCAOTHANHTICH` VALUES (1990,'LTT06',2),(2000,'LTT06',1),(2010,'LTT04',1),(2018,'LTT01',1),(2019,'LTT03',1),(2022,'LTT02',1),(2022,'LTT04',1),(2023,'LTT03',1),(2023,'LTT05',1),(2024,'LTT02',1),(2025,'LTT01',1),(2025,'LTT05',1),(2025,'LTT06',2);
 /*!40000 ALTER TABLE `BAOCAOTHANHTICH` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -50,11 +50,11 @@ DROP TABLE IF EXISTS `CAYGIAPHA`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `CAYGIAPHA` (
-  `MaGiaPha` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `TenGiaPha` varchar(35) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `NguoiLap` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MaGiaPha` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `TenGiaPha` varchar(35) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `NguoiLap` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `TGLap` date DEFAULT (curdate()),
-  `TruongToc` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `TruongToc` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`MaGiaPha`),
   KEY `NguoiLap` (`NguoiLap`),
   KEY `TruongToc` (`TruongToc`),
@@ -69,7 +69,7 @@ CREATE TABLE `CAYGIAPHA` (
 
 LOCK TABLES `CAYGIAPHA` WRITE;
 /*!40000 ALTER TABLE `CAYGIAPHA` DISABLE KEYS */;
-INSERT INTO `CAYGIAPHA` VALUES ('GP01','Nguyễn Văn - Hà Nội','TV02','2025-12-30','TV02'),('GP02','Nguyễn Văn - Nghệ An','TV01','2025-12-30','TV03'),('GP03','Hoàng Tộc - Thái Bình','TV09','2025-12-29','TV09');
+INSERT INTO `CAYGIAPHA` VALUES ('GP03','Hoàng Tộc - Thái Bình','TV09','2025-12-29','TV09'),('GP04','Nguyễn Thành - Quảng Ngãi','TV34','2025-12-30','TV34');
 /*!40000 ALTER TABLE `CAYGIAPHA` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -84,7 +84,7 @@ DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `TRG_GEN_ID_CAYGIAPHA` BEFORE INSERT ON `CAYGIAPHA` FOR EACH ROW BEGIN
     DECLARE max_id INT;
 
-    -- Lấy số lớn nhất hiện có trong cột MaGiaPha, rồi +1
+    
     SELECT COALESCE(MAX(CAST(SUBSTRING(MaGiaPha, 3) AS UNSIGNED)), 0) + 1
     INTO max_id
     FROM CAYGIAPHA;
@@ -106,14 +106,14 @@ DELIMITER ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `TRG_UPDATE_TAIKHOAN_LOAITK_GIAPHA` AFTER UPDATE ON `CAYGIAPHA` FOR EACH ROW BEGIN
-    DECLARE account_count INT;  -- Dùng COUNT thay vì lấy email
+    DECLARE account_count INT;  
 
-    -- Kiểm tra xem thành viên trưởng tộc có tài khoản không
+    
     SELECT COUNT(*) INTO account_count
     FROM TAIKHOAN
     WHERE MaTV = NEW.TruongToc;
 
-    -- Nếu có tài khoản, cập nhật loại tài khoản thành 'LTK02'
+    
     IF account_count > 0 THEN
         UPDATE TAIKHOAN
         SET MaLoaiTK = 'LTK02'
@@ -134,8 +134,8 @@ DROP TABLE IF EXISTS `CT_PHIEUTHU`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `CT_PHIEUTHU` (
-  `MaPhieuThu` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `MaDMT` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `MaPhieuThu` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `MaDMT` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `SoTienThu` decimal(15,2) DEFAULT NULL,
   `SoThuTu` int DEFAULT '1',
   `TinhHopLe` tinyint(1) DEFAULT '0',
@@ -167,14 +167,14 @@ DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `TRG_INSERT_AUTO_CT_PHIEUTHU` BEFORE INSERT ON `CT_PHIEUTHU` FOR EACH ROW BEGIN
     DECLARE max_stt INT;
     
-    -- Tự động tính số thứ tự trong phiếu thu
+    
     SELECT COALESCE(MAX(SoThuTu), 0) + 1 INTO max_stt
     FROM CT_PHIEUTHU
     WHERE MaPhieuThu = NEW.MaPhieuThu;
     
     SET NEW.SoThuTu = max_stt;
     
-    -- Đảm bảo TinhHopLe mặc định là FALSE
+    
     IF NEW.TinhHopLe IS NULL THEN
         SET NEW.TinhHopLe = FALSE;
     END IF;
@@ -194,10 +194,10 @@ DELIMITER ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `TRG_UPDATE_NGAYXACNHAN` BEFORE UPDATE ON `CT_PHIEUTHU` FOR EACH ROW BEGIN
-    -- Cập nhật NgayXacNhan khi TinhHopLe chuyển sang TRUE
+    
     IF OLD.TinhHopLe = FALSE AND NEW.TinhHopLe = TRUE THEN
         SET NEW.NgayXacNhan = CURRENT_TIMESTAMP();
-    -- Xóa NgayXacNhan khi hủy xác nhận
+    
     ELSEIF OLD.TinhHopLe = TRUE AND NEW.TinhHopLe = FALSE THEN
         SET NEW.NgayXacNhan = NULL;
     END IF;
@@ -217,28 +217,28 @@ DELIMITER ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `TRG_UPDATE_TONGTHU_AFTER_XACNHAN` AFTER UPDATE ON `CT_PHIEUTHU` FOR EACH ROW BEGIN
-    -- Chỉ xử lý khi TinhHopLe chuyển từ FALSE sang TRUE
+    
     IF OLD.TinhHopLe = FALSE AND NEW.TinhHopLe = TRUE THEN
         
-        -- Cập nhật TongThu trong bảng DANHMUC
+        
         UPDATE DANHMUC
         SET TongThu = COALESCE(TongThu, 0) + NEW.SoTienThu
         WHERE MaDM = NEW.MaDMT;
         
-        -- Cập nhật TongThu trong bảng PHIEUTHUQUY
+        
         UPDATE PHIEUTHUQUY
         SET TongThu = COALESCE(TongThu, 0) + NEW.SoTienThu
         WHERE MaPhieuThu = NEW.MaPhieuThu;
         
-    -- Xử lý trường hợp hủy xác nhận (TRUE sang FALSE) - tùy chọn
+    
     ELSEIF OLD.TinhHopLe = TRUE AND NEW.TinhHopLe = FALSE THEN
         
-        -- Trừ TongThu trong bảng DANHMUC
+        
         UPDATE DANHMUC
         SET TongThu = COALESCE(TongThu, 0) - OLD.SoTienThu
         WHERE MaDM = OLD.MaDMT;
         
-        -- Trừ TongThu trong bảng PHIEUTHUQUY
+        
         UPDATE PHIEUTHUQUY
         SET TongThu = COALESCE(TongThu, 0) - OLD.SoTienThu
         WHERE MaPhieuThu = OLD.MaPhieuThu;
@@ -259,9 +259,9 @@ DROP TABLE IF EXISTS `DANHMUC`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `DANHMUC` (
-  `MaDM` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `TenDM` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `NguoiDamNhan` varchar(5) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MaDM` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `TenDM` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `NguoiDamNhan` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `TongThu` decimal(15,2) DEFAULT '0.00',
   `TongChi` decimal(15,2) DEFAULT '0.00',
   PRIMARY KEY (`MaDM`),
@@ -276,7 +276,7 @@ CREATE TABLE `DANHMUC` (
 
 LOCK TABLES `DANHMUC` WRITE;
 /*!40000 ALTER TABLE `DANHMUC` DISABLE KEYS */;
-INSERT INTO `DANHMUC` VALUES ('DM01','Quỹ khuyến học','TV02',0.00,0.00),('DM02','Quỹ từ thiện','TV04',0.00,0.00),('DM03','Quỹ xây dựng nhà thờ họ','TV06',0.00,0.00),('DM04','Quỹ hiếu hỷ','TV02',0.00,0.00),('DM05','Quỹ hỗ trợ sinh viên','TV04',0.00,0.00);
+INSERT INTO `DANHMUC` VALUES ('DM01','Quỹ khuyến học',NULL,0.00,0.00),('DM02','Quỹ từ thiện',NULL,0.00,0.00),('DM03','Quỹ xây dựng nhà thờ họ',NULL,0.00,0.00),('DM04','Quỹ hiếu hỷ',NULL,0.00,0.00),('DM05','Quỹ hỗ trợ sinh viên',NULL,0.00,0.00);
 /*!40000 ALTER TABLE `DANHMUC` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -288,8 +288,8 @@ DROP TABLE IF EXISTS `DIADIEMMAITANG`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `DIADIEMMAITANG` (
-  `MaDiaDiem` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `TenDiaDiem` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MaDiaDiem` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `TenDiaDiem` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`MaDiaDiem`),
   UNIQUE KEY `TenDiaDiem` (`TenDiaDiem`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -313,8 +313,8 @@ DROP TABLE IF EXISTS `GHINHANTHANHTICH`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `GHINHANTHANHTICH` (
-  `MaLTT` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `MaTV` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `MaLTT` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `MaTV` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `NgayPhatSinh` date NOT NULL DEFAULT (curdate()),
   PRIMARY KEY (`MaLTT`,`MaTV`,`NgayPhatSinh`),
   KEY `MaTV` (`MaTV`),
@@ -329,7 +329,7 @@ CREATE TABLE `GHINHANTHANHTICH` (
 
 LOCK TABLES `GHINHANTHANHTICH` WRITE;
 /*!40000 ALTER TABLE `GHINHANTHANHTICH` DISABLE KEYS */;
-INSERT INTO `GHINHANTHANHTICH` VALUES ('LTT01','TV01','2025-01-15'),('LTT01','TV02','2018-06-10'),('LTT03','TV03','2019-01-01'),('LTT02','TV04','2024-02-20'),('LTT06','TV04','2025-01-01'),('LTT03','TV05','2023-01-11'),('LTT06','TV05','2025-01-01'),('LTT02','TV06','2022-02-20'),('LTT04','TV06','2022-12-11'),('LTT04','TV07','2010-12-11'),('LTT05','TV07','2023-03-15'),('LTT05','TV08','2025-03-15');
+INSERT INTO `GHINHANTHANHTICH` VALUES ('LTT03','TV03','2019-01-01'),('LTT03','TV05','2023-01-11'),('LTT06','TV05','2025-01-01'),('LTT04','TV07','2010-12-11'),('LTT05','TV07','2023-03-15'),('LTT06','TV09','1990-01-20'),('LTT06','TV15','2000-01-01'),('LTT06','TV20','1990-01-01');
 /*!40000 ALTER TABLE `GHINHANTHANHTICH` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -344,12 +344,12 @@ DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `TRG_CHECK_NGAY_THANHTICH` BEFORE INSERT ON `GHINHANTHANHTICH` FOR EACH ROW BEGIN
     DECLARE ngay_sinh DATE;
 
-    -- lấy ngày sinh của thành viên
+    
     SELECT DATE(NgayGioSinh) INTO ngay_sinh
     FROM THANHVIEN
     WHERE MaTV = NEW.MaTV;
 
-    -- kiểm tra ngày
+    
     IF NEW.NgayPhatSinh <= ngay_sinh THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Ngày đạt thành tích phải sau ngày sinh thành viên!';
@@ -375,18 +375,18 @@ DELIMITER ;;
 
     SET current_year = YEAR(NEW.NgayPhatSinh);
 
-    -- Kiểm tra xem đã có bản ghi cho năm và loại thành tích này chưa
+    
     SELECT SoLuong INTO existing_count
     FROM BAOCAOTHANHTICH
     WHERE Nam = current_year AND MaLTT = NEW.MaLTT;
 
     IF existing_count IS NOT NULL THEN
-        -- Nếu có, tăng số lượng lên 1
+        
         UPDATE BAOCAOTHANHTICH
         SET SoLuong = SoLuong + 1
         WHERE Nam = current_year AND MaLTT = NEW.MaLTT;
     ELSE
-        -- Nếu chưa có, tạo mới bản ghi với số lượng là 1
+        
         INSERT INTO BAOCAOTHANHTICH (Nam, MaLTT, SoLuong)
         VALUES (current_year, NEW.MaLTT, 1);
     END IF;
@@ -405,8 +405,8 @@ DROP TABLE IF EXISTS `HONNHAN`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `HONNHAN` (
-  `MaTV` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `MaTVVC` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `MaTV` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `MaTVVC` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `NgayBatDau` date DEFAULT (curdate()),
   `NgayKetThuc` date DEFAULT NULL,
   PRIMARY KEY (`MaTV`,`MaTVVC`),
@@ -422,7 +422,7 @@ CREATE TABLE `HONNHAN` (
 
 LOCK TABLES `HONNHAN` WRITE;
 /*!40000 ALTER TABLE `HONNHAN` DISABLE KEYS */;
-INSERT INTO `HONNHAN` VALUES ('TV02','TV03','1970-06-15',NULL),('TV04','TV05','1997-05-20',NULL),('TV09','TV16','2025-12-29',NULL),('TV10','TV13','1945-12-29',NULL),('TV11','TV12','2025-12-29',NULL),('TV15','TV17','2025-12-29',NULL),('TV18','TV19','2025-12-30',NULL),('TV21','TV22','2025-12-30',NULL),('TV24','TV26','2025-12-30',NULL);
+INSERT INTO `HONNHAN` VALUES ('TV09','TV16','2025-12-29',NULL),('TV10','TV13','1945-12-29',NULL),('TV11','TV12','2025-12-29',NULL),('TV15','TV17','2025-12-29',NULL),('TV18','TV19','2025-12-30',NULL),('TV21','TV22','2025-12-30',NULL),('TV24','TV26','2025-12-30',NULL),('TV32','TV33','1925-12-30',NULL),('TV34','TV38','1990-12-30',NULL),('TV35','TV36','1970-12-30',NULL),('TV37','TV39','2025-12-30',NULL),('TV43','TV44','2000-12-30',NULL),('TV48','TV49','1949-12-30',NULL);
 /*!40000 ALTER TABLE `HONNHAN` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -438,7 +438,7 @@ DELIMITER ;;
     DECLARE birth_date_1 DATE;
     DECLARE birth_date_2 DATE;
 
-    -- Lấy ngày sinh của thành viên
+    
     SELECT DATE(NgayGioSinh) INTO birth_date_1
     FROM THANHVIEN
     WHERE MaTV = NEW.MaTV;
@@ -447,7 +447,7 @@ DELIMITER ;;
     FROM THANHVIEN
     WHERE MaTV = NEW.MaTVVC;
 
-    -- Kiểm tra ngày kết hôn phải sau ngày sinh
+    
     IF NEW.NgayBatDau <= birth_date_1 OR NEW.NgayBatDau <= birth_date_2 THEN
         SIGNAL SQLSTATE '45010'
         SET MESSAGE_TEXT = 'Ngày kết hôn phải sau ngày sinh thành viên!';
@@ -470,12 +470,12 @@ DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `TRG_INSERT_DOI_THANHVIEN_HONNHAN` AFTER INSERT ON `HONNHAN` FOR EACH ROW BEGIN
     DECLARE partner_gen INT;
     
-    -- Đời vợ
+    
     SELECT DOI INTO partner_gen
     FROM THANHVIEN
     WHERE MaTV = NEW.MaTVVC;
 
-    -- Nếu một bên có đời, mà bên kia chưa có hoặc khác thì cập nhật giống nhau
+    
     IF partner_gen IS NOT NULL AND partner_gen = 0 THEN
         UPDATE THANHVIEN
         SET DOI = partner_gen
@@ -499,12 +499,12 @@ DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `TRG_INSERT_MaGP_THANHVIEN_HONNHAN` AFTER INSERT ON `HONNHAN` FOR EACH ROW BEGIN
     DECLARE partner_gen VARCHAR(5);
 
-    -- Lấy mã gia phả bạn đời (trong gia phả)
+    
     SELECT MaGiaPha INTO partner_gen
     FROM THANHVIEN
     WHERE MaTV = NEW.MaTV;
 
-    -- Gán mã gia phả bằng bạn đời
+    
     IF partner_gen IS NOT NULL THEN
         UPDATE THANHVIEN
         SET MaGiaPha = partner_gen
@@ -525,8 +525,8 @@ DROP TABLE IF EXISTS `LOAITAIKHOAN`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `LOAITAIKHOAN` (
-  `MaLoaiTK` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `TenLoaiTK` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MaLoaiTK` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `TenLoaiTK` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`MaLoaiTK`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -549,8 +549,8 @@ DROP TABLE IF EXISTS `LOAITHANHTICH`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `LOAITHANHTICH` (
-  `MaLTT` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `TenLTT` varchar(35) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MaLTT` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `TenLTT` varchar(35) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`MaLTT`),
   UNIQUE KEY `TenLTT` (`TenLTT`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -562,7 +562,7 @@ CREATE TABLE `LOAITHANHTICH` (
 
 LOCK TABLES `LOAITHANHTICH` WRITE;
 /*!40000 ALTER TABLE `LOAITHANHTICH` DISABLE KEYS */;
-INSERT INTO `LOAITHANHTICH` VALUES ('LTT02','Bằng khen Thủ tướng'),('LTT03','Chiến sĩ thi đua'),('LTT06','Giải thưởng khoa học kỹ thuật'),('LTT04','Giấy khen cấp tỉnh'),('LTT05','Học bổng giỏi'),('LTT01','Huân chương Lao động');
+INSERT INTO `LOAITHANHTICH` VALUES ('LTT02','Bằng khen Thủ tướng'),('LTT03','Chiến sĩ thi đua'),('LTT10','Công dân tiêu biểu thành phố'),('LTT08','Đảng viên tiêu biểu trung ương'),('LTT06','Giải thưởng khoa học kỹ thuật'),('LTT04','Giấy khen cấp tỉnh'),('LTT05','Học bổng giỏi'),('LTT01','Huân chương Lao động'),('LTT13','Nghệ sĩ nhân dân'),('LTT12','Nghệ sĩ ưu tú'),('LTT11','Nhà giáo dân nhân'),('LTT07','Sinh viên 5 tốt'),('LTT09','Thanh niên tiên tiến');
 /*!40000 ALTER TABLE `LOAITHANHTICH` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -574,8 +574,8 @@ DROP TABLE IF EXISTS `NGHENGHIEP`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `NGHENGHIEP` (
-  `MaNgheNghiep` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `TenNgheNghiep` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MaNgheNghiep` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `TenNgheNghiep` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`MaNgheNghiep`),
   UNIQUE KEY `TenNgheNghiep` (`TenNgheNghiep`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -599,8 +599,8 @@ DROP TABLE IF EXISTS `NGUYENNHANMAT`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `NGUYENNHANMAT` (
-  `MaNguyenNhanMat` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `TenNguyenNhanMat` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MaNguyenNhanMat` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `TenNguyenNhanMat` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`MaNguyenNhanMat`),
   UNIQUE KEY `TenNguyenNhanMat` (`TenNguyenNhanMat`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -612,7 +612,7 @@ CREATE TABLE `NGUYENNHANMAT` (
 
 LOCK TABLES `NGUYENNHANMAT` WRITE;
 /*!40000 ALTER TABLE `NGUYENNHANMAT` DISABLE KEYS */;
-INSERT INTO `NGUYENNHANMAT` VALUES ('NNM02','Bệnh hiểm nghèo'),('NNM05','Khác'),('NNM03','Tai nạn giao thông'),('NNM04','Tai nạn lao động'),('NNM01','Tuổi già');
+INSERT INTO `NGUYENNHANMAT` VALUES ('NNM02','Bệnh hiểm nghèo'),('NNM06','Đuối nước'),('NNM08','Giật điện'),('NNM05','Khác'),('NNM03','Tai nạn giao thông'),('NNM04','Tai nạn lao động'),('NNM07','Tự tử'),('NNM01','Tuổi già');
 /*!40000 ALTER TABLE `NGUYENNHANMAT` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -624,8 +624,8 @@ DROP TABLE IF EXISTS `PHANQUYENLOAITK`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `PHANQUYENLOAITK` (
-  `MaLoaiTK` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `MaQuyen` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `MaLoaiTK` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `MaQuyen` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`MaLoaiTK`,`MaQuyen`),
   KEY `MaQuyen` (`MaQuyen`),
   CONSTRAINT `PHANQUYENLOAITK_ibfk_1` FOREIGN KEY (`MaLoaiTK`) REFERENCES `LOAITAIKHOAN` (`MaLoaiTK`),
@@ -650,12 +650,12 @@ DROP TABLE IF EXISTS `PHIEUCHIQUY`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `PHIEUCHIQUY` (
-  `MaPhieuChi` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `MaTV` varchar(5) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MaPhieuChi` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `MaTV` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `NgayChi` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `MaDMC` varchar(5) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MaDMC` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `SoTienChi` decimal(15,2) DEFAULT NULL,
-  `LyDoChi` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `LyDoChi` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`MaPhieuChi`),
   KEY `MaTV` (`MaTV`),
   KEY `MaDMC` (`MaDMC`),
@@ -742,8 +742,8 @@ DROP TABLE IF EXISTS `PHIEUTHUQUY`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `PHIEUTHUQUY` (
-  `MaPhieuThu` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `MaTV` varchar(5) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MaPhieuThu` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `MaTV` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `NgayThu` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `TongThu` decimal(15,2) DEFAULT '0.00',
   PRIMARY KEY (`MaPhieuThu`),
@@ -792,9 +792,9 @@ DROP TABLE IF EXISTS `QUANHECON`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `QUANHECON` (
-  `MaTV` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `MaTVCha` varchar(5) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `MaTVMe` varchar(5) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MaTV` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `MaTVCha` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MaTVMe` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `NgayPhatSinh` date DEFAULT NULL,
   PRIMARY KEY (`MaTV`),
   KEY `MaTVCha` (`MaTVCha`),
@@ -811,7 +811,7 @@ CREATE TABLE `QUANHECON` (
 
 LOCK TABLES `QUANHECON` WRITE;
 /*!40000 ALTER TABLE `QUANHECON` DISABLE KEYS */;
-INSERT INTO `QUANHECON` VALUES ('TV02','TV01',NULL,'1945-03-20'),('TV04','TV02','TV03','1972-08-10'),('TV06','TV04','TV05','1998-04-05'),('TV07','TV04','TV05','2002-01-18'),('TV08','TV06',NULL,'2024-06-10'),('TV09','TV10','TV13','2025-12-28'),('TV10','TV11','TV12','2025-12-28'),('TV14','TV11','TV12','2025-12-29'),('TV15','TV10','TV13','2025-12-29'),('TV18','TV09','TV16','2025-12-30'),('TV20','TV09','TV16','2025-12-30'),('TV21','TV15','TV17','2025-12-30'),('TV23','TV18','TV19','2025-12-30'),('TV24','TV18','TV19','2025-12-30'),('TV25','TV21','TV22','2025-12-30'),('TV27','TV24','TV26','2025-12-30'),('TV28','TV24','TV26','2025-12-30');
+INSERT INTO `QUANHECON` VALUES ('TV07',NULL,'TV05','2002-01-18'),('TV09','TV10','TV13','2025-12-28'),('TV10','TV11','TV12','2025-12-28'),('TV14','TV11','TV12','2025-12-29'),('TV15','TV10','TV13','2025-12-29'),('TV18','TV09','TV16','2025-12-30'),('TV20','TV09','TV16','2025-12-30'),('TV21','TV15','TV17','2025-12-30'),('TV23','TV18','TV19','2025-12-30'),('TV24','TV18','TV19','2025-12-30'),('TV25','TV21','TV22','2025-12-30'),('TV27','TV24','TV26','2025-12-30'),('TV28','TV24','TV26','2025-12-30'),('TV30','TV31',NULL,'2025-12-30'),('TV31','TV32',NULL,'2025-12-30'),('TV34','TV35',NULL,'1977-12-30'),('TV37','TV35','TV36','1979-12-30'),('TV40','TV35','TV36','1995-12-30'),('TV41','TV34','TV38','1999-12-30'),('TV42','TV34','TV38','2025-12-30'),('TV43','TV37','TV39','2000-12-30'),('TV45','TV42',NULL,'2025-12-30'),('TV46','TV35','TV36','2025-12-30');
 /*!40000 ALTER TABLE `QUANHECON` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -827,23 +827,23 @@ DELIMITER ;;
     DECLARE father_gender VARCHAR(3);
     DECLARE mother_gender VARCHAR(3);
 
-    -- Lấy giới tính của cha
+    
     SELECT GioiTinh INTO father_gender
     FROM THANHVIEN
     WHERE MaTV = NEW.MaTVCha;
     
-    -- Lấy giới tính của mẹ
+    
     SELECT GioiTinh INTO mother_gender
     FROM THANHVIEN
     WHERE MaTV = NEW.MaTVMe;
     
-    -- Kiểm tra giới tính cha phải là Nam
+    
     IF father_gender IS NOT NULL AND father_gender != 'Nam' THEN
         SIGNAL SQLSTATE '45003'
         SET MESSAGE_TEXT = N'Giới tính của cha phải là Nam!';
     END IF;
 
-    -- Kiểm tra giới tính mẹ phải là Nữ
+    
     IF mother_gender IS NOT NULL AND mother_gender != 'Nữ' THEN
         SIGNAL SQLSTATE '45004'
         SET MESSAGE_TEXT = N'Giới tính của mẹ phải là Nữ!';
@@ -868,28 +868,28 @@ DELIMITER ;;
     DECLARE mother_birth DATE;
     DECLARE child_birth DATE;
 
-    -- Lấy ngày sinh của cha
+    
     SELECT NgayGioSinh INTO father_birth
     FROM THANHVIEN
     WHERE MaTV = NEW.MaTVCha;
     
-    -- Lấy ngày sinh của mẹ
+    
     SELECT NgayGioSinh INTO mother_birth
     FROM THANHVIEN
     WHERE MaTV = NEW.MaTVMe;
 
-    -- Lấy ngày sinh con
+    
     SELECT NgayGioSinh INTO child_birth
     FROM THANHVIEN
     WHERE MaTV = NEW.MaTV;
     
-    -- Kiểm tra ngày sinh con phải sau ngày sinh cha
+    
     IF father_birth IS NOT NULL AND child_birth <= father_birth THEN
         SIGNAL SQLSTATE '45002'
         SET MESSAGE_TEXT = N'Ngày sinh của con phải sau ngày sinh của cha!';
     END IF;
 
-    -- Kiểm tra ngày sinh con phải sau ngày sinh mẹ
+    
     IF mother_birth IS NOT NULL AND child_birth <= mother_birth THEN
         SIGNAL SQLSTATE '45001'
         SET MESSAGE_TEXT = N'Ngày sinh của con phải sau ngày sinh của mẹ!';
@@ -912,12 +912,12 @@ DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `TRG_INSERT_MaTVMe_QUANHECON_HONNHAN` BEFORE INSERT ON `QUANHECON` FOR EACH ROW BEGIN
     DECLARE spouse_id VARCHAR(5);
 
-    -- Lấy mã vợ của cha từ bảng HONNHAN
+    
     SELECT MaTVVC INTO spouse_id
     FROM HONNHAN
     WHERE MaTV = NEW.MaTVCha AND NgayKetThuc IS NULL;
 
-    -- Nếu có vợ thì gán làm mẹ
+    
     IF spouse_id IS NOT NULL THEN
         SET NEW.MaTVMe = spouse_id;
     END IF;
@@ -939,12 +939,12 @@ DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `TRG_INSERT_DOI_THANHVIEN_QUANHECON` AFTER INSERT ON `QUANHECON` FOR EACH ROW BEGIN
     DECLARE parent_gen INT;
 
-    -- Lấy đời của cha/mẹ từ bảng THANHVIEN
+    
     SELECT doi INTO parent_gen
     FROM THANHVIEN
     WHERE MaTV = NEW.MaTVCha;
 
-    -- Nếu đời cha/mẹ có tồn tại thì cập nhật đời của con
+    
     IF parent_gen IS NOT NULL THEN
         UPDATE THANHVIEN
         SET DOI = parent_gen + 1
@@ -968,7 +968,7 @@ DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `TRG_INSERT_MaGP_THANHVIEN_QUANHECON` AFTER INSERT ON `QUANHECON` FOR EACH ROW BEGIN
     DECLARE parent_family_id VARCHAR(5);
 
-    -- Ưu tiên lấy mã gia phả từ cha, nếu cha không có thì lấy từ mẹ
+    
     SELECT MaGiaPha INTO parent_family_id
     FROM THANHVIEN
     WHERE MaTV = NEW.MaTVCha;
@@ -979,7 +979,7 @@ DELIMITER ;;
         WHERE MaTV = NEW.MaTV;
     END IF;
 
-    -- Nếu cha hoặc mẹ có mã gia phả thì set cho con
+    
     IF parent_family_id IS NOT NULL THEN
         UPDATE THANHVIEN
         SET MaGiaPha = parent_family_id
@@ -1000,8 +1000,8 @@ DROP TABLE IF EXISTS `QUEQUAN`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `QUEQUAN` (
-  `MaQueQuan` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `TenQueQuan` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MaQueQuan` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `TenQueQuan` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`MaQueQuan`),
   UNIQUE KEY `TenQueQuan` (`TenQueQuan`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -1013,7 +1013,7 @@ CREATE TABLE `QUEQUAN` (
 
 LOCK TABLES `QUEQUAN` WRITE;
 /*!40000 ALTER TABLE `QUEQUAN` DISABLE KEYS */;
-INSERT INTO `QUEQUAN` VALUES ('QQ04','Điện Biên'),('QQ00','Hà Nội'),('QQ01','Hải Phòng'),('QQ03','Hồ Chí Minh'),('QQ02','Thanh Hóa');
+INSERT INTO `QUEQUAN` VALUES ('QQ07','An Giang'),('QQ08','Đà Nẵng'),('QQ04','Điện Biên'),('QQ00','Hà Nội'),('QQ01','Hải Phòng'),('QQ03','Hồ Chí Minh'),('QQ06','Nghệ An'),('QQ05','Quảng Ngãi'),('QQ02','Thanh Hóa');
 /*!40000 ALTER TABLE `QUEQUAN` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1025,8 +1025,8 @@ DROP TABLE IF EXISTS `QUYEN`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `QUYEN` (
-  `MaQuyen` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `TenQuyen` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MaQuyen` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `TenQuyen` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`MaQuyen`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -1048,8 +1048,8 @@ DROP TABLE IF EXISTS `REFRESH_TOKENS`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `REFRESH_TOKENS` (
-  `token` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `TenDangNhap` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `token` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `TenDangNhap` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `NgayTao` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `NgayHetHan` timestamp NOT NULL,
   PRIMARY KEY (`token`),
@@ -1065,7 +1065,7 @@ CREATE TABLE `REFRESH_TOKENS` (
 
 LOCK TABLES `REFRESH_TOKENS` WRITE;
 /*!40000 ALTER TABLE `REFRESH_TOKENS` DISABLE KEYS */;
-INSERT INTO `REFRESH_TOKENS` VALUES ('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidmFuZHVuZ0BleGFtcGxlLmNvbSIsInRva2VuX3R5cGUiOjEsImlhdCI6MTc2NzA2MjI4MywiZXhwIjoxNzY3NjY3MDgzfQ.jy5hhzPWCVSuCz3qF_i6gMx8u_ICmF7TtMaMLoVpGHk','vandung@example.com','2025-12-30 02:38:04','2026-01-06 09:38:04'),('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidmFuZHVuZ0BleGFtcGxlLmNvbSIsInRva2VuX3R5cGUiOjEsImlhdCI6MTc2NzA3NzU4MiwiZXhwIjoxNzY3NjgyMzgyfQ.5bhjFMwYyHlSQYgyrvcw9TgF8MH6kZM5Jogeh0taq5Q','vandung@example.com','2025-12-30 06:53:02','2026-01-06 13:53:02'),('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidmFuZHVuZ0BleGFtcGxlLmNvbSIsInRva2VuX3R5cGUiOjEsImlhdCI6MTc2NzAzMDEzMSwiZXhwIjoxNzY3NjM0OTMxfQ.MMt_mRHHeu6bvY67MHBpCT3IG0KdNSJurUuL42PNh2Q','vandung@example.com','2025-12-29 17:42:11','2026-01-06 00:42:11'),('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidmFuZHVuZ0BleGFtcGxlLmNvbSIsInRva2VuX3R5cGUiOjEsImlhdCI6MTc2NzAzMjA2MywiZXhwIjoxNzY3NjM2ODYzfQ.AP76O7cCWRP8sUcfjkKIvMrjUaU4p66zYpqqf5jNuac','vandung@example.com','2025-12-29 18:14:22','2026-01-06 01:14:23'),('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJ0b2tlbl90eXBlIjoxLCJpYXQiOjE3NjcwMjk3ODAsImV4cCI6MTc2NzYzNDU4MH0.gaDhWoWJn5idBxOhSCbdL03TzsOSDv97h3bxqrxauUU','admin@example.com','2025-12-29 17:36:20','2026-01-06 00:36:21'),('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJ0b2tlbl90eXBlIjoxLCJpYXQiOjE3NjcwMzAxNTQsImV4cCI6MTc2NzYzNDk1NH0.9XBhEwYJJflTojLJ_bdUlgRnBgoKOV6GiXowFY2ViGQ','admin@example.com','2025-12-29 17:42:34','2026-01-06 00:42:34'),('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJ0b2tlbl90eXBlIjoxLCJpYXQiOjE3NjcwNjc4MzAsImV4cCI6MTc2NzY3MjYzMH0.PTCiBK2Hb_pkx3-TtaS8dSET3tmfesCp60C-4Wy5sZs','admin@example.com','2025-12-30 04:10:29','2026-01-06 11:10:30'),('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJ0b2tlbl90eXBlIjoxLCJpYXQiOjE3NjcwNjcxMjgsImV4cCI6MTc2NzY3MTkyOH0.S42czynEn5ky88rdkrzdGAm-Gm4VklwTHZN9XZVAZP0','admin@example.com','2025-12-30 03:58:47','2026-01-06 10:58:49'),('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJ0b2tlbl90eXBlIjoxLCJpYXQiOjE3NjcwNjg3ODksImV4cCI6MTc2NzY3MzU4OX0.aagZliGUhIoeYxJFPuQC5V4RDLp5XSyla9gcJWx4E00','admin@example.com','2025-12-30 04:26:29','2026-01-06 11:26:30'),('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJ0b2tlbl90eXBlIjoxLCJpYXQiOjE3NjcwNjkyOTMsImV4cCI6MTc2NzY3NDA5M30.Wy7N8jvfAz8ckFuHAJGPnUaQsOyNUa7CO8-reA_MA_o','admin@example.com','2025-12-30 04:34:53','2026-01-06 11:34:54'),('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJ0b2tlbl90eXBlIjoxLCJpYXQiOjE3NjcwNjkzMjIsImV4cCI6MTc2NzY3NDEyMn0.afffXm7uV01LBaMKIjAK1kB4V3xc-8OVDfPi1YP1WIQ','admin@example.com','2025-12-30 04:35:22','2026-01-06 11:35:23');
+INSERT INTO `REFRESH_TOKENS` VALUES ('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidGhhbmhjb25nQGV4YW1wbGUuY29tIiwidG9rZW5fdHlwZSI6MSwiaWF0IjoxNzY3MDgxMDczLCJleHAiOjE3Njc2ODU4NzN9.LiuHUl1SS1udYAXXeZJTtIm-_yOxnqDyfk87529WTpQ','thanhcong@example.com','2025-12-30 07:51:13','2026-01-06 14:51:13'),('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidHJ1bmd0cmFuQGV4YW1wbGUuY29tIiwidG9rZW5fdHlwZSI6MSwiaWF0IjoxNzY3MDgxNjk3LCJleHAiOjE3Njc2ODY0OTd9.nIGVjClt1Yap95u5mF7LQJcpxs1PXAN-KFTKo353uA8','trungtran@example.com','2025-12-30 08:01:37','2026-01-06 15:01:37'),('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidmFuZHVuZ0BleGFtcGxlLmNvbSIsInRva2VuX3R5cGUiOjEsImlhdCI6MTc2NzA2MjI4MywiZXhwIjoxNzY3NjY3MDgzfQ.jy5hhzPWCVSuCz3qF_i6gMx8u_ICmF7TtMaMLoVpGHk','vandung@example.com','2025-12-30 02:38:04','2026-01-06 09:38:04'),('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidmFuZHVuZ0BleGFtcGxlLmNvbSIsInRva2VuX3R5cGUiOjEsImlhdCI6MTc2NzA4MDAzNSwiZXhwIjoxNzY3Njg0ODM1fQ.PFRxdv2zMfGrdO9T3AvopzMXI8CoKpBGWMQjowzgt7A','vandung@example.com','2025-12-30 07:33:55','2026-01-06 14:33:55'),('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidmFuZHVuZ0BleGFtcGxlLmNvbSIsInRva2VuX3R5cGUiOjEsImlhdCI6MTc2NzAzMDEzMSwiZXhwIjoxNzY3NjM0OTMxfQ.MMt_mRHHeu6bvY67MHBpCT3IG0KdNSJurUuL42PNh2Q','vandung@example.com','2025-12-29 17:42:11','2026-01-06 00:42:11'),('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidmFuZHVuZ0BleGFtcGxlLmNvbSIsInRva2VuX3R5cGUiOjEsImlhdCI6MTc2NzAzMjA2MywiZXhwIjoxNzY3NjM2ODYzfQ.AP76O7cCWRP8sUcfjkKIvMrjUaU4p66zYpqqf5jNuac','vandung@example.com','2025-12-29 18:14:22','2026-01-06 01:14:23'),('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJ0b2tlbl90eXBlIjoxLCJpYXQiOjE3NjcwMjk3ODAsImV4cCI6MTc2NzYzNDU4MH0.gaDhWoWJn5idBxOhSCbdL03TzsOSDv97h3bxqrxauUU','admin@example.com','2025-12-29 17:36:20','2026-01-06 00:36:21'),('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJ0b2tlbl90eXBlIjoxLCJpYXQiOjE3NjcwMzAxNTQsImV4cCI6MTc2NzYzNDk1NH0.9XBhEwYJJflTojLJ_bdUlgRnBgoKOV6GiXowFY2ViGQ','admin@example.com','2025-12-29 17:42:34','2026-01-06 00:42:34'),('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJ0b2tlbl90eXBlIjoxLCJpYXQiOjE3NjcwNjc4MzAsImV4cCI6MTc2NzY3MjYzMH0.PTCiBK2Hb_pkx3-TtaS8dSET3tmfesCp60C-4Wy5sZs','admin@example.com','2025-12-30 04:10:29','2026-01-06 11:10:30'),('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJ0b2tlbl90eXBlIjoxLCJpYXQiOjE3NjcwNjcxMjgsImV4cCI6MTc2NzY3MTkyOH0.S42czynEn5ky88rdkrzdGAm-Gm4VklwTHZN9XZVAZP0','admin@example.com','2025-12-30 03:58:47','2026-01-06 10:58:49'),('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJ0b2tlbl90eXBlIjoxLCJpYXQiOjE3NjcwNjg3ODksImV4cCI6MTc2NzY3MzU4OX0.aagZliGUhIoeYxJFPuQC5V4RDLp5XSyla9gcJWx4E00','admin@example.com','2025-12-30 04:26:29','2026-01-06 11:26:30'),('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJ0b2tlbl90eXBlIjoxLCJpYXQiOjE3NjcwNjkyOTMsImV4cCI6MTc2NzY3NDA5M30.Wy7N8jvfAz8ckFuHAJGPnUaQsOyNUa7CO8-reA_MA_o','admin@example.com','2025-12-30 04:34:53','2026-01-06 11:34:54'),('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJ0b2tlbl90eXBlIjoxLCJpYXQiOjE3NjcwNjkzMjIsImV4cCI6MTc2NzY3NDEyMn0.afffXm7uV01LBaMKIjAK1kB4V3xc-8OVDfPi1YP1WIQ','admin@example.com','2025-12-30 04:35:22','2026-01-06 11:35:23'),('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJ0b2tlbl90eXBlIjoxLCJpYXQiOjE3NjcwODA1MDQsImV4cCI6MTc2NzY4NTMwNH0.7RMtzXpMXanjMm4EzcMxvTJ2h1JPv4NG1K6204H_OHA','admin@example.com','2025-12-30 07:41:44','2026-01-06 14:41:45'),('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJ0b2tlbl90eXBlIjoxLCJpYXQiOjE3NjcwODQ3MjQsImV4cCI6MTc2NzY4OTUyNH0.2X-goVbE0HQPLI1imSxRZkaWJwOcM9A_2QJ8bVEZ2Mo','admin@example.com','2025-12-30 08:52:04','2026-01-06 15:52:05'),('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJ0b2tlbl90eXBlIjoxLCJpYXQiOjE3NjcwODY5MjUsImV4cCI6MTc2NzY5MTcyNX0.uT7zI66YNgTMx-QrTViOoR3mKIBtUZDKYoJ9fXAXgJc','admin@example.com','2025-12-30 09:28:45','2026-01-06 16:28:45');
 /*!40000 ALTER TABLE `REFRESH_TOKENS` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1077,10 +1077,10 @@ DROP TABLE IF EXISTS `TAIKHOAN`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `TAIKHOAN` (
-  `TenDangNhap` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `MaTV` varchar(5) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `MatKhau` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `MaLoaiTK` varchar(5) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `TenDangNhap` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `MaTV` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MatKhau` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MaLoaiTK` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `TGTaoMoi` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`TenDangNhap`),
   KEY `MaTV` (`MaTV`),
@@ -1096,7 +1096,7 @@ CREATE TABLE `TAIKHOAN` (
 
 LOCK TABLES `TAIKHOAN` WRITE;
 /*!40000 ALTER TABLE `TAIKHOAN` DISABLE KEYS */;
-INSERT INTO `TAIKHOAN` VALUES ('admin@example.com',NULL,'c7a2c5c32068865b8f850123a46abcdfa81c5c1b1b7d90705b89315ad659c6fb','LTK01','2025-12-29 17:16:37'),('truongtoc@example.com',NULL,'c7a2c5c32068865b8f850123a46abcdfa81c5c1b1b7d90705b89315ad659c6fb','LTK02','2025-12-29 17:16:37'),('vandung@example.com','TV09','c7a2c5c32068865b8f850123a46abcdfa81c5c1b1b7d90705b89315ad659c6fb','LTK02','2025-12-29 17:41:23');
+INSERT INTO `TAIKHOAN` VALUES ('admin@example.com',NULL,'c7a2c5c32068865b8f850123a46abcdfa81c5c1b1b7d90705b89315ad659c6fb','LTK01','2025-12-29 17:16:37'),('thanhcong@example.com','TV34','c7a2c5c32068865b8f850123a46abcdfa81c5c1b1b7d90705b89315ad659c6fb','LTK02','2025-12-30 07:42:11'),('trungtran@example.com','TV47','c7a2c5c32068865b8f850123a46abcdfa81c5c1b1b7d90705b89315ad659c6fb','LTK02','2025-12-30 07:51:41'),('truongtoc@example.com',NULL,'c7a2c5c32068865b8f850123a46abcdfa81c5c1b1b7d90705b89315ad659c6fb','LTK02','2025-12-29 17:16:37'),('vandung@example.com','TV09','c7a2c5c32068865b8f850123a46abcdfa81c5c1b1b7d90705b89315ad659c6fb','LTK02','2025-12-29 17:41:23');
 /*!40000 ALTER TABLE `TAIKHOAN` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1108,20 +1108,20 @@ DROP TABLE IF EXISTS `THANHVIEN`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `THANHVIEN` (
-  `MaTV` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `HoTen` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MaTV` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `HoTen` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `NgayGioSinh` date DEFAULT (curdate()),
-  `DiaChi` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `TrangThai` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'Còn Sống',
+  `DiaChi` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `TrangThai` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'Còn Sống',
   `TGTaoMoi` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `DOI` int DEFAULT '0',
-  `MaQueQuan` varchar(5) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `MaNgheNghiep` varchar(5) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `GioiTinh` varchar(3) COLLATE utf8mb4_unicode_ci DEFAULT 'Nam',
-  `MaNguyenNhanMat` varchar(5) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MaQueQuan` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MaNgheNghiep` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `GioiTinh` varchar(3) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'Nam',
+  `MaNguyenNhanMat` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `NgayGioMat` datetime DEFAULT NULL,
-  `MaDiaDiem` varchar(5) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `MaGiaPha` varchar(5) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MaDiaDiem` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MaGiaPha` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`MaTV`),
   KEY `MaQueQuan` (`MaQueQuan`),
   KEY `MaNgheNghiep` (`MaNgheNghiep`),
@@ -1142,7 +1142,7 @@ CREATE TABLE `THANHVIEN` (
 
 LOCK TABLES `THANHVIEN` WRITE;
 /*!40000 ALTER TABLE `THANHVIEN` DISABLE KEYS */;
-INSERT INTO `THANHVIEN` VALUES ('TV01','Nguyễn Văn Tổ','1920-05-15','Nghệ An','Mất','2025-12-29 17:16:37',0,'QQ02','NN04','Nam','NNM01','2020-01-15 10:30:00','DD02','GP01'),('TV02','Nguyễn Văn Long','1945-03-20','Hà Nội','Còn Sống','2025-12-29 17:16:37',1,'QQ01','NN06','Nam',NULL,NULL,NULL,'GP01'),('TV03','Lê Thị Lan','1948-11-25','Đà Nẵng','Còn Sống','2025-12-29 17:16:37',0,'QQ03','NN03','Nữ',NULL,NULL,NULL,'GP02'),('TV04','Nguyễn Văn Hùng','1972-08-10','Hà Nội','Còn Sống','2025-12-29 17:16:37',2,'QQ01','NN01','Nam',NULL,NULL,NULL,'GP01'),('TV05','Phạm Thị Hồng','1975-09-12','Hà Nội','Còn Sống','2025-12-29 17:16:37',0,'QQ01','NN02','Nữ',NULL,NULL,NULL,'GP02'),('TV06','Nguyễn Văn Nam','1998-04-05','TP.HCM','Còn Sống','2025-12-29 17:16:37',3,'QQ04','NN01','Nam',NULL,NULL,NULL,'GP01'),('TV07','Nguyễn Thị Ngọc Anh','2002-01-18','Hà Nội','Còn Sống','2025-12-29 17:16:37',3,'QQ01','NN02','Nữ',NULL,NULL,NULL,'GP01'),('TV08','Nguyễn Văn Minh','2024-06-10','Hà Nội','Còn Sống','2025-12-29 17:16:37',4,'QQ01','NN05','Nam',NULL,NULL,NULL,'GP01'),('TV09','Hoàng Văn Dũng','1950-03-14','Thái Bình','Còn Sống','2025-12-29 17:41:23',2,'QQ00','NN07','Nam',NULL,NULL,NULL,'GP03'),('TV10','Hoàng Văn Hưng','1925-08-10','Thái Bình','Còn Sống','2025-12-29 18:26:13',1,'QQ04','NN01','Nam',NULL,NULL,NULL,'GP03'),('TV11','Hoàng Văn Thái','1900-01-01','Hà Nội','Còn Sống','2025-12-29 18:26:49',0,'QQ00','NN04','Nam',NULL,NULL,NULL,'GP03'),('TV12','Trần Thị Mận','1902-05-05','Thái Bình','Còn Sống','2025-12-29 18:27:11',0,'QQ00','NN04','Nữ',NULL,NULL,NULL,'GP03'),('TV13','Lê Thị Bưởi','1928-10-20','Hà Nội','Còn Sống','2025-12-29 18:29:16',1,'QQ00','NN07','Nữ',NULL,NULL,NULL,'GP03'),('TV14','Hoàng Thị Hoa','1930-12-15','Thái Bình','Còn Sống','2025-12-29 18:30:21',1,'QQ00','NN14','Nữ',NULL,NULL,NULL,'GP03'),('TV15','Hoàng Văn Hải','1958-09-02','Thái Bình','Còn Sống','2025-12-29 18:31:22',2,'QQ00','NN09','Nam',NULL,NULL,NULL,'GP03'),('TV16','Phạm Thị Cúc','1955-06-20','Hưng Yên','Còn Sống','2025-12-29 18:32:26',2,'QQ04','NN07','Nữ',NULL,NULL,NULL,'GP03'),('TV17','Ngô Thị Đào','1960-01-11','Thái Bình','Còn Sống','2025-12-29 18:32:56',2,'QQ00','NN01','Nữ',NULL,NULL,NULL,'GP03'),('TV18','Hoàng Văn Tuấn','1978-04-30','Thái Bình','Còn Sống','2025-12-30 06:54:46',3,'QQ00','NN06','Nam',NULL,NULL,NULL,'GP03'),('TV19','Nguyễn Thị Mai','1980-02-13','Nghệ An','Còn Sống','2025-12-30 06:55:21',3,'QQ00','NN03','Nữ',NULL,NULL,NULL,'GP03'),('TV20','Hoàng Thị Tuyết','1985-01-10','Thái Bình','Còn Sống','2025-12-30 06:55:57',3,'QQ00','NN14','Nữ',NULL,NULL,NULL,'GP03'),('TV21','Hoàng Văn Nam','1988-01-01','Thái Bình','Còn Sống','2025-12-30 06:56:30',3,'QQ00','NN02','Nam',NULL,NULL,NULL,'GP03'),('TV22','Trần Thị Ly','1990-05-05','Hưng Yên','Còn Sống','2025-12-30 06:57:10',3,'QQ04','NN07','Nữ',NULL,NULL,NULL,'GP03'),('TV23','Hoàng Thị An','2000-05-01','Thái Bình','Còn Sống','2025-12-30 07:02:20',4,'QQ04',NULL,'Nữ',NULL,NULL,NULL,'GP03'),('TV24','Hoàng Văn Bình','2002-09-02','Thái Bình','Còn Sống','2025-12-30 07:02:52',4,'QQ00',NULL,'Nam',NULL,NULL,NULL,'GP03'),('TV25','Hoàng Văn Khánh','2015-12-25','Thái Bình','Còn Sống','2025-12-30 07:03:33',4,'QQ00',NULL,'Nam',NULL,NULL,NULL,'GP03'),('TV26','Vũ Thị Sương','2003-01-01','Hà Nam','Còn Sống','2025-12-30 07:04:09',4,'QQ00','NN05','Nữ',NULL,NULL,NULL,'GP03'),('TV27','Hoàng Văn Cường','2024-01-01','Thái Bình','Còn Sống','2025-12-30 07:04:40',5,'QQ00',NULL,'Nam',NULL,NULL,NULL,'GP03'),('TV28','Hoàng Thị Diệu','2025-02-02','Thái Bình','Còn Sống','2025-12-30 07:05:11',5,'QQ00',NULL,'Nữ',NULL,NULL,NULL,'GP03');
+INSERT INTO `THANHVIEN` VALUES ('TV03','Lê Thị Lan','1948-11-25','Đà Nẵng','Còn Sống','2025-12-29 17:16:37',0,'QQ03','NN03','Nữ',NULL,NULL,NULL,NULL),('TV05','Phạm Thị Hồng','1975-09-12','Hà Nội','Còn Sống','2025-12-29 17:16:37',0,'QQ01','NN02','Nữ',NULL,NULL,NULL,NULL),('TV07','Nguyễn Thị Ngọc Anh','2002-01-18','Hà Nội','Còn Sống','2025-12-29 17:16:37',3,'QQ01','NN02','Nữ',NULL,NULL,NULL,NULL),('TV09','Hoàng Văn Dũng','1950-03-14','Thái Bình','Còn Sống','2025-12-29 17:41:23',2,'QQ00','NN07','Nam',NULL,NULL,NULL,'GP03'),('TV10','Hoàng Văn Hưng','1925-08-10','Thái Bình','Còn Sống','2025-12-29 18:26:13',1,'QQ04','NN01','Nam',NULL,NULL,NULL,'GP03'),('TV11','Hoàng Văn Thái','1900-01-01','Hà Nội','Mất','2025-12-29 18:26:49',0,'QQ00','NN04','Nam','NNM02','1990-01-01 10:20:00','DD04','GP03'),('TV12','Trần Thị Mận','1902-05-05','Thái Bình','Còn Sống','2025-12-29 18:27:11',0,'QQ00','NN04','Nữ',NULL,NULL,NULL,'GP03'),('TV13','Lê Thị Bưởi','1928-10-20','Hà Nội','Còn Sống','2025-12-29 18:29:16',1,'QQ00','NN07','Nữ',NULL,NULL,NULL,'GP03'),('TV14','Hoàng Thị Hoa','1930-12-15','Thái Bình','Mất','2025-12-29 18:30:21',1,'QQ00','NN14','Nữ','NNM05','2020-02-01 14:00:00','DD04','GP03'),('TV15','Hoàng Văn Hải','1958-09-02','Thái Bình','Còn Sống','2025-12-29 18:31:22',2,'QQ00','NN09','Nam',NULL,NULL,NULL,'GP03'),('TV16','Phạm Thị Cúc','1955-06-20','Hưng Yên','Còn Sống','2025-12-29 18:32:26',2,'QQ04','NN07','Nữ',NULL,NULL,NULL,'GP03'),('TV17','Ngô Thị Đào','1960-01-11','Thái Bình','Còn Sống','2025-12-29 18:32:56',2,'QQ00','NN01','Nữ',NULL,NULL,NULL,'GP03'),('TV18','Hoàng Văn Tuấn','1978-04-30','Thái Bình','Còn Sống','2025-12-30 06:54:46',3,'QQ00','NN06','Nam',NULL,NULL,NULL,'GP03'),('TV19','Nguyễn Thị Mai','1980-02-13','Nghệ An','Còn Sống','2025-12-30 06:55:21',3,'QQ00','NN03','Nữ',NULL,NULL,NULL,'GP03'),('TV20','Hoàng Thị Tuyết','1985-01-10','Thái Bình','Còn Sống','2025-12-30 06:55:57',3,'QQ00','NN14','Nữ',NULL,NULL,NULL,'GP03'),('TV21','Hoàng Văn Nam','1988-01-01','Thái Bình','Còn Sống','2025-12-30 06:56:30',3,'QQ00','NN02','Nam',NULL,NULL,NULL,'GP03'),('TV22','Trần Thị Ly','1990-05-05','Hưng Yên','Còn Sống','2025-12-30 06:57:10',3,'QQ04','NN07','Nữ',NULL,NULL,NULL,'GP03'),('TV23','Hoàng Thị An','2000-05-01','Thái Bình','Còn Sống','2025-12-30 07:02:20',4,'QQ04',NULL,'Nữ',NULL,NULL,NULL,'GP03'),('TV24','Hoàng Văn Bình','2002-09-02','Thái Bình','Còn Sống','2025-12-30 07:02:52',4,'QQ00',NULL,'Nam',NULL,NULL,NULL,'GP03'),('TV25','Hoàng Văn Khánh','2015-12-25','Thái Bình','Còn Sống','2025-12-30 07:03:33',4,'QQ00',NULL,'Nam',NULL,NULL,NULL,'GP03'),('TV26','Vũ Thị Sương','2003-01-01','Hà Nam','Còn Sống','2025-12-30 07:04:09',4,'QQ00','NN05','Nữ',NULL,NULL,NULL,'GP03'),('TV27','Hoàng Văn Cường','2024-01-01','Thái Bình','Còn Sống','2025-12-30 07:04:40',5,'QQ00',NULL,'Nam',NULL,NULL,NULL,'GP03'),('TV28','Hoàng Thị Diệu','2025-02-02','Thái Bình','Còn Sống','2025-12-30 07:05:11',5,'QQ00',NULL,'Nữ',NULL,NULL,NULL,'GP03'),('TV30','Trần Văn Anh','1960-01-01','Hà Nội','Còn Sống','2025-12-30 07:38:46',2,'QQ00',NULL,'Nam',NULL,NULL,NULL,NULL),('TV31','Trần Văn Cầu','1930-01-01','Hà Nội','Còn Sống','2025-12-30 07:39:07',1,'QQ00',NULL,'Nam',NULL,NULL,NULL,NULL),('TV32','Trần Văn Bô','1904-01-01','Hà Nội','Còn Sống','2025-12-30 07:39:31',0,'QQ00',NULL,'Nam',NULL,NULL,NULL,NULL),('TV33','Nguyễn Thị Ánh','1906-01-01','Hải Dương','Còn Sống','2025-12-30 07:40:14',0,'QQ00','NN03','Nữ',NULL,NULL,NULL,NULL),('TV34','Nguyễn Thành Công','1975-12-30','Quảng Ngãi','Còn Sống','2025-12-30 07:42:11',1,'QQ00','NN03','Nam',NULL,NULL,NULL,'GP04'),('TV35','Nguyễn Thành Phúc','1950-01-01','Quảng Ngãi','Còn Sống','2025-12-30 07:43:44',0,'QQ05','NN08','Nam',NULL,NULL,NULL,'GP04'),('TV36','Trần Thị Xuân','1951-01-01','Hà Nội','Còn Sống','2025-12-30 07:44:20',0,'QQ01','NN02','Nữ',NULL,NULL,NULL,'GP04'),('TV37','Nguyễn Thành Thái','1978-01-01','Đà Nẵng','Còn Sống','2025-12-30 07:45:01',1,'QQ05',NULL,'Nam',NULL,NULL,NULL,'GP04'),('TV38','Phạm Thị Bưởi','1970-01-01','Đà Nẵng','Còn Sống','2025-12-30 07:45:42',1,'QQ01',NULL,'Nữ',NULL,NULL,NULL,'GP04'),('TV39','Trần Thị Bích','1980-01-01','Quảng Nam','Còn Sống','2025-12-30 07:46:12',1,'QQ06','NN09','Nữ',NULL,NULL,NULL,'GP04'),('TV40','Nguyễn Thị Phương','1994-01-01','Đà Nẵng','Còn Sống','2025-12-30 07:46:48',1,'QQ03',NULL,'Nữ',NULL,NULL,NULL,'GP04'),('TV41','Nguyễn Thị Thanh Phương','2000-01-01','Nghệ An','Còn Sống','2025-12-30 07:47:24',2,'QQ00',NULL,'Nữ',NULL,NULL,NULL,'GP04'),('TV42','Nguyễn Thành Phước','2001-01-01','Đà Nẵng','Còn Sống','2025-12-30 07:47:50',2,'QQ00',NULL,'Nam',NULL,NULL,NULL,'GP04'),('TV43','Nguyễn Thành Kim','1998-01-01','Quế Hưng','Còn Sống','2025-12-30 07:48:26',2,'QQ00',NULL,'Nam',NULL,NULL,NULL,'GP04'),('TV44','Nguyễn Thị Kim Anh','2000-01-01','Hà Nội','Còn Sống','2025-12-30 07:48:56',2,'QQ00',NULL,'Nữ',NULL,NULL,NULL,'GP04'),('TV45','Nguyễn Thành Nhân','2024-01-01','HCM','Còn Sống','2025-12-30 07:49:32',3,'QQ05',NULL,'Nam',NULL,NULL,NULL,'GP04'),('TV46','Nguyễn Thành Triết','2025-01-01','Bình Dương','Còn Sống','2025-12-30 07:50:08',1,'QQ01',NULL,'Nam',NULL,NULL,NULL,'GP04'),('TV47','Trần Trung','1950-12-26','An Giang','Còn Sống','2025-12-30 07:51:41',1,'QQ00','NN12','Nam',NULL,NULL,NULL,NULL),('TV48','Trần Trung Vĩnh','1925-01-01','Hà Tiên','Còn Sống','2025-12-30 07:54:39',0,'QQ07',NULL,'Nam',NULL,NULL,NULL,NULL),('TV49','Phạm Thị Ái Kiều','1929-01-01','Tây Ninh','Còn Sống','2025-12-30 07:55:10',0,'QQ01',NULL,'Nữ',NULL,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `THANHVIEN` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -1197,8 +1197,8 @@ DROP TABLE IF EXISTS `YEU_CAU_MAT_KHAU`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `YEU_CAU_MAT_KHAU` (
   `MaYeuCau` int NOT NULL AUTO_INCREMENT,
-  `Email` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `TrangThai` enum('ChoDuyet','DaDuyet','DaDoi') COLLATE utf8mb4_unicode_ci DEFAULT 'ChoDuyet',
+  `Email` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `TrangThai` enum('ChoDuyet','DaDuyet','DaDoi') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'ChoDuyet',
   `NgayYeuCau` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `NgayDuyet` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`MaYeuCau`),
@@ -1226,4 +1226,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-12-30  7:05:30
+-- Dump completed on 2025-12-30  9:41:01

@@ -219,7 +219,7 @@ export default function FamilyTreeView({
         // Iterate until no more changes (to cascade updates)
         let changed = true;
         let iterations = 0;
-        const MAX_ITERATIONS = 10;
+        const MAX_ITERATIONS = 20; // Increased to handle complex family trees with 6+ generations
 
         while (changed && iterations < MAX_ITERATIONS) {
             changed = false;
@@ -658,8 +658,21 @@ export default function FamilyTreeView({
         );
     };
 
-    // Find roots (Generation 0)
-    const rootFamilies = generationData.length > 0 ? generationData[0].families : [];
+    // Find ALL root families (members without parents) across all generations
+    // This ensures members like Trần Trung appear even if they're in generation 1+
+    const rootFamilies = useMemo(() => {
+        const roots = [];
+        generationData.forEach(gen => {
+            gen.families.forEach(family => {
+                // Check if this family's primary member has no parents
+                const parents = getParents(family.primary.MaTV);
+                if (!parents.father && !parents.mother) {
+                    roots.push(family);
+                }
+            });
+        });
+        return roots;
+    }, [generationData]);
 
     return (
         <div className="glass-card overflow-hidden">

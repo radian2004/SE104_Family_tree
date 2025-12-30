@@ -703,78 +703,78 @@ INSERT INTO LOAITAIKHOAN (MaLoaiTK, TenLoaiTK) VALUES
 ('LTK03', 'User')
 ON DUPLICATE KEY UPDATE TenLoaiTK = VALUES(TenLoaiTK);
 
--- Thêm để test
--- Thành viên
-INSERT INTO THANHVIEN (HoTen, NgayGioSinh, DiaChi, MaQueQuan, MaNgheNghiep, GioiTinh) VALUES
-('Nguyễn Văn Tổ',      '1920-05-15', 'Nghệ An', 'QQ02', 'NN04', 'Nam'), -- TV01 - Thủy tổ (Đời 1)
-('Nguyễn Văn Long',    '1945-03-20', 'Hà Nội', 'QQ01', 'NN06', 'Nam'), -- TV02 - Con của Tổ (Đời 2)
-('Lê Thị Lan',         '1948-11-25', 'Đà Nẵng', 'QQ03', 'NN03', 'Nữ'),  -- TV03 - Vợ Long (Đời 2)
-('Nguyễn Văn Hùng',    '1972-08-10', 'Hà Nội', 'QQ01', 'NN01', 'Nam'), -- TV04 - Con của Long & Lan (Đời 3)
-('Phạm Thị Hồng',      '1975-09-12', 'Hà Nội', 'QQ01', 'NN02', 'Nữ'),  -- TV05 - Vợ Hùng (Đời 3)
-('Nguyễn Văn Nam',     '1998-04-05', 'TP.HCM', 'QQ04', 'NN01', 'Nam'), -- TV06 - Con của Hùng & Hồng (Đời 4)
-('Nguyễn Thị Ngọc Anh','2002-01-18', 'Hà Nội', 'QQ01', 'NN02', 'Nữ'),  -- TV07 - Con của Hùng & Hồng (Đời 4)
-('Nguyễn Văn Minh',    '2024-06-10', 'Hà Nội', 'QQ01', 'NN05', 'Nam'); -- TV08 - Con của Nam (Đời 5)
+-- -- Thêm để test
+-- -- Thành viên
+-- INSERT INTO THANHVIEN (HoTen, NgayGioSinh, DiaChi, MaQueQuan, MaNgheNghiep, GioiTinh) VALUES
+-- ('Nguyễn Văn Tổ',      '1920-05-15', 'Nghệ An', 'QQ02', 'NN04', 'Nam'), -- TV01 - Thủy tổ (Đời 1)
+-- ('Nguyễn Văn Long',    '1945-03-20', 'Hà Nội', 'QQ01', 'NN06', 'Nam'), -- TV02 - Con của Tổ (Đời 2)
+-- ('Lê Thị Lan',         '1948-11-25', 'Đà Nẵng', 'QQ03', 'NN03', 'Nữ'),  -- TV03 - Vợ Long (Đời 2)
+-- ('Nguyễn Văn Hùng',    '1972-08-10', 'Hà Nội', 'QQ01', 'NN01', 'Nam'), -- TV04 - Con của Long & Lan (Đời 3)
+-- ('Phạm Thị Hồng',      '1975-09-12', 'Hà Nội', 'QQ01', 'NN02', 'Nữ'),  -- TV05 - Vợ Hùng (Đời 3)
+-- ('Nguyễn Văn Nam',     '1998-04-05', 'TP.HCM', 'QQ04', 'NN01', 'Nam'), -- TV06 - Con của Hùng & Hồng (Đời 4)
+-- ('Nguyễn Thị Ngọc Anh','2002-01-18', 'Hà Nội', 'QQ01', 'NN02', 'Nữ'),  -- TV07 - Con của Hùng & Hồng (Đời 4)
+-- ('Nguyễn Văn Minh',    '2024-06-10', 'Hà Nội', 'QQ01', 'NN05', 'Nam'); -- TV08 - Con của Nam (Đời 5)
 
-INSERT INTO CAYGIAPHA (TenGiaPha, NguoiLap, TruongToc) VALUES
-('Nguyễn Văn - Hà Nội', 'TV02', 'TV02'),   -- Ông Long vừa lập vừa làm trưởng tộc
-('Nguyễn Văn - Nghệ An', 'TV01', 'TV03');   -- Thủy tổ lập, truyền lại cho cháu đích tôn Hùng
+-- INSERT INTO CAYGIAPHA (TenGiaPha, NguoiLap, TruongToc) VALUES
+-- ('Nguyễn Văn - Hà Nội', 'TV02', 'TV02'),   -- Ông Long vừa lập vừa làm trưởng tộc
+-- ('Nguyễn Văn - Nghệ An', 'TV01', 'TV03');   -- Thủy tổ lập, truyền lại cho cháu đích tôn Hùng
 
-UPDATE THANHVIEN SET MaGiaPha = 'GP02' WHERE MaTV IN ('TV02','TV03','TV04','TV05','TV06','TV07','TV08');
-UPDATE THANHVIEN SET MaGiaPha = 'GP01' WHERE MaTV = 'TV01';
+-- UPDATE THANHVIEN SET MaGiaPha = 'GP02' WHERE MaTV IN ('TV02','TV03','TV04','TV05','TV06','TV07','TV08');
+-- UPDATE THANHVIEN SET MaGiaPha = 'GP01' WHERE MaTV = 'TV01';
 
-INSERT INTO HONNHAN (MaTV, MaTVVC, NgayBatDau, NgayKetThuc) VALUES
-('TV02', 'TV03', '1970-06-15', NULL), -- Long (TV02) kết hôn với Lan (TV03) - Đời 2
-('TV04', 'TV05', '1997-05-20', NULL); -- Hùng (TV04) kết hôn với Hồng (TV05) - Đời 3
+-- INSERT INTO HONNHAN (MaTV, MaTVVC, NgayBatDau, NgayKetThuc) VALUES
+-- ('TV02', 'TV03', '1970-06-15', NULL), -- Long (TV02) kết hôn với Lan (TV03) - Đời 2
+-- ('TV04', 'TV05', '1997-05-20', NULL); -- Hùng (TV04) kết hôn với Hồng (TV05) - Đời 3
 
--- Quan hệ cha mẹ - con cái (cấu trúc cây gia phả đúng)
--- TV01 là Thủy tổ (không có cha mẹ trong hệ thống)
--- TV02 (Long) là con của TV01 (Tổ), mẹ không có trong hệ thống
--- TV04 (Hùng), hoặc các con của Long & Lan
--- TV06 (Nam), TV07 (Ngọc Anh) là con của Hùng & Hồng
--- TV08 (Minh) là con của Nam
-INSERT INTO QUANHECON (MaTV, MaTVCha, MaTVMe, NgayPhatSinh) VALUES
-('TV02', 'TV01', NULL, '1945-03-20'),  -- Long là con của Tổ (mẹ không có trong hệ thống)
-('TV04', 'TV02', 'TV03', '1972-08-10'), -- Hùng là con của Long & Lan
-('TV06', 'TV04', 'TV05', '1998-04-05'), -- Nam là con của Hùng & Hồng
-('TV07', 'TV04', 'TV05', '2002-01-18'), -- Ngọc Anh là con của Hùng & Hồng
-('TV08', 'TV06', NULL, '2024-06-10');   -- Minh là con của Nam (mẹ chưa trong hệ thống)
+-- -- Quan hệ cha mẹ - con cái (cấu trúc cây gia phả đúng)
+-- -- TV01 là Thủy tổ (không có cha mẹ trong hệ thống)
+-- -- TV02 (Long) là con của TV01 (Tổ), mẹ không có trong hệ thống
+-- -- TV04 (Hùng), hoặc các con của Long & Lan
+-- -- TV06 (Nam), TV07 (Ngọc Anh) là con của Hùng & Hồng
+-- -- TV08 (Minh) là con của Nam
+-- INSERT INTO QUANHECON (MaTV, MaTVCha, MaTVMe, NgayPhatSinh) VALUES
+-- ('TV02', 'TV01', NULL, '1945-03-20'),  -- Long là con của Tổ (mẹ không có trong hệ thống)
+-- ('TV04', 'TV02', 'TV03', '1972-08-10'), -- Hùng là con của Long & Lan
+-- ('TV06', 'TV04', 'TV05', '1998-04-05'), -- Nam là con của Hùng & Hồng
+-- ('TV07', 'TV04', 'TV05', '2002-01-18'), -- Ngọc Anh là con của Hùng & Hồng
+-- ('TV08', 'TV06', NULL, '2024-06-10');   -- Minh là con của Nam (mẹ chưa trong hệ thống)
 
--- Ghi nhận thành tích
-INSERT INTO GHINHANTHANHTICH (MaLTT, MaTV, NgayPhatSinh) VALUES -- GHINHAN THANH TICH trong 10 năm qua
-('LTT01', 'TV01', '2025-01-15'), -- Tổ đạt Huân chương Lao động
-('LTT02', 'TV04', '2024-02-20'), -- Hùng đạt Bằng khen Thủ tướng
-('LTT03', 'TV05', '2023-1-11'), -- Hồng đạt Chiến sĩ thi đua
-('LTT04', 'TV06', '2022-12-11'), -- Nam đạt Giấy khen cấp tỉnh
-('LTT05', 'TV07', '2023-03-15'), -- Ngọc Anh đạt Học bổng giỏi
-('LTT06', 'TV04', '2025-01-01'), -- Hùng đạt Giải thưởng khoa học kỹ thuật
-('LTT01', 'TV02', '2018-06-10'), -- Long đạt Huân chương Lao động
-('LTT03', 'TV03', '2019-01-01'), -- Lan đạt Chiến sĩ thi đua
-('LTT05', 'TV08', '2025-03-15'), -- Minh đạt Học bổng giỏi
-('LTT02', 'TV06', '2022-02-20'), -- Nam đạt Bằng khen Thủ tướng
-('LTT04', 'TV07', '2010-12-11'), -- Ngọc Anh đạt Giấy khen cấp tỉnh
-('LTT06', 'TV05', '2025-01-01'); -- Hồng đạt Giải thưởng khoa học kỹ thuật
+-- -- Ghi nhận thành tích
+-- INSERT INTO GHINHANTHANHTICH (MaLTT, MaTV, NgayPhatSinh) VALUES -- GHINHAN THANH TICH trong 10 năm qua
+-- ('LTT01', 'TV01', '2025-01-15'), -- Tổ đạt Huân chương Lao động
+-- ('LTT02', 'TV04', '2024-02-20'), -- Hùng đạt Bằng khen Thủ tướng
+-- ('LTT03', 'TV05', '2023-1-11'), -- Hồng đạt Chiến sĩ thi đua
+-- ('LTT04', 'TV06', '2022-12-11'), -- Nam đạt Giấy khen cấp tỉnh
+-- ('LTT05', 'TV07', '2023-03-15'), -- Ngọc Anh đạt Học bổng giỏi
+-- ('LTT06', 'TV04', '2025-01-01'), -- Hùng đạt Giải thưởng khoa học kỹ thuật
+-- ('LTT01', 'TV02', '2018-06-10'), -- Long đạt Huân chương Lao động
+-- ('LTT03', 'TV03', '2019-01-01'), -- Lan đạt Chiến sĩ thi đua
+-- ('LTT05', 'TV08', '2025-03-15'), -- Minh đạt Học bổng giỏi
+-- ('LTT02', 'TV06', '2022-02-20'), -- Nam đạt Bằng khen Thủ tướng
+-- ('LTT04', 'TV07', '2010-12-11'), -- Ngọc Anh đạt Giấy khen cấp tỉnh
+-- ('LTT06', 'TV05', '2025-01-01'); -- Hồng đạt Giải thưởng khoa học kỹ thuật
 
--- Cập nhật thông tin mất cho một số thành viên
-UPDATE THANHVIEN SET MaNguyenNhanMat = 'NNM01', NgayGioMat = '2020-01-15 10:30:00', MaDiaDiem = 'DD02' WHERE MaTV = 'TV01'; -- TV01 mất
+-- -- Cập nhật thông tin mất cho một số thành viên
+-- UPDATE THANHVIEN SET MaNguyenNhanMat = 'NNM01', NgayGioMat = '2020-01-15 10:30:00', MaDiaDiem = 'DD02' WHERE MaTV = 'TV01'; -- TV01 mất
+
+-- INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, MaLoaiTK) VALUES 
+-- ('truongtoc@example.com', SHA2(CONCAT('Test@123', 'secret'), 256), 'LTK02');
+
+-- -- INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, MaLoaiTK) VALUES 
+-- -- ('user@example.com', SHA2(CONCAT('Test@123', 'secret'), 256), 'LTK03');
+
+-- INSERT INTO DANHMUC (MaDM, TenDM, NguoiDamNhan, TongThu, TongChi) VALUES
+-- ('DM01', 'Quỹ khuyến học', 'TV02', 0, 0),
+-- ('DM02', 'Quỹ từ thiện', 'TV04', 0, 0),
+-- ('DM03', 'Quỹ xây dựng nhà thờ họ', 'TV06', 0, 0),
+-- ('DM04', 'Quỹ hiếu hỷ', 'TV02', 0, 0),
+-- ('DM05', 'Quỹ hỗ trợ sinh viên', 'TV04', 0, 0)
+-- ON DUPLICATE KEY UPDATE 
+--     TenDM = VALUES(TenDM),
+--     NguoiDamNhan = VALUES(NguoiDamNhan);
 
 INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, MaLoaiTK) VALUES 
 ('admin@example.com', SHA2(CONCAT('Test@123', 'secret'), 256), 'LTK01');
-
-INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, MaLoaiTK) VALUES 
-('truongtoc@example.com', SHA2(CONCAT('Test@123', 'secret'), 256), 'LTK02');
-
--- INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, MaLoaiTK) VALUES 
--- ('user@example.com', SHA2(CONCAT('Test@123', 'secret'), 256), 'LTK03');
-
-INSERT INTO DANHMUC (MaDM, TenDM, NguoiDamNhan, TongThu, TongChi) VALUES
-('DM01', 'Quỹ khuyến học', 'TV02', 0, 0),
-('DM02', 'Quỹ từ thiện', 'TV04', 0, 0),
-('DM03', 'Quỹ xây dựng nhà thờ họ', 'TV06', 0, 0),
-('DM04', 'Quỹ hiếu hỷ', 'TV02', 0, 0),
-('DM05', 'Quỹ hỗ trợ sinh viên', 'TV04', 0, 0)
-ON DUPLICATE KEY UPDATE 
-    TenDM = VALUES(TenDM),
-    NguoiDamNhan = VALUES(NguoiDamNhan);
 
 SELECT * FROM TAIKHOAN;
 SELECT * FROM REFRESH_TOKENS;

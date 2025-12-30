@@ -56,7 +56,8 @@ class KetThucService {
     }
 
     const member = memberRows[0];
-    if (member.NgayGioSinh) {
+    // ✅ Add safer null/undefined check
+    if (member && member.NgayGioSinh != null) {
       const ngaySinh = new Date(member.NgayGioSinh);
       const ngayMat = new Date(NgayGioMat);
 
