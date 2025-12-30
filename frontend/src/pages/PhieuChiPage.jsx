@@ -6,13 +6,16 @@
 
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiArrowLeft, FiPlus, FiTrash2, FiDollarSign, FiCalendar, FiUser, FiFileText } from 'react-icons/fi';
+import { FiArrowLeft, FiPlus, FiTrash2, FiDollarSign, FiCalendar, FiUser, FiFileText, FiFilter } from 'react-icons/fi';
 import phieuChiService from '../services/phieuchi';
 import phieuThuService from '../services/phieuthu';
 import { usePermissions } from '../hooks/usePermissions';
+import { useAuthStore } from '../store/authStore';
+import GiaPhaSelector from '../components/common/GiaPhaSelector';
 
 export default function PhieuChiPage() {
     const { canRecordExpense, isAdmin, isOwner } = usePermissions();
+    const user = useAuthStore(state => state.user);
 
     const [phieuChiList, setPhieuChiList] = useState([]);
     const [danhMucList, setDanhMucList] = useState([]);
@@ -26,6 +29,10 @@ export default function PhieuChiPage() {
         SoTienChi: '',
         LyDoChi: ''
     });
+
+    // Kiểm tra xem user hiện tại có phải là "Người đảm nhận" của bất kỳ danh mục nào không
+    const isNguoiDamNhan = danhMucList.some(dm => dm.NguoiDamNhan === user?.MaTV);
+    const canCreateExpense = canRecordExpense || isNguoiDamNhan;
 
     // Load data on mount
     useEffect(() => {
@@ -173,8 +180,15 @@ export default function PhieuChiPage() {
                     </div>
                 </div>
 
-                {/* Tab Navigation */}
-                <div className="flex gap-2 mb-6 animate-fade-in">
+                {/* Admin GiaPha Filter - on its own section with higher z-index */}
+                <div className="mb-6 animate-fade-in relative z-50">
+                    <div className="max-w-sm">
+                        <GiaPhaSelector value="" onChange={() => { }} />
+                    </div>
+                </div>
+
+                {/* Tab Navigation - lower z-index */}
+                <div className="flex gap-2 mb-6 animate-fade-in relative z-10">
                     <button
                         onClick={() => setActiveTab('list')}
                         className={`px-4 py-2 rounded-lg font-medium transition-all ${activeTab === 'list'
@@ -184,7 +198,7 @@ export default function PhieuChiPage() {
                     >
                         📋 Danh sách phiếu chi
                     </button>
-                    {canRecordExpense && (
+                    {canCreateExpense && (
                         <button
                             onClick={() => setActiveTab('create')}
                             className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${activeTab === 'create'
@@ -234,7 +248,7 @@ export default function PhieuChiPage() {
                                                     <th className="px-4 py-3 text-left text-sm font-semibold text-neutral-700">Lý do</th>
                                                     <th className="px-4 py-3 text-left text-sm font-semibold text-neutral-700">Ngày chi</th>
                                                     <th className="px-4 py-3 text-right text-sm font-semibold text-neutral-700">Số tiền</th>
-                                                    {canRecordExpense && (
+                                                    {canCreateExpense && (
                                                         <th className="px-4 py-3 text-center text-sm font-semibold text-neutral-700">Thao tác</th>
                                                     )}
                                                 </tr>
@@ -273,7 +287,7 @@ export default function PhieuChiPage() {
                                                         <td className="px-4 py-3 text-right font-semibold text-red-600">
                                                             {formatCurrency(pc.SoTienChi)}
                                                         </td>
-                                                        {canRecordExpense && (
+                                                        {canCreateExpense && (
                                                             <td className="px-4 py-3 text-center">
                                                                 <button
                                                                     onClick={() => handleDelete(pc.MaPhieuChi)}
@@ -294,7 +308,7 @@ export default function PhieuChiPage() {
                         )}
 
                         {/* Create Tab */}
-                        {activeTab === 'create' && canRecordExpense && (
+                        {activeTab === 'create' && canCreateExpense && (
                             <div className="animate-fade-in">
                                 <form onSubmit={handleCreate} className="glass-card p-6 max-w-lg">
                                     <h3 className="text-lg font-bold text-neutral-800 mb-6">Tạo phiếu chi mới</h3>

@@ -30,6 +30,11 @@ export default function ThanhVienCard({ thanhvien, onDelete }) {
       <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">
         {formatDate(thanhvien.NgayGioSinh)}
       </td>
+      <td className="px-6 py-4 whitespace-nowrap text-center">
+        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 text-amber-700 font-bold text-sm">
+          {thanhvien.DOI ?? 0}
+        </span>
+      </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600 max-w-xs truncate">
         {thanhvien.DiaChi}
       </td>

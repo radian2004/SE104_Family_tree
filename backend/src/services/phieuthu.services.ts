@@ -123,12 +123,15 @@ class PhieuThuService {
   }
 
   /**
-   * Lấy danh sách phiếu thu
-   * - Admin: xem tất cả
-   * - Owner: xem gia phả của mình (hoặc tất cả nếu chưa có gia phả)
-   * - User: xem của mình
-   */
-  async getPhieuThuList(userInfo: { MaLoaiTK: string; MaTV: string; MaGiaPha: string | null }) {
+  * Lấy danh sách phiếu thu
+  * - Admin: xem tất cả (có thể filter theo MaGiaPha)
+  * - Owner: xem gia phả của mình (hoặc tất cả nếu chưa có gia phả)
+  * - User: xem của mình
+  */
+  async getPhieuThuList(
+    userInfo: { MaLoaiTK: string; MaTV: string; MaGiaPha: string | null },
+    filters?: { MaGiaPha?: string }
+  ) {
     let sql = `
       SELECT 
         pt.MaPhieuThu,
@@ -141,24 +144,36 @@ class PhieuThuService {
     `;
 
     const params: any[] = [];
+    const conditions: string[] = [];
 
     if (userInfo.MaLoaiTK === 'LTK01') {
       // Admin: xem tất cả
+      // ✅ Allow Admin to filter by MaGiaPha
+      if (filters?.MaGiaPha) {
+        conditions.push('tv.MaGiaPha = ?');
+        params.push(filters.MaGiaPha);
+      }
     } else if (userInfo.MaLoaiTK === 'LTK02') {
       // Owner: xem gia phả của mình
-      // Nếu MaGiaPha là null, hiển thị tất cả (chưa được link với gia phả cụ thể)
       if (userInfo.MaGiaPha) {
-        sql += ' WHERE tv.MaGiaPha = ?';
+        conditions.push('tv.MaGiaPha = ?');
         params.push(userInfo.MaGiaPha);
       }
-      // Else: show all (no filter)
     } else {
-      // User: xem của mình
-      if (userInfo.MaTV) {
-        sql += ' WHERE pt.MaTV = ?';
+      // User: xem các phiếu trong gia phả của mình (giống Owner)
+      // Không chỉ xem phiếu của bản thân mà xem tất cả phiếu trong gia phả
+      if (userInfo.MaGiaPha) {
+        conditions.push('tv.MaGiaPha = ?');
+        params.push(userInfo.MaGiaPha);
+      } else if (userInfo.MaTV) {
+        // Fallback: nếu không có MaGiaPha, xem phiếu của bản thân
+        conditions.push('pt.MaTV = ?');
         params.push(userInfo.MaTV);
       }
-      // Else: show all (no filter when MaTV is null)
+    }
+
+    if (conditions.length > 0) {
+      sql += ' WHERE ' + conditions.join(' AND ');
     }
 
     sql += ' ORDER BY pt.NgayThu DESC';
@@ -245,12 +260,12 @@ class PhieuThuService {
     const chiTiet = chiTietRows[0];
 
     // Kiểm tra quyền xác nhận
-    // Admin/Owner có thể xác nhận bất kỳ phiếu nào
-    // User chỉ có thể xác nhận danh mục họ đảm nhận
-    const isAdminOrOwner = userInfo.MaLoaiTK === 'LTK01' || userInfo.MaLoaiTK === 'LTK02';
-    if (!isAdminOrOwner && chiTiet.NguoiDamNhan !== userInfo.MaTV) {
+    // Chỉ Owner hoặc Người đảm nhận mới có quyền xác nhận
+    // Admin (LTK01) KHÔNG có quyền này
+    const isOwner = userInfo.MaLoaiTK === 'LTK02';
+    if (!isOwner && chiTiet.NguoiDamNhan !== userInfo.MaTV) {
       throw new ErrorWithStatus({
-        message: 'Chỉ người đảm nhận danh mục hoặc Admin/Trưởng tộc mới có quyền xác nhận',
+        message: 'Chỉ người đảm nhận danh mục hoặc Trưởng tộc mới có quyền xác nhận',
         status: HTTP_STATUS.FORBIDDEN
       });
     }
@@ -327,15 +342,16 @@ class PhieuThuService {
 
   /**
    * Lấy danh sách chi tiết phiếu thu chờ xác nhận
-   * - Admin/Owner: xem TẤT CẢ phiếu chờ xác nhận
-   * - User: chỉ xem danh mục họ đảm nhận
+   * - Admin: xem TẤT CẢ phiếu chờ xác nhận
+   * - Owner/User: xem phiếu trong gia phả của mình
    */
-  async getPendingConfirmations(userInfo: { MaLoaiTK: string; MaTV: string | null }) {
+  async getPendingConfirmations(userInfo: { MaLoaiTK: string; MaTV: string | null; MaGiaPha: string | null }) {
     let sql = `
       SELECT 
         ct.MaPhieuThu,
         ct.MaDMT,
         dm.TenDM,
+        dm.NguoiDamNhan,
         ct.SoTienThu,
         ct.SoThuTu,
         tv.HoTen AS HoTenNguoiDong,
@@ -349,10 +365,13 @@ class PhieuThuService {
 
     const params: any[] = [];
 
-    // Admin/Owner xem tất cả, User chỉ xem danh mục mình đảm nhận
-    if (userInfo.MaLoaiTK !== 'LTK01' && userInfo.MaLoaiTK !== 'LTK02') {
-      sql += ' AND dm.NguoiDamNhan = ?';
-      params.push(userInfo.MaTV);
+    // Admin xem tất cả, Owner/User xem trong gia phả của mình
+    if (userInfo.MaLoaiTK !== 'LTK01') {
+      // Owner và User: filter theo MaGiaPha
+      if (userInfo.MaGiaPha) {
+        sql += ' AND tv.MaGiaPha = ?';
+        params.push(userInfo.MaGiaPha);
+      }
     }
 
     sql += ' ORDER BY pt.NgayThu DESC';
@@ -366,8 +385,11 @@ class PhieuThuService {
   /**
    * Lấy danh sách danh mục
    */
-  async getDanhMucList() {
-    const sql = `
+  /**
+   * Lấy danh sách danh mục
+   */
+  async getDanhMucList(MaGiaPha?: string) {
+    let sql = `
       SELECT 
         dm.MaDM,
         dm.TenDM,
@@ -377,10 +399,19 @@ class PhieuThuService {
         dm.TongChi
       FROM DANHMUC dm
       LEFT JOIN THANHVIEN tv ON dm.NguoiDamNhan = tv.MaTV
-      ORDER BY dm.MaDM
+      WHERE 1=1
     `;
 
-    const rows = await databaseService.query<DanhMucRow[]>(sql);
+    const params: any[] = [];
+
+    if (MaGiaPha) {
+      sql += ' AND tv.MaGiaPha = ?';
+      params.push(MaGiaPha);
+    }
+
+    sql += ' ORDER BY dm.MaDM';
+
+    const rows = await databaseService.query<DanhMucRow[]>(sql, params);
     return rows;
   }
 
@@ -548,42 +579,96 @@ class PhieuThuService {
   /**
  * Tra cứu danh mục thu chi theo năm
  * @param nam - Năm cần tra cứu
+ * @param userInfo - Thông tin user để lọc theo MaGiaPha
  * @returns Danh sách danh mục với tổng thu/chi trong năm đó
  */
-  async traCuuDanhMucThuChi(nam: number): Promise<TraCuuDanhMucResponse> {
-    // SQL Query: Lấy tất cả danh mục với tổng thu/chi THEO NĂM
-    const sql = `
-      SELECT 
-        dm.MaDM,
-        dm.TenDM,
-        dm.NguoiDamNhan,
-        tv.HoTen AS TenNguoiDamNhan,
-        
-        -- Tổng thu trong năm (chỉ tính các khoản đã xác nhận TinhHopLe = TRUE)
-        COALESCE(
-          (SELECT SUM(ct.SoTienThu) 
-           FROM CT_PHIEUTHU ct
-           WHERE ct.MaDMT = dm.MaDM 
-             AND ct.TinhHopLe = TRUE 
-             AND YEAR(ct.NgayXacNhan) = ?
-          ), 0
-        ) AS TongThuNam,
-        
-        -- Tổng chi trong năm
-        COALESCE(
-          (SELECT SUM(pc.SoTienChi)
-           FROM PHIEUCHIQUY pc
-           WHERE pc.MaDMC = dm.MaDM
-             AND YEAR(pc.NgayChi) = ?
-          ), 0
-        ) AS TongChiNam
-        
-      FROM DANHMUC dm
-      LEFT JOIN THANHVIEN tv ON dm.NguoiDamNhan = tv.MaTV
-      ORDER BY dm.MaDM
-    `;
+  async traCuuDanhMucThuChi(
+    nam: number,
+    userInfo?: { MaLoaiTK: string; MaGiaPha: string | null }
+  ): Promise<TraCuuDanhMucResponse> {
+    const params: any[] = [];
 
-    const rows = await databaseService.query<RowDataPacket[]>(sql, [nam, nam]);
+    // ⭐ Xác định MaGiaPha để filter
+    // Nếu có MaGiaPha (từ request hoặc userInfo) thì filter theo đó
+    const filterMaGiaPha = userInfo?.MaGiaPha || null;
+
+    // SQL Query phụ thuộc việc có filter MaGiaPha hay không
+    let sql: string;
+
+    if (filterMaGiaPha) {
+      // ⭐ CÓ MaGiaPha: Lấy TẤT CẢ danh mục, tính thu/chi CHỈ cho gia phả này
+      sql = `
+        SELECT 
+          dm.MaDM,
+          dm.TenDM,
+          dm.NguoiDamNhan,
+          tv.HoTen AS TenNguoiDamNhan,
+          
+          -- Tổng thu trong năm: CHỈ tính phiếu thu của thành viên TRONG GIA PHẢ này
+          COALESCE(
+            (SELECT SUM(ct.SoTienThu) 
+             FROM CT_PHIEUTHU ct
+             INNER JOIN PHIEUTHUQUY pt ON ct.MaPhieuThu = pt.MaPhieuThu
+             INNER JOIN THANHVIEN tvp ON pt.MaTV = tvp.MaTV
+             WHERE ct.MaDMT = dm.MaDM 
+               AND ct.TinhHopLe = TRUE 
+               AND YEAR(ct.NgayXacNhan) = ?
+               AND tvp.MaGiaPha = ?
+            ), 0
+          ) AS TongThuNam,
+          
+          -- Tổng chi trong năm: CHỈ tính phiếu chi của người lập TRONG GIA PHẢ này
+          COALESCE(
+            (SELECT SUM(pc.SoTienChi)
+             FROM PHIEUCHIQUY pc
+             INNER JOIN THANHVIEN tvc ON pc.MaTV = tvc.MaTV
+             WHERE pc.MaDMC = dm.MaDM
+               AND YEAR(pc.NgayChi) = ?
+               AND tvc.MaGiaPha = ?
+            ), 0
+          ) AS TongChiNam
+          
+        FROM DANHMUC dm
+        LEFT JOIN THANHVIEN tv ON dm.NguoiDamNhan = tv.MaTV
+        ORDER BY dm.MaDM
+      `;
+      params.push(nam, filterMaGiaPha, nam, filterMaGiaPha);
+    } else {
+      // ⭐ KHÔNG có MaGiaPha (Admin xem tất cả): Hiển thị tổng toàn hệ thống
+      sql = `
+        SELECT 
+          dm.MaDM,
+          dm.TenDM,
+          dm.NguoiDamNhan,
+          tv.HoTen AS TenNguoiDamNhan,
+          
+          -- Tổng thu trong năm (tất cả gia phả)
+          COALESCE(
+            (SELECT SUM(ct.SoTienThu) 
+             FROM CT_PHIEUTHU ct
+             WHERE ct.MaDMT = dm.MaDM 
+               AND ct.TinhHopLe = TRUE 
+               AND YEAR(ct.NgayXacNhan) = ?
+            ), 0
+          ) AS TongThuNam,
+          
+          -- Tổng chi trong năm (tất cả gia phả)
+          COALESCE(
+            (SELECT SUM(pc.SoTienChi)
+             FROM PHIEUCHIQUY pc
+             WHERE pc.MaDMC = dm.MaDM
+               AND YEAR(pc.NgayChi) = ?
+            ), 0
+          ) AS TongChiNam
+          
+        FROM DANHMUC dm
+        LEFT JOIN THANHVIEN tv ON dm.NguoiDamNhan = tv.MaTV
+        ORDER BY dm.MaDM
+      `;
+      params.push(nam, nam);
+    }
+
+    const rows = await databaseService.query<RowDataPacket[]>(sql, params);
 
     // Chuyển đổi kết quả
     const danhSach: DanhMucThuChiItem[] = rows.map((row, index) => {
@@ -628,6 +713,91 @@ class PhieuThuService {
       tongChiNam,
       tongDuThieu,
       danhSach
+    };
+  }
+
+  /**
+   * Xóa phiếu thu
+   * Quyền: Owner hoặc người đảm nhận danh mục của phiếu thu đó
+   */
+  async deletePhieuThu(
+    MaPhieuThu: string,
+    userInfo: { MaLoaiTK: string; MaTV: string; MaGiaPha?: string }
+  ) {
+    // 1. Lấy thông tin phiếu thu
+    const checkSql = `
+      SELECT pt.MaPhieuThu, pt.MaTV, tv.MaGiaPha,
+             ctpt.MaDMT, dm.NguoiDamNhan
+      FROM PHIEUTHUQUY pt
+      LEFT JOIN THANHVIEN tv ON pt.MaTV = tv.MaTV
+      LEFT JOIN CT_PHIEUTHU ctpt ON pt.MaPhieuThu = ctpt.MaPhieuThu
+      LEFT JOIN DANHMUC dm ON ctpt.MaDMT = dm.MaDM
+      WHERE pt.MaPhieuThu = ?
+    `;
+
+    const rows = await databaseService.query<RowDataPacket[]>(checkSql, [MaPhieuThu]);
+
+    if (rows.length === 0) {
+      throw new ErrorWithStatus({
+        message: 'Không tìm thấy phiếu thu',
+        status: HTTP_STATUS.NOT_FOUND
+      });
+    }
+
+    const phieuThu = rows[0];
+
+    // 2. Kiểm tra quyền
+    const isOwner = userInfo.MaLoaiTK === 'LTK02';
+    const isAdmin = userInfo.MaLoaiTK === 'LTK01';
+
+    // Admin KHÔNG có quyền xóa phiếu thu
+    if (isAdmin) {
+      throw new ErrorWithStatus({
+        message: 'Admin không có quyền xóa phiếu thu',
+        status: HTTP_STATUS.FORBIDDEN
+      });
+    }
+
+    // Owner: được phép xóa phiếu thu trong gia phả của mình
+    if (isOwner) {
+      // Nếu phiếu thu thuộc thành viên đã bị xóa (MaGiaPha null), Owner vẫn được xóa
+      // Nếu phiếu thu thuộc thành viên còn tồn tại, phải check MaGiaPha
+      if (phieuThu.MaGiaPha && phieuThu.MaGiaPha !== userInfo.MaGiaPha) {
+        throw new ErrorWithStatus({
+          message: 'Bạn chỉ có thể xóa phiếu thu trong gia phả của mình',
+          status: HTTP_STATUS.FORBIDDEN
+        });
+      }
+    } else {
+      // User thường: phải là người đảm nhận danh mục
+      const isNguoiDamNhan = rows.some(row => row.NguoiDamNhan === userInfo.MaTV);
+      if (!isNguoiDamNhan) {
+        throw new ErrorWithStatus({
+          message: 'Bạn chỉ có thể xóa phiếu thu của danh mục mà bạn đảm nhận',
+          status: HTTP_STATUS.FORBIDDEN
+        });
+      }
+    }
+
+    // 3. Xóa chi tiết phiếu thu trước (CT_PHIEUTHU)
+    await databaseService.query(
+      'DELETE FROM CT_PHIEUTHU WHERE MaPhieuThu = ?',
+      [MaPhieuThu]
+    );
+
+    // 4. Xóa phiếu thu
+    const result = await databaseService.query<ResultSetHeader>(
+      'DELETE FROM PHIEUTHUQUY WHERE MaPhieuThu = ?',
+      [MaPhieuThu]
+    );
+
+    if (result.affectedRows === 0) {
+      throw new Error('Không thể xóa phiếu thu');
+    }
+
+    return {
+      message: 'Xóa phiếu thu thành công',
+      MaPhieuThu
     };
   }
 }

@@ -58,6 +58,36 @@ export const getAvailableMembersController = async (req: Request, res: Response)
 };
 
 /**
+ * Controller xác minh thành viên bằng mã
+ * GET /users/verify-member?MaGiaPha=<mã>&MaTV=<mã>
+ */
+export const verifyMemberController = async (req: Request, res: Response) => {
+  const MaGiaPha = req.query.MaGiaPha as string;
+  const MaTV = req.query.MaTV as string;
+
+  if (!MaGiaPha || !MaTV) {
+    throw new ErrorWithStatus({
+      message: 'Vui lòng cung cấp cả Mã gia phả và Mã thành viên',
+      status: HTTP_STATUS.BAD_REQUEST
+    });
+  }
+
+  const result = await usersService.verifyMemberForRegistration(MaGiaPha.trim(), MaTV.trim());
+
+  if (!result) {
+    throw new ErrorWithStatus({
+      message: 'Không tìm thấy thành viên hoặc mã không khớp. Vui lòng kiểm tra lại.',
+      status: HTTP_STATUS.NOT_FOUND
+    });
+  }
+
+  return res.status(HTTP_STATUS.OK).json({
+    message: 'Xác minh thành viên thành công',
+    result
+  });
+};
+
+/**
  * Controller đăng nhập
  * POST /users/login
  */

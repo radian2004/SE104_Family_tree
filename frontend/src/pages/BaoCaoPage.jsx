@@ -11,9 +11,13 @@ import thanhvienService from '../services/thanhvien.js';
 import thanhtichService from '../services/thanhtich.js';
 import phieuThuService from '../services/phieuthu.js';
 import giaPhaService from '../services/giapha.js';
+import { usePermissions } from '../hooks/usePermissions';
+import { useAuth } from '../hooks/useAuth';
 
 export default function BaoCaoPage() {
     const currentYear = new Date().getFullYear();
+    const { user } = useAuth();
+    const { isAdmin, isOwner } = usePermissions();
 
     // State
     const [activeTab, setActiveTab] = useState('thanhvien'); // 'thanhvien' | 'thanhtich' | 'thuChi'
@@ -35,7 +39,14 @@ export default function BaoCaoPage() {
     useEffect(() => {
         const loadGiaPhaList = async () => {
             try {
-                const data = await giaPhaService.getAll();
+                let data = await giaPhaService.getAll();
+
+                // ⭐ FILTER FOR OWNER/USER: Only show their own gia phả
+                // Admin can see all, Owner/User can only see their own
+                if (!isAdmin && user?.MaGiaPha) {
+                    data = data.filter(gp => gp.MaGiaPha === user.MaGiaPha);
+                }
+
                 setGiaPhaList(data);
                 // Select first gia pha by default if available
                 if (data.length > 0) {
@@ -46,7 +57,7 @@ export default function BaoCaoPage() {
             }
         };
         loadGiaPhaList();
-    }, []);
+    }, [isOwner, isAdmin, user?.MaGiaPha]);
 
     // Load báo cáo
     const loadBaoCao = async () => {
@@ -179,14 +190,17 @@ export default function BaoCaoPage() {
                 </div>
 
                 {/* Filters */}
-                <div className="glass-card p-4 mb-6">
-                    <div className="flex flex-wrap items-end gap-4">
-                        <div className="min-w-[200px]">
-                            <label className="block text-sm font-medium text-neutral-600 mb-1">Gia phả</label>
+                <div className="glass-card p-6 mb-6">
+                    {/* Row 1: GiaPha Selector - Full width row */}
+                    <div className="mb-5">
+                        <label className="block text-sm font-medium text-neutral-700 mb-2 flex items-center gap-2">
+                            🌳 Chọn Gia Phả
+                        </label>
+                        <div className="max-w-md">
                             <select
                                 value={selectedGiaPha}
                                 onChange={(e) => setSelectedGiaPha(e.target.value)}
-                                className="input w-full"
+                                className="w-full px-4 py-3 bg-white border-2 border-emerald-200 rounded-xl text-neutral-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all cursor-pointer"
                             >
                                 {giaPhaList.length === 0 && (
                                     <option value="">Đang tải...</option>
@@ -198,13 +212,17 @@ export default function BaoCaoPage() {
                                 ))}
                             </select>
                         </div>
+                    </div>
+
+                    {/* Row 2: Year filters + Submit button */}
+                    <div className="flex flex-wrap items-end gap-4">
                         <div>
                             <label className="block text-sm font-medium text-neutral-600 mb-1">Từ năm</label>
                             <input
                                 type="number"
                                 value={namBatDau}
                                 onChange={(e) => setNamBatDau(Number(e.target.value))}
-                                className="input w-32"
+                                className="input w-28"
                                 min="1900"
                                 max={currentYear}
                             />
@@ -215,7 +233,7 @@ export default function BaoCaoPage() {
                                 type="number"
                                 value={namKetThuc}
                                 onChange={(e) => setNamKetThuc(Number(e.target.value))}
-                                className="input w-32"
+                                className="input w-28"
                                 min="1900"
                                 max={currentYear}
                             />
@@ -223,9 +241,9 @@ export default function BaoCaoPage() {
                         <button
                             onClick={loadBaoCao}
                             disabled={isLoading || !selectedGiaPha}
-                            className="btn btn-primary"
+                            className="btn btn-primary px-6"
                         >
-                            {isLoading ? 'Đang tải...' : 'Xem báo cáo'}
+                            {isLoading ? 'Đang tải...' : '📊 Xem báo cáo'}
                         </button>
                     </div>
                 </div>
@@ -332,17 +350,17 @@ export default function BaoCaoPage() {
                                                     <td className="px-6 py-4 font-medium text-neutral-800">{row.Nam}</td>
                                                     <td className="px-6 py-4 text-center">
                                                         <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-emerald-100 text-emerald-700">
-                                                            +{row.SoLuongSinh || 0}
+                                                            +{row.SoSinh || 0}
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4 text-center">
                                                         <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-pink-100 text-pink-700">
-                                                            {row.SoLuongKetHon || 0}
+                                                            {row.SoKetHon || 0}
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4 text-center">
                                                         <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-neutral-100 text-neutral-600">
-                                                            -{row.SoLuongMat || 0}
+                                                            {row.SoMat || 0}
                                                         </span>
                                                     </td>
                                                 </tr>
@@ -407,7 +425,7 @@ export default function BaoCaoPage() {
                                             </thead>
                                             <tbody>
                                                 {baoCaoThanhTich.map((row, index) => (
-                                                    <tr key={`${row.Nam}-${row.TenLTT}-${index}`} className="border-b border-neutral-100 hover:bg-neutral-50">
+                                                    <tr key={`${row.Nam}-${row.LoaiThanhTich || row.TenLTT}-${index}`} className="border-b border-neutral-100 hover:bg-neutral-50">
                                                         <td className="px-6 py-4 text-sm text-neutral-500">{row.STT || index + 1}</td>
                                                         <td className="px-6 py-4 font-medium text-neutral-800">{row.Nam}</td>
                                                         <td className="px-6 py-4 text-neutral-700">{row.TenLTT || row.LoaiThanhTich || '-'}</td>

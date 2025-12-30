@@ -22,7 +22,9 @@ import {
   FiUserPlus,
   FiSettings,
   FiBook,
-  FiDollarSign
+  FiDollarSign,
+  FiAlertCircle,
+  FiFileText
 } from 'react-icons/fi';
 import AdminPasswordRequests from '../components/admin/AdminPasswordRequests';
 import UserProfileModal from '../components/UserProfileModal';
@@ -82,13 +84,8 @@ export default function DashboardPage() {
 
     // Admin & Owner: Ghi nhận thành tích
     if (isAdmin || isOwner) {
-      actions.push({ title: 'Ghi nhận thành tích', icon: <FiAward />, path: '/thanhvien', color: 'text-yellow-500' });
-    }
-
-    // Admin & Owner: Tạo quan hệ
-    if (isAdmin || isOwner) {
-      actions.push({ title: 'Tạo quan hệ hôn nhân', icon: <FiHeart />, path: '/quanhe/honnhan', color: 'text-pink-500' });
-      actions.push({ title: 'Tạo quan hệ con cái', icon: <FiUsers />, path: '/quanhe/concai', color: 'text-emerald-500' });
+      actions.push({ title: 'Ghi nhận thành tích', icon: <FiAward />, path: '/thanhtich', color: 'text-yellow-500' });
+      actions.push({ title: 'Ghi nhận kết thúc', icon: <FiAlertCircle />, path: '/ketthuc', color: 'text-neutral-500' });
     }
 
     // All roles: Báo cáo
@@ -100,10 +97,8 @@ export default function DashboardPage() {
     // All roles: Thu quỹ
     actions.push({ title: 'Thu quỹ họ', icon: <FiDollarSign />, path: '/phieuthu', color: 'text-emerald-500' });
 
-    // Admin & Owner: Chi quỹ
-    if (isAdmin || isOwner) {
-      actions.push({ title: 'Chi quỹ họ', icon: <FiDollarSign />, path: '/phieuchi', color: 'text-red-500' });
-    }
+    // Chi quỹ họ (Quyền tạo sẽ được kiểm tra ở trang Chi tiết)
+    actions.push({ title: 'Chi quỹ họ', icon: <FiFileText />, path: '/phieuchi', color: 'text-rose-500' });
 
     return actions;
   };
@@ -227,28 +222,28 @@ export default function DashboardPage() {
               </button>
 
               <button
-                onClick={() => navigate('/quanhe/honnhan')}
-                className="flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all border-l-4 border-pink-500"
+                onClick={() => navigate('/thanhtich')}
+                className="flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all border-l-4 border-yellow-500"
               >
-                <div className="w-12 h-12 rounded-lg bg-pink-100 flex items-center justify-center text-pink-600">
-                  <FiHeart className="w-6 h-6" />
+                <div className="w-12 h-12 rounded-lg bg-yellow-100 flex items-center justify-center text-yellow-600">
+                  <FiAward className="w-6 h-6" />
                 </div>
                 <div className="text-left">
-                  <h4 className="font-bold text-neutral-800">Quan hệ hôn nhân</h4>
-                  <p className="text-sm text-neutral-500">Quản lý quan hệ vợ chồng</p>
+                  <h4 className="font-bold text-neutral-800">Ghi nhận thành tích</h4>
+                  <p className="text-sm text-neutral-500">Khen thưởng, giải thưởng</p>
                 </div>
               </button>
 
               <button
-                onClick={() => navigate('/quanhe/concai')}
-                className="flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all border-l-4 border-emerald-500"
+                onClick={() => navigate('/ketthuc')}
+                className="flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all border-l-4 border-neutral-400"
               >
-                <div className="w-12 h-12 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600">
-                  <FiUsers className="w-6 h-6" />
+                <div className="w-12 h-12 rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-600">
+                  <FiAlertCircle className="w-6 h-6" />
                 </div>
                 <div className="text-left">
-                  <h4 className="font-bold text-neutral-800">Quan hệ con cái</h4>
-                  <p className="text-sm text-neutral-500">Quản lý quan hệ cha mẹ - con</p>
+                  <h4 className="font-bold text-neutral-800">Ghi nhận kết thúc</h4>
+                  <p className="text-sm text-neutral-500">Qua đời, mai táng</p>
                 </div>
               </button>
             </div>

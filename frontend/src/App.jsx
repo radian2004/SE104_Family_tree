@@ -22,10 +22,10 @@ import ThanhVienEditPage from './pages/ThanhVienEditPage';
 import GiaPhaPage from './pages/GiaPhaPage';
 import GiaPhaDetailPage from './pages/GiaPhaDetailPage';
 import BaoCaoPage from './pages/BaoCaoPage';
-import QuanHeHonNhanPage from './pages/QuanHeHonNhanPage';
-import QuanHeConCaiPage from './pages/QuanHeConCaiPage';
 import PhieuThuPage from './pages/PhieuThuPage';
 import PhieuChiPage from './pages/PhieuChiPage';
+import ThanhTichPage from './pages/ThanhTichPage';
+import KetThucPage from './pages/KetThucPage';
 
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
@@ -123,20 +123,22 @@ export default function App() {
           }
         />
 
-        {/* Quan hệ routes */}
+        {/* Thành tích route */}
         <Route
-          path="/quanhe/honnhan"
+          path="/thanhtich"
           element={
             <ProtectedRoute>
-              <QuanHeHonNhanPage />
+              <ThanhTichPage />
             </ProtectedRoute>
           }
         />
+
+        {/* Kết thúc route */}
         <Route
-          path="/quanhe/concai"
+          path="/ketthuc"
           element={
             <ProtectedRoute>
-              <QuanHeConCaiPage />
+              <KetThucPage />
             </ProtectedRoute>
           }
         />
@@ -162,6 +164,14 @@ export default function App() {
         {/* ==================== ADMIN ROUTES ==================== */}
         <Route
           path="/admin/users"
+          element={
+            <AdminRoute>
+              <QuanLyTaiKhoanPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/taikhoan"
           element={
             <AdminRoute>
               <QuanLyTaiKhoanPage />

@@ -32,14 +32,9 @@ export default function ThanhVienList({
   if (thanhvienList.length === 0) {
     return (
       <div className="card text-center py-12">
-        <p className="text-gray-600 mb-4">Không có thành viên nào</p>
-        <button
-          onClick={() => navigate('/thanhvien/create')}
-          className="btn-primary inline-flex items-center gap-2"
-        >
-          <FiPlus />
-          Thêm thành viên mới
-        </button>
+        <div className="text-6xl mb-4">👥</div>
+        <p className="text-neutral-600">Không có thành viên nào</p>
+        <p className="text-neutral-400 text-sm mt-2">Nhấn nút "Thêm thành viên" ở góc trên bên phải để bắt đầu</p>
       </div>
     );
   }
@@ -56,6 +51,9 @@ export default function ThanhVienList({
               </th>
               <th className="px-6 py-4 text-left text-sm font-semibold">
                 Ngày sinh
+              </th>
+              <th className="px-6 py-4 text-center text-sm font-semibold">
+                Đời
               </th>
               <th className="px-6 py-4 text-left text-sm font-semibold">
                 Địa chỉ

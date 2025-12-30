@@ -5,8 +5,23 @@ import { GhiNhanThanhVienReqBody } from '~/models/requests/GhiNhanThanhVien.requ
 import { TraCuuThanhVienQuery } from '~/models/requests/TraCuuThanhVien.requests';
 
 // Controller đăng ký thành viên mới
+// ⭐ V2: Thêm phân quyền - Owner/User chỉ được thêm vào gia phả của mình
 export const registerController = async (req: Request, res: Response) => {
-  const { HoTen, NgayGioSinh, DiaChi, MaQueQuan, MaNgheNghiep, GioiTinh, MaGiaPha } = req.body;  // ✅ ĐÚNG
+  const userInfo = req.userInfo;  // ⭐ Lấy từ middleware
+  let { HoTen, NgayGioSinh, DiaChi, MaQueQuan, MaNgheNghiep, GioiTinh, MaGiaPha } = req.body;
+
+  // ⭐ PHÂN QUYỀN THEO GIA PHẢ
+  // Admin (LTK01): có thể thêm vào bất kỳ gia phả nào
+  // Owner (LTK02) / User (LTK03): BẮT BUỘC thêm vào gia phả của mình
+  if (userInfo && userInfo.MaLoaiTK !== 'LTK01') {
+    if (!userInfo.MaGiaPha) {
+      return res.status(403).json({
+        message: 'Bạn chưa thuộc gia phả nào, không thể thêm thành viên'
+      });
+    }
+    // Override MaGiaPha với gia phả của user (không cho phép thêm vào gia phả khác)
+    MaGiaPha = userInfo.MaGiaPha;
+  }
 
   console.log('[registerController] Request body:', { HoTen, NgayGioSinh, DiaChi, MaQueQuan, MaNgheNghiep, GioiTinh, MaGiaPha });
 
@@ -17,7 +32,7 @@ export const registerController = async (req: Request, res: Response) => {
       DiaChi,
       MaQueQuan,
       MaNgheNghiep,
-      GioiTinh,  // ✅ ĐÚNG: 'Nam' hoặc 'Nữ'
+      GioiTinh,
       MaGiaPha
     });
 
@@ -35,16 +50,37 @@ export const registerController = async (req: Request, res: Response) => {
   }
 };
 
+
 // Controller lấy tất cả thành viên với filter/sort
+// ⭐ V2: Thêm phân quyền theo MaGiaPha - Owner/User chỉ xem được gia phả của mình
 export const getAllThanhVienController = async (req: Request, res: Response) => {
+  const userInfo = req.userInfo;  // ⭐ Lấy từ middleware
+
   const filters = {
     search: req.query.search as string,
     sortBy: req.query.sortBy as string,
     sortOrder: req.query.sortOrder as string,
     MaGiaPha: req.query.MaGiaPha as string,
+    gioiTinh: req.query.gioiTinh as string,
+    trangThai: req.query.trangThai as string,
   };
 
   try {
+    // ⭐ PHÂN QUYỀN THEO GIA PHẢ
+    // Admin (LTK01): xem tất cả hoặc filter theo MaGiaPha nếu truyền
+    // Owner (LTK02) / User (LTK03): BẮT BUỘC filter theo userInfo.MaGiaPha
+    if (userInfo && userInfo.MaLoaiTK !== 'LTK01') {
+      // Owner hoặc User - chỉ được xem gia phả của mình
+      if (!userInfo.MaGiaPha) {
+        return res.status(403).json({
+          message: 'Bạn chưa thuộc gia phả nào',
+          result: []
+        });
+      }
+      // Override MaGiaPha filter với gia phả của user
+      filters.MaGiaPha = userInfo.MaGiaPha;
+    }
+
     const result = await thanhvienService.getAllThanhVien(filters);
     return res.status(200).json({
       message: 'Lấy danh sách thành công',
@@ -60,9 +96,12 @@ export const getAllThanhVienController = async (req: Request, res: Response) => 
   }
 };
 
+
 // Controller tìm thành viên theo MaTV
+// ⭐ V2: Thêm phân quyền - Owner/User chỉ được xem thành viên trong gia phả của mình
 export const getThanhVienByMaTVController = async (req: Request, res: Response) => {
   const { MaTV } = req.params;
+  const userInfo = req.userInfo;  // ⭐ Lấy từ middleware
 
   try {
     const result = await thanhvienService.findByMaTV(MaTV);
@@ -71,6 +110,21 @@ export const getThanhVienByMaTVController = async (req: Request, res: Response) 
       return res.status(404).json({
         message: 'Không tìm thấy thành viên'
       });
+    }
+
+    // ⭐ PHÂN QUYỀN THEO GIA PHẢ
+    if (userInfo && userInfo.MaLoaiTK !== 'LTK01') {
+      if (!userInfo.MaGiaPha) {
+        return res.status(403).json({
+          message: 'Bạn chưa thuộc gia phả nào'
+        });
+      }
+      // Verify member belongs to user's gia pha
+      if (result.MaGiaPha !== userInfo.MaGiaPha) {
+        return res.status(403).json({
+          message: 'Thành viên này không thuộc gia phả của bạn'
+        });
+      }
     }
 
     return res.status(200).json({
@@ -86,12 +140,31 @@ export const getThanhVienByMaTVController = async (req: Request, res: Response) 
   }
 };
 
+
 // Controller cập nhật thành viên
+// ⭐ V2: Thêm phân quyền - Owner/User chỉ được cập nhật thành viên trong gia phả của mình
 export const updateThanhVienController = async (req: Request, res: Response) => {
   const { MaTV } = req.params;
   const payload = req.body;
+  const userInfo = req.userInfo;  // ⭐ Lấy từ middleware
 
   try {
+    // ⭐ PHÂN QUYỀN THEO GIA PHẢ
+    if (userInfo && userInfo.MaLoaiTK !== 'LTK01') {
+      if (!userInfo.MaGiaPha) {
+        return res.status(403).json({
+          message: 'Bạn chưa thuộc gia phả nào'
+        });
+      }
+      // Verify member belongs to user's gia pha
+      const member = await thanhvienService.findByMaTV(MaTV);
+      if (!member || member.MaGiaPha !== userInfo.MaGiaPha) {
+        return res.status(403).json({
+          message: 'Thành viên này không thuộc gia phả của bạn'
+        });
+      }
+    }
+
     const result = await thanhvienService.updateThanhVien(MaTV, payload);
     return res.status(200).json(result);
   } catch (error: any) {
@@ -103,11 +176,30 @@ export const updateThanhVienController = async (req: Request, res: Response) => 
   }
 };
 
+
 // Controller xóa thành viên
+// ⭐ V2: Thêm phân quyền - Owner/User chỉ được xóa thành viên trong gia phả của mình
 export const deleteThanhVienController = async (req: Request, res: Response) => {
   const { MaTV } = req.params;
+  const userInfo = req.userInfo;  // ⭐ Lấy từ middleware
 
   try {
+    // ⭐ PHÂN QUYỀN THEO GIA PHẢ
+    if (userInfo && userInfo.MaLoaiTK !== 'LTK01') {
+      if (!userInfo.MaGiaPha) {
+        return res.status(403).json({
+          message: 'Bạn chưa thuộc gia phả nào'
+        });
+      }
+      // Verify member belongs to user's gia pha
+      const member = await thanhvienService.findByMaTV(MaTV);
+      if (!member || member.MaGiaPha !== userInfo.MaGiaPha) {
+        return res.status(403).json({
+          message: 'Thành viên này không thuộc gia phả của bạn'
+        });
+      }
+    }
+
     const result = await thanhvienService.deleteThanhVien(MaTV);
     return res.status(200).json(result);
   } catch (error: any) {
@@ -118,6 +210,7 @@ export const deleteThanhVienController = async (req: Request, res: Response) => 
     });
   }
 };
+
 
 /**
  * ✅ MỚI: Controller lấy báo cáo tăng giảm thành viên
@@ -197,10 +290,10 @@ export const ghiNhanThanhVienController = async (req: Request, res: Response) =>
     }
 
     // Validate loại quan hệ
-    if (payload.LoaiQuanHe !== 'Con cái' && payload.LoaiQuanHe !== 'Vợ/Chồng') {
+    if (payload.LoaiQuanHe !== 'Con cái' && payload.LoaiQuanHe !== 'Vợ/Chồng' && payload.LoaiQuanHe !== 'Cha') {
       return res.status(400).json({
         message: 'Loại quan hệ không hợp lệ',
-        error: 'Loại quan hệ phải là "Con cái" hoặc "Vợ/Chồng"'
+        error: 'Loại quan hệ phải là "Con cái", "Vợ/Chồng" hoặc "Cha"'
       });
     }
 

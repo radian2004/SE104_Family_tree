@@ -1,22 +1,24 @@
 /**
  * ============================================
  * GIA PHẢ DETAIL PAGE - Chi tiết cây gia phả
- * Với chức năng thêm/sửa/xóa thành viên
+ * Với chức năng thêm/sửa/xóa thành viên và quan hệ
  * ============================================
  */
 
 import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiUsers, FiCalendar, FiUserPlus, FiRefreshCw } from 'react-icons/fi';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
+import { FiArrowLeft, FiUsers, FiUserPlus, FiRefreshCw, FiCheck, FiCalendar, FiX } from 'react-icons/fi';
 import giaPhaService from '../services/giapha.js';
 import thanhvienService from '../services/thanhvien.js';
 import { useLookupsStore } from '../store/lookupsStore.js';
 import { usePermissions } from '../hooks/usePermissions';
 import FamilyTreeView from '../components/giapha/FamilyTreeView.jsx';
 
+
 export default function GiaPhaDetailPage() {
     const { MaGiaPha } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const { cayGiaPha } = useLookupsStore();
     const { isAdmin, isOwner } = usePermissions();
     const canManage = isAdmin || isOwner;
@@ -26,6 +28,9 @@ export default function GiaPhaDetailPage() {
     const [relationships, setRelationships] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [successMsg, setSuccessMsg] = useState(null);
+
+
 
     // Load gia phả detail and members
     const loadData = async () => {
@@ -56,6 +61,23 @@ export default function GiaPhaDetailPage() {
         }
     }, [MaGiaPha]);
 
+    // Listen for reload signal from navigation state
+    useEffect(() => {
+        if (location.state?.reload) {
+            loadData();
+            // Clear the state to prevent reload on next navigation
+            window.history.replaceState({}, document.title);
+        }
+    }, [location.state]);
+
+    // Clear success message after 3 seconds
+    useEffect(() => {
+        if (successMsg) {
+            const timer = setTimeout(() => setSuccessMsg(null), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [successMsg]);
+
     // Check if member is deceased
     const isDeceased = (tv) => {
         const status = (tv.TrangThai || '').toLowerCase();
@@ -64,7 +86,7 @@ export default function GiaPhaDetailPage() {
 
     // Handle edit member - navigate to edit page
     const handleEditMember = (MaTV) => {
-        navigate(`/thanhvien/edit/${MaTV}`);
+        navigate(`/thanhvien/${MaTV}/edit`);
     };
 
     // Handle delete member
@@ -75,12 +97,11 @@ export default function GiaPhaDetailPage() {
 
         try {
             await thanhvienService.delete(MaTV);
-            alert('Đã xóa thành viên thành công!');
-            // Reload data
+            setSuccessMsg('Đã xóa thành viên thành công!');
             loadData();
         } catch (err) {
             console.error('Delete error:', err);
-            alert(err.response?.data?.message || 'Lỗi xóa thành viên');
+            setError(err.response?.data?.message || 'Lỗi xóa thành viên');
         }
     };
 
@@ -96,11 +117,11 @@ export default function GiaPhaDetailPage() {
             <nav className="navbar px-6 py-4">
                 <div className="max-w-7xl mx-auto flex justify-between items-center">
                     <Link
-                        to="/giapha"
+                        to="/dashboard"
                         className="flex items-center gap-2 text-neutral-600 hover:text-emerald-600 transition-colors"
                     >
                         <FiArrowLeft className="w-5 h-5" />
-                        <span>Quay lại danh sách</span>
+                        <span>Quay lại</span>
                     </Link>
 
                     {/* Action Buttons */}
@@ -129,11 +150,22 @@ export default function GiaPhaDetailPage() {
 
             {/* Main Content */}
             <main className="max-w-7xl mx-auto px-6 py-8">
+                {/* Success Message */}
+                {successMsg && (
+                    <div className="mb-6 p-4 bg-emerald-100 text-emerald-700 rounded-xl flex items-center gap-2 animate-fade-in">
+                        <FiCheck className="w-5 h-5" />
+                        {successMsg}
+                    </div>
+                )}
+
                 {/* Error Alert */}
                 {error && (
                     <div className="alert alert-danger mb-6 animate-fade-in">
                         <span className="text-lg">⚠️</span>
                         <p>{error}</p>
+                        <button onClick={() => setError(null)} className="ml-auto">
+                            <FiX className="w-4 h-4" />
+                        </button>
                     </div>
                 )}
 
@@ -181,7 +213,7 @@ export default function GiaPhaDetailPage() {
                         </div>
 
                         {/* Stats Grid */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                        <div className="grid grid-cols-3 gap-4 mb-8">
                             <div className="glass-card p-4 text-center">
                                 <div className="text-2xl mb-2">👥</div>
                                 <div className="text-2xl font-bold text-neutral-800">{thanhVienList.length}</div>
@@ -200,13 +232,6 @@ export default function GiaPhaDetailPage() {
                                     {thanhVienList.filter(tv => isDeceased(tv)).length}
                                 </div>
                                 <div className="text-xs text-neutral-500">Đã mất</div>
-                            </div>
-                            <div className="glass-card p-4 text-center">
-                                <div className="text-2xl mb-2">👫</div>
-                                <div className="text-2xl font-bold text-violet-600">
-                                    {new Set(thanhVienList.map(tv => tv.DOI)).size || 0}
-                                </div>
-                                <div className="text-xs text-neutral-500">Số đời</div>
                             </div>
                         </div>
 

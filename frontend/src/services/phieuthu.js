@@ -12,9 +12,9 @@ class PhieuThuService {
      * Lấy danh sách phiếu thu
      * GET /users/phieuthu
      */
-    async getAll() {
+    async getAll(params) {
         try {
-            const response = await apiClient.get('/users/phieuthu');
+            const response = await apiClient.get('/users/phieuthu', { params });
             return response.data.result || [];
         } catch (error) {
             throw error;
@@ -114,13 +114,31 @@ class PhieuThuService {
     }
 
     /**
-     * Tra cứu danh mục thu chi theo năm
-     * GET /users/phieuthu/danhmuc/tra-cuu?nam=2025
+     * Xóa phiếu thu
+     * DELETE /users/phieuthu/:MaPhieuThu
      */
-    async traCuuDanhMuc(nam) {
+    async delete(MaPhieuThu) {
         try {
+            const response = await apiClient.delete(`/users/phieuthu/${MaPhieuThu}`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+
+    /**
+     * Tra cứu danh mục thu chi theo năm
+     * GET /users/phieuthu/danhmuc/tra-cuu?nam=2025&MaGiaPha=GP01
+     */
+    async traCuuDanhMuc(nam, MaGiaPha) {
+        try {
+            const params = { nam };
+            if (MaGiaPha) {
+                params.MaGiaPha = MaGiaPha;
+            }
             const response = await apiClient.get('/users/phieuthu/danhmuc/tra-cuu', {
-                params: { nam }
+                params
             });
             return response.data.data || response.data;
         } catch (error) {

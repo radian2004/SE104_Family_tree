@@ -6,13 +6,16 @@
 
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiArrowLeft, FiPlus, FiCheck, FiX, FiDollarSign, FiCalendar, FiUser, FiClock, FiBarChart2 } from 'react-icons/fi';
+import { FiArrowLeft, FiPlus, FiCheck, FiX, FiDollarSign, FiCalendar, FiUser, FiClock, FiBarChart2, FiFilter, FiTrash2 } from 'react-icons/fi';
 import phieuThuService from '../services/phieuthu';
 import thanhVienService from '../services/thanhvien';
 import { usePermissions } from '../hooks/usePermissions';
+import { useAuthStore } from '../store/authStore';
+import GiaPhaSelector from '../components/common/GiaPhaSelector';
 
 export default function PhieuThuPage() {
     const { canRecordIncome, isAdmin, isOwner } = usePermissions();
+    const user = useAuthStore(state => state.user);
 
     const [phieuThuList, setPhieuThuList] = useState([]);
     const [pendingList, setPendingList] = useState([]);
@@ -21,6 +24,9 @@ export default function PhieuThuPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [activeTab, setActiveTab] = useState('list'); // 'list', 'pending', 'create', 'report'
+
+    // ✅ GiaPha filter state for Admin
+    const [filterGiaPha, setFilterGiaPha] = useState('');
 
     // Report state
     const [reportData, setReportData] = useState(null);
@@ -35,10 +41,48 @@ export default function PhieuThuPage() {
     const [selectedDanhMuc, setSelectedDanhMuc] = useState('');
     const [soTienThu, setSoTienThu] = useState('');
 
+    // Kiểm tra xem user hiện tại có phải là "Người đảm nhận" của bất kỳ danh mục nào không
+    const isNguoiDamNhan = danhMucList.some(dm => dm.NguoiDamNhan === user?.MaTV);
+    const canCreateReceipt = canRecordIncome || isNguoiDamNhan;
+
     // Load data on mount
     useEffect(() => {
         loadData();
     }, []);
+
+    // ✅ Reload thành viên & receipts when GiaPha filter changes
+    useEffect(() => {
+        const loadFilteredData = async () => {
+            try {
+                const params = filterGiaPha ? { MaGiaPha: filterGiaPha } : {};
+
+                const [thanhVien, phieuThu] = await Promise.all([
+                    thanhVienService.getAll(params),
+                    phieuThuService.getAll(params)
+                ]);
+
+                setThanhVienList(thanhVien || []);
+                setPhieuThuList(phieuThu || []);
+            } catch (err) {
+                console.error('Error loading filtered data:', err);
+            }
+        };
+
+        // Skip initial load if desired, but here we want to react to changes.
+        // loadData() runs on mount and loads everything.
+        // This effect runs when filterGiaPha changes.
+        // To avoid double loading on mount (if filterGiaPha starts as ''), we could verify.
+        // But for simplicity and correctness when switching back to "All", just run it.
+        // However, on mount filterGiaPha is '', so this might duplicate loadData's work.
+        // We can check if data is already loaded or just let it be.
+        if (filterGiaPha !== '') {
+            loadFilteredData();
+        } else if (!isLoading) {
+            // Only reload 'all' if we are not in initial load state (approximated)
+            // or just let the user trigger it by clearing filter
+            loadFilteredData();
+        }
+    }, [filterGiaPha]);
 
     const loadData = async () => {
         setIsLoading(true);
@@ -174,6 +218,19 @@ export default function PhieuThuPage() {
         }
     };
 
+    // Xóa phiếu thu - Chỉ Owner và người đảm nhận danh mục
+    const handleDelete = async (MaPhieuThu) => {
+        if (!confirm('Bạn có chắc muốn xóa phiếu thu này? Hành động này không thể hoàn tác.')) return;
+        try {
+            await phieuThuService.delete(MaPhieuThu);
+            alert('Xóa phiếu thu thành công!');
+            loadData();
+        } catch (err) {
+            alert(err.response?.data?.message || 'Lỗi xóa phiếu thu');
+        }
+    };
+
+
     // Calculate total
     const calculateTotal = () => {
         return formData.chiTietPhieuThu.reduce((sum, ct) => sum + ct.SoTienThu, 0);
@@ -235,10 +292,21 @@ export default function PhieuThuPage() {
                 </div>
             </nav>
 
+
             {/* Main Content */}
             <main className="max-w-7xl mx-auto px-6 py-8">
-                {/* Tab Navigation */}
-                <div className="flex gap-2 mb-6 animate-fade-in">
+                {/* Admin GiaPha Filter - on its own section with higher z-index */}
+                <div className="mb-6 animate-fade-in relative z-50">
+                    <div className="max-w-sm">
+                        <GiaPhaSelector
+                            value={filterGiaPha}
+                            onChange={(val) => setFilterGiaPha(val)}
+                        />
+                    </div>
+                </div>
+
+                {/* Tab Navigation - lower z-index */}
+                <div className="flex gap-2 mb-6 animate-fade-in relative z-10">
                     <button
                         onClick={() => setActiveTab('list')}
                         className={`px-4 py-2 rounded-lg font-medium transition-all ${activeTab === 'list'
@@ -263,7 +331,7 @@ export default function PhieuThuPage() {
                             </span>
                         )}
                     </button>
-                    {canRecordIncome && (
+                    {canCreateReceipt && (
                         <button
                             onClick={() => setActiveTab('create')}
                             className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${activeTab === 'create'
@@ -321,6 +389,9 @@ export default function PhieuThuPage() {
                                                     <th className="px-4 py-3 text-left text-sm font-semibold text-neutral-700">Người đóng</th>
                                                     <th className="px-4 py-3 text-left text-sm font-semibold text-neutral-700">Ngày thu</th>
                                                     <th className="px-4 py-3 text-right text-sm font-semibold text-neutral-700">Tổng thu</th>
+                                                    {canCreateReceipt && (
+                                                        <th className="px-4 py-3 text-center text-sm font-semibold text-neutral-700">Thao tác</th>
+                                                    )}
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-neutral-100">
@@ -346,6 +417,17 @@ export default function PhieuThuPage() {
                                                         <td className="px-4 py-3 text-right font-semibold text-emerald-600">
                                                             {formatCurrency(pt.TongThu)}
                                                         </td>
+                                                        {canCreateReceipt && (
+                                                            <td className="px-4 py-3 text-center">
+                                                                <button
+                                                                    onClick={() => handleDelete(pt.MaPhieuThu)}
+                                                                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                                    title="Xóa phiếu thu"
+                                                                >
+                                                                    <FiTrash2 className="w-4 h-4" />
+                                                                </button>
+                                                            </td>
+                                                        )}
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -384,7 +466,7 @@ export default function PhieuThuPage() {
                                                         </span>
                                                     </div>
                                                 </div>
-                                                {(isAdmin || isOwner) && (
+                                                {(isOwner || (user?.MaTV === item.NguoiDamNhan)) && (
                                                     <button
                                                         onClick={() => handleXacNhan(item.MaPhieuThu, item.MaDMT)}
                                                         className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
@@ -401,7 +483,7 @@ export default function PhieuThuPage() {
                         )}
 
                         {/* Create Tab */}
-                        {activeTab === 'create' && canRecordIncome && (
+                        {activeTab === 'create' && canCreateReceipt && (
                             <div className="animate-fade-in">
                                 <form onSubmit={handleCreate} className="glass-card p-6">
                                     <h3 className="text-lg font-bold text-neutral-800 mb-6">Tạo phiếu thu mới</h3>
@@ -629,8 +711,9 @@ export default function PhieuThuPage() {
                             </div>
                         )}
                     </>
-                )}
-            </main>
-        </div>
+                )
+                }
+            </main >
+        </div >
     );
 }

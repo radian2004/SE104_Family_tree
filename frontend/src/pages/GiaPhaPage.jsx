@@ -37,7 +37,15 @@ export default function GiaPhaPage() {
         setIsLoading(true);
         setError(null);
         try {
-            const data = await giaPhaService.getAll();
+            let data = await giaPhaService.getAll();
+
+            // ⭐ REDIRECT FOR OWNER/USER: Go directly to their gia phả
+            // Admin can see all, Owner/User should be redirected to their own
+            if (!isAdmin && user?.MaGiaPha) {
+                // Redirect directly to their GiaPha detail page
+                navigate(`/giapha/${user.MaGiaPha}`, { replace: true });
+                return;
+            }
 
             // Fetch member counts for each gia pha (since backend doesn't return it correctly)
             const giaPhaWithCounts = await Promise.all(
@@ -203,15 +211,7 @@ export default function GiaPhaPage() {
                         </div>
                     </div>
 
-                    {canManage && (
-                        <button
-                            onClick={() => setShowCreateModal(true)}
-                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg shadow-lg hover:shadow-xl transition-all"
-                        >
-                            <FiPlus className="w-4 h-4" />
-                            <span>Tạo gia phả</span>
-                        </button>
-                    )}
+
                 </div>
             </nav>
 
@@ -350,102 +350,6 @@ export default function GiaPhaPage() {
                     </div>
                 )}
             </main>
-
-            {/* Create Modal */}
-            {showCreateModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
-                        <div className="p-6 bg-gradient-to-r from-emerald-500 to-teal-500 text-white flex justify-between items-center">
-                            <h2 className="text-xl font-bold">Tạo Gia Phả Mới</h2>
-                            <button onClick={() => setShowCreateModal(false)} className="p-1 hover:bg-white/20 rounded-full transition-colors">
-                                <FiX className="w-5 h-5" />
-                            </button>
-                        </div>
-
-                        <form onSubmit={handleCreate} className="p-6 space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-neutral-700 mb-1">Tên gia phả *</label>
-                                <input
-                                    type="text"
-                                    value={createForm.TenGiaPha}
-                                    onChange={(e) => setCreateForm({ ...createForm, TenGiaPha: e.target.value })}
-                                    placeholder="Nhập tên gia phả (VD: Gia phả họ Nguyễn)"
-                                    className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                                    required
-                                />
-                            </div>
-
-                            {/* Autocomplete Search input for TruongToc */}
-                            <div className="relative">
-                                <label className="block text-sm font-medium text-neutral-700 mb-1">
-                                    Trưởng tộc (Tìm theo tên) <span className="text-red-500">*</span>
-                                </label>
-                                <div className="relative">
-                                    <input
-                                        type="text"
-                                        value={searchQuery}
-                                        onChange={(e) => {
-                                            setSearchQuery(e.target.value);
-                                            // Reset selected TruongToc if user types new query
-                                            if (createForm.TruongTocName && e.target.value !== createForm.TruongTocName) {
-                                                setCreateForm({ ...createForm, TruongToc: '', TruongTocName: '' });
-                                            }
-                                        }}
-                                        onFocus={() => { if (searchResults.length > 0) setShowDropdown(true); }}
-                                        placeholder="Nhập tên thành viên để tìm..."
-                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent pl-10 ${!createForm.TruongToc ? 'border-neutral-200 focus:ring-orange-500' : 'border-emerald-300 focus:ring-emerald-500'
-                                            }`}
-                                    />
-                                    <FiSearch className="absolute left-3 top-2.5 text-neutral-400 w-5 h-5" />
-                                </div>
-
-                                {/* Dropdown results */}
-                                {showDropdown && searchResults.length > 0 && (
-                                    <div className="absolute z-10 w-full mt-1 bg-white border border-neutral-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                                        {searchResults.map((member) => (
-                                            <div
-                                                key={member.MaTV}
-                                                onClick={() => handleSelectMember(member)}
-                                                className="px-4 py-2 hover:bg-neutral-50 cursor-pointer flex justify-between items-center transition-colors"
-                                            >
-                                                <div>
-                                                    <div className="font-medium text-neutral-800">{member.HoTen}</div>
-                                                    <div className="text-xs text-neutral-500">
-                                                        Mã: {member.MaTV} {member.TenGiaPha ? `- Gia phả: ${member.TenGiaPha}` : '- Chưa thuộc gia phả nào'}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                                {showDropdown && searchResults.length === 0 && searchQuery.trim().length >= 2 && (
-                                    <div className="absolute z-10 w-full mt-1 bg-white border border-neutral-200 rounded-lg shadow-lg p-4 text-center text-sm text-neutral-500">
-                                        Không tìm thấy thành viên nào
-                                    </div>
-                                )}
-                                {createForm.TruongToc && (
-                                    <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1">
-                                        <FiCheck className="w-3 h-3" />
-                                        <strong>✓ Đã chọn:</strong> {createForm.TruongTocName} ({createForm.TruongToc})
-                                    </p>
-                                )}
-                                {!createForm.TruongToc && (
-                                    <p className="text-xs text-orange-500 mt-2">
-                                        ⚠️ Bạn phải chọn một trưởng tộc từ danh sách trước khi tạo gia phả
-                                    </p>
-                                )}
-                            </div>
-
-                            <div className="flex justify-end gap-3 pt-4">
-                                <button type="button" onClick={() => setShowCreateModal(false)} className="px-4 py-2 border border-neutral-300 rounded-lg hover:bg-neutral-50">Hủy</button>
-                                <button type="submit" disabled={isCreating} className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50">
-                                    {isCreating ? 'Đang tạo...' : 'Tạo gia phả'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
 
             {/* Add Member By Email Modal */}
             {showAddMemberModal && (

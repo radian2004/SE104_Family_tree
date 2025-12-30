@@ -14,12 +14,19 @@ import thanhvienService from '../services/thanhvien.js';
 import ThanhTichList from '../components/thanhvien/ThanhTichList.jsx';
 import KetThucSection from '../components/thanhvien/KetThucSection.jsx';
 import QuanHeSection from '../components/thanhvien/QuanHeSection.jsx';
+import { usePermissions } from '../hooks/usePermissions';
+import { useAuth } from '../hooks/useAuth';
 
 export default function ThanhVienDetailPage() {
   const navigate = useNavigate();
   const { MaTV } = useParams();
   const { removeThanhVienFromList } = useThanhVienStore();
   const { setAllLookups, queQuan, ngheNghiep, cayGiaPha } = useLookupsStore();
+  const { user } = useAuth();
+  const { isAdmin, isOwner } = usePermissions();
+
+  // ✅ Permission: Only Admin/Owner can edit relationships
+  const canEditRelations = isAdmin || isOwner;
 
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
@@ -292,6 +299,21 @@ export default function ThanhVienDetailPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Đời (Generation) Card */}
+              <div className="glass-card p-5 hover:shadow-lg transition-shadow">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600">
+                    <span className="text-xl font-bold">🌿</span>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-neutral-500 mb-1">Thế hệ (Đời)</h3>
+                    <p className="text-neutral-800 font-medium">
+                      Đời thứ <span className="text-2xl font-bold text-amber-600">{thanhvien.DOI ?? 0}</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Divider */}
@@ -313,6 +335,8 @@ export default function ThanhVienDetailPage() {
                 MaTV={MaTV}
                 memberName={thanhvien?.HoTen}
                 memberGender={thanhvien?.GioiTinh}
+                canEdit={canEditRelations}
+                MaGiaPha={thanhvien?.MaGiaPha}
               />
             </div>
 

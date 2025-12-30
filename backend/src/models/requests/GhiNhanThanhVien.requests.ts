@@ -11,10 +11,10 @@ export interface GhiNhanThanhVienReqBody {
   DiaChi: string;                             // Địa chỉ (required)
   MaQueQuan: string;                          // Mã quê quán - FK QUEQUAN (required)
   MaNgheNghiep?: string | null;               // Mã nghề nghiệp - FK NGHENGHIEP (optional)
-  
+
   // Thông tin quan hệ
   MaTVCu: string;                             // Mã thành viên cũ (cha/mẹ/chồng/vợ)
-  LoaiQuanHe: 'Con cái' | 'Vợ/Chồng';         // Loại quan hệ
+  LoaiQuanHe: 'Con cái' | 'Vợ/Chồng' | 'Cha';   // Loại quan hệ (thêm Cha để thêm cha cho thành viên)
   NgayPhatSinh: string;                       // Ngày phát sinh (ngày khai sinh / ngày kết hôn)
 }
 

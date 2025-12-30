@@ -9,6 +9,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiArrowLeft, FiSettings, FiMapPin, FiBriefcase, FiHeart, FiMap, FiAward, FiDollarSign } from 'react-icons/fi';
 import CategoryManagementModal from '../components/common/CategoryManagementModal';
+import GiaPhaSelector from '../components/common/GiaPhaSelector';
+import { usePermissions } from '../hooks/usePermissions'; // Import usePermissions
 
 // Category configuration
 const CATEGORIES = [
@@ -63,8 +65,10 @@ const CATEGORIES = [
 ];
 
 export default function DanhMucPage() {
+    const { isAdmin, isOwner } = usePermissions(); // Get permissions
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [modalOpen, setModalOpen] = useState(false);
+    const [selectedGiaPha, setSelectedGiaPha] = useState(null); // Add selectedGiaPha state
 
     const openModal = (categoryId) => {
         setSelectedCategory(categoryId);
@@ -115,6 +119,17 @@ export default function DanhMucPage() {
                         </div>
                     </div>
                 </div>
+
+                {/* Gia Pha Selector - Only for Admin/Owner */}
+                {(isAdmin || isOwner) && (
+                    <div className="mb-8">
+                        <GiaPhaSelector
+                            value={selectedGiaPha}
+                            onChange={setSelectedGiaPha}
+                            inititalSelectFirst={true}
+                        />
+                    </div>
+                )}
 
                 {/* Info Box */}
                 <div className="mb-8 p-4 bg-amber-50 border border-amber-100 rounded-xl">
@@ -169,6 +184,7 @@ export default function DanhMucPage() {
                 isOpen={modalOpen}
                 onClose={closeModal}
                 categoryType={selectedCategory}
+                MaGiaPha={selectedGiaPha} // Pass selected MaGiaPha to modal
                 onUpdate={() => {
                     // Có thể reload data nếu cần
                 }}

@@ -181,8 +181,9 @@ class UsersService {
       MaGiaPha = gpRows[0].MaGiaPha;
 
       // 3. Tạo thành viên mới (người lập gia phả)
+      // ⭐ FIX: Đời đầu tiên là 0, không phải 1
       await databaseService.getPool().execute<ResultSetHeader>(
-        'INSERT INTO THANHVIEN (MaGiaPha, HoTen, DOI, TrangThai) VALUES (?, ?, 1, ?)',
+        'INSERT INTO THANHVIEN (MaGiaPha, HoTen, DOI, TrangThai) VALUES (?, ?, 0, ?)',
         [MaGiaPha, name, 'Còn Sống']
       );
 
@@ -388,11 +389,9 @@ class UsersService {
       FROM THANHVIEN tv
       LEFT JOIN TAIKHOAN tk ON tv.MaTV = tk.MaTV
       LEFT JOIN QUEQUAN qq ON tv.MaQueQuan = qq.MaQueQuan
-      LEFT JOIN QUANHECON qhc_cha ON tv.MaTV = qhc_cha.MaCon AND qhc_cha.QuanHe = 'Con ruột'
-      LEFT JOIN THANHVIEN cha ON qhc_cha.MaCha = cha.MaTV
-      LEFT JOIN QUANHECON qhc_me ON tv.MaTV = qhc_me.MaCon AND qhc_me.QuanHe = 'Con ruột'
-      LEFT JOIN HONNHAN hn ON qhc_me.MaCha = hn.MaChong OR qhc_me.MaCha = hn.MaVo
-      LEFT JOIN THANHVIEN me ON (hn.MaVo = me.MaTV AND hn.MaChong = cha.MaTV) OR (hn.MaChong = me.MaTV AND hn.MaVo = cha.MaTV)
+      LEFT JOIN QUANHECON qhc ON tv.MaTV = qhc.MaTV
+      LEFT JOIN THANHVIEN cha ON qhc.MaTVCha = cha.MaTV
+      LEFT JOIN THANHVIEN me ON qhc.MaTVMe = me.MaTV
       WHERE tv.MaGiaPha = ? AND tk.TenDangNhap IS NULL
       ORDER BY tv.HoTen, tv.NgayGioSinh
     `;
@@ -409,6 +408,74 @@ class UsersService {
       TenMe: row.TenMe,
       HasAccount: false
     }));
+  }
+
+  /**
+   * Xác minh thành viên bằng mã gia phả và mã thành viên
+   * Trả về thông tin chi tiết nếu khớp, null nếu không
+   */
+  async verifyMemberForRegistration(MaGiaPha: string, MaTV: string) {
+    // Tìm thành viên với MaTV trong gia phả MaGiaPha và chưa có tài khoản
+    const sql = `
+      SELECT 
+        tv.MaTV, 
+        tv.HoTen, 
+        tv.NgayGioSinh,
+        tv.DOI,
+        tv.GioiTinh,
+        tv.DiaChi,
+        gp.TenGiaPha,
+        gp.MaGiaPha,
+        qq.TenQueQuan,
+        cha.HoTen AS TenCha,
+        me.HoTen AS TenMe
+      FROM THANHVIEN tv
+      INNER JOIN CAYGIAPHA gp ON tv.MaGiaPha = gp.MaGiaPha
+      LEFT JOIN TAIKHOAN tk ON tv.MaTV = tk.MaTV
+      LEFT JOIN QUEQUAN qq ON tv.MaQueQuan = qq.MaQueQuan
+      LEFT JOIN QUANHECON qhc ON tv.MaTV = qhc.MaTV
+      LEFT JOIN THANHVIEN cha ON qhc.MaTVCha = cha.MaTV
+      LEFT JOIN THANHVIEN me ON qhc.MaTVMe = me.MaTV
+      WHERE gp.MaGiaPha = ? AND tv.MaTV = ? AND tk.TenDangNhap IS NULL
+    `;
+
+    const rows = await databaseService.query<RowDataPacket[]>(sql, [MaGiaPha, MaTV]);
+
+    if (rows.length === 0) {
+      // Có thể đã có tài khoản hoặc không tồn tại
+      // Kiểm tra xem có tồn tại không
+      const checkSql = `
+        SELECT tv.MaTV, tk.TenDangNhap
+        FROM THANHVIEN tv
+        INNER JOIN CAYGIAPHA gp ON tv.MaGiaPha = gp.MaGiaPha
+        LEFT JOIN TAIKHOAN tk ON tv.MaTV = tk.MaTV
+        WHERE gp.MaGiaPha = ? AND tv.MaTV = ?
+      `;
+      const checkRows = await databaseService.query<RowDataPacket[]>(checkSql, [MaGiaPha, MaTV]);
+
+      if (checkRows.length > 0 && checkRows[0].TenDangNhap) {
+        throw new ErrorWithStatus({
+          message: 'Thành viên này đã có tài khoản',
+          status: HTTP_STATUS.BAD_REQUEST
+        });
+      }
+
+      return null; // Không tồn tại
+    }
+
+    const row = rows[0];
+    return {
+      MaTV: row.MaTV,
+      HoTen: row.HoTen,
+      NgayGioSinh: row.NgayGioSinh,
+      DOI: row.DOI,
+      GioiTinh: row.GioiTinh,
+      DiaChi: row.DiaChi || row.TenQueQuan,
+      TenGiaPha: row.TenGiaPha,
+      MaGiaPha: row.MaGiaPha,
+      TenCha: row.TenCha,
+      TenMe: row.TenMe
+    };
   }
 
   /**
@@ -742,12 +809,11 @@ class UsersService {
     }
 
     // Create request
-    // MaTK references TAIKHOAN(TenDangNhap), which IS the email in this system
     const sql = `
-      INSERT INTO YEU_CAU_MAT_KHAU (MaTK, Email, TrangThai)
-      VALUES (?, ?, 'ChoDuyet')
+      INSERT INTO YEU_CAU_MAT_KHAU (Email, TrangThai)
+      VALUES (?, 'ChoDuyet')
     `;
-    await databaseService.query(sql, [email, email]);
+    await databaseService.query(sql, [email]);
 
     return {
       message: 'Đã gửi yêu cầu đặt lại mật khẩu. Vui lòng đợi Admin phê duyệt.'

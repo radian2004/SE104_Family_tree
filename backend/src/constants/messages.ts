@@ -72,7 +72,7 @@ export const THANHVIEN_MESSAGES = {
   // Validation
   MISSING_REQUIRED_FIELDS: 'Thiếu thông tin bắt buộc',
   INVALID_GENDER: 'Giới tính không hợp lệ. Phải là "Nam" hoặc "Nữ"',
-  INVALID_RELATION_TYPE: 'Loại quan hệ không hợp lệ. Phải là "Con cái" hoặc "Vợ/Chồng"',
+  INVALID_RELATION_TYPE: 'Loại quan hệ không hợp lệ. Phải là "Con cái", "Vợ/Chồng" hoặc "Cha"',
 
   // Errors
   MEMBER_NOT_FOUND: 'Không tìm thấy thành viên',

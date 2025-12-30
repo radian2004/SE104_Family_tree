@@ -7,12 +7,67 @@ import { TaiKhoanInfo } from '~/middlewares/authorization.middlewares'
 
 class KetThucService {
   /**
+   * ⭐ Helper: Kiểm tra thành viên có thuộc gia phả không
+   */
+  async verifyMemberInGiaPha(MaTV: string, MaGiaPha: string): Promise<boolean> {
+    const sql = 'SELECT MaTV FROM THANHVIEN WHERE MaTV = ? AND MaGiaPha = ?';
+    const rows = await databaseService.query<RowDataPacket[]>(sql, [MaTV, MaGiaPha]);
+    return rows.length > 0;
+  }
+
+  /**
    * 1. Ghi nhận kết thúc (thành viên qua đời)
    * Cập nhật thông tin mất vào bảng THANHVIEN
    * Đồng thời cập nhật TrangThai → 'Mất'
+   * ⭐ V2: Thêm phân quyền - chỉ cho phép ghi nhận cho thành viên trong gia phả của mình
    */
   async ghiNhanKetThuc(payload: GhiNhanKetThucPayload, userInfo?: TaiKhoanInfo) {
     const { MaTV, NgayGioMat, MaNguyenNhanMat, MaDiaDiem } = payload
+
+    // ⭐ PHÂN QUYỀN THEO GIA PHẢ
+    if (userInfo && userInfo.MaLoaiTK !== 'LTK01') {
+      if (!userInfo.MaGiaPha) {
+        throw new ErrorWithStatus({
+          message: 'Bạn chưa thuộc gia phả nào',
+          status: HTTP_STATUS.FORBIDDEN
+        });
+      }
+      // Verify member belongs to user's gia pha
+      const memberCheck = await this.verifyMemberInGiaPha(MaTV, userInfo.MaGiaPha);
+      if (!memberCheck) {
+        throw new ErrorWithStatus({
+          message: 'Thành viên này không thuộc gia phả của bạn',
+          status: HTTP_STATUS.FORBIDDEN
+        });
+      }
+    }
+
+    // ⭐ VALIDATE: Ngày mất phải sau ngày sinh
+    const [memberRows] = await databaseService.query<RowDataPacket[]>(
+      'SELECT NgayGioSinh FROM THANHVIEN WHERE MaTV = ?',
+      [MaTV]
+    );
+
+    if (memberRows.length === 0) {
+      throw new ErrorWithStatus({
+        message: 'Không tìm thấy thành viên',
+        status: HTTP_STATUS.NOT_FOUND
+      });
+    }
+
+    const member = memberRows[0];
+    // ✅ Add safer null/undefined check
+    if (member && member.NgayGioSinh != null) {
+      const ngaySinh = new Date(member.NgayGioSinh);
+      const ngayMat = new Date(NgayGioMat);
+
+      if (ngayMat < ngaySinh) {
+        throw new ErrorWithStatus({
+          message: 'Ngày mất không thể trước ngày sinh',
+          status: HTTP_STATUS.BAD_REQUEST
+        });
+      }
+    }
 
     const query = `
       UPDATE THANHVIEN
@@ -39,8 +94,11 @@ class KetThucService {
     }
   }
 
+
   /**
     * 2. Tra cứu danh sách thành viên đã kết thúc
+    * - Admin: Xem tất cả (có thể filter theo MaGiaPha từ query params)
+    * - Owner/User: Chỉ xem trong gia phả
     */
   async traCuuKetThuc(filters?: {
     HoTen?: string
@@ -50,18 +108,29 @@ class KetThucService {
     TenDiaDiem?: string
     TuNgay?: string
     DenNgay?: string
+    MaGiaPha?: string  // ✅ NEW: Admin có thể filter theo gia phả từ dropdown
   }, userInfo?: TaiKhoanInfo): Promise<TraCuuKetThucResult[]> {
     let whereClauses: string[] = ["tv.TrangThai = 'Mất'"];
     const params: any[] = [];
 
-    // ⭐ FILTER THEO MaGiaPha (Owner/User chỉ xem trong gia phả)
-    if (userInfo && userInfo.MaLoaiTK !== 'LTK01') {
-      // Không phải Admin → giới hạn theo gia phả
-      if (!userInfo.MaGiaPha) {
-        throw new Error('Bạn chưa thuộc gia phả nào');
+    // ⭐ FILTER THEO MaGiaPha 
+    // - Admin (LTK01): Xem tất cả, nhưng có thể filter theo MaGiaPha từ query
+    // - Owner/User: Giới hạn theo gia phả của mình
+    if (userInfo) {
+      if (userInfo.MaLoaiTK === 'LTK01') {
+        // Admin: nếu có MaGiaPha từ filter thì dùng, không thì xem tất cả
+        if (filters?.MaGiaPha) {
+          whereClauses.push('tv.MaGiaPha = ?');
+          params.push(filters.MaGiaPha);
+        }
+      } else {
+        // Không phải Admin → giới hạn theo gia phả
+        if (!userInfo.MaGiaPha) {
+          throw new Error('Bạn chưa thuộc gia phả nào');
+        }
+        whereClauses.push('tv.MaGiaPha = ?');
+        params.push(userInfo.MaGiaPha);
       }
-      whereClauses.push('tv.MaGiaPha = ?');
-      params.push(userInfo.MaGiaPha);
     }
 
     // Lọc theo họ tên (LIKE search)
@@ -110,7 +179,7 @@ class KetThucService {
         ROW_NUMBER() OVER (ORDER BY tv.NgayGioMat DESC) AS STT,
         tv.MaTV,
         tv.HoTen,
-        DATE_FORMAT(tv.NgayGioMat, '%d/%m/%Y %H:%i:%s') AS NgayGioMat,
+        DATE_FORMAT(tv.NgayGioMat, '%Y-%m-%d %H:%i:%s') AS NgayGioMat,
         COALESCE(nnm.TenNguyenNhanMat, 'Không rõ') AS TenNguyenNhanMat,
         COALESCE(dd.TenDiaDiem, 'Không rõ') AS TenDiaDiem
       FROM THANHVIEN tv

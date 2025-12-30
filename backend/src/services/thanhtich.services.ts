@@ -40,6 +40,17 @@ class ThanhTichService {
   }
 
   /**
+   * ⭐ Kiểm tra thành viên có thuộc gia phả không
+   * Dùng cho phân quyền ghi nhận thành tích/kết thúc
+   */
+  async verifyMemberInGiaPha(MaTV: string, MaGiaPha: string): Promise<boolean> {
+    const sql = 'SELECT MaTV FROM THANHVIEN WHERE MaTV = ? AND MaGiaPha = ?';
+    const rows = await databaseService.query<RowDataPacket[]>(sql, [MaTV, MaGiaPha]);
+    return rows.length > 0;
+  }
+
+
+  /**
    * Ghi nhận thành tích mới
    */
   async ghiNhanThanhTich(payload: {
@@ -83,7 +94,7 @@ class ThanhTichService {
 
   /**
    * Tra cứu thành tích với phân quyền
-   * - Admin: Tra cứu tất cả
+   * - Admin: Tra cứu tất cả (có thể filter theo MaGiaPha từ query params)
    * - Owner/User: Chỉ tra cứu trong gia phả
    */
   async traCuuThanhTich(
@@ -93,6 +104,7 @@ class ThanhTichService {
       TenLoaiThanhTich?: string;
       TuNgay?: Date;
       DenNgay?: Date;
+      MaGiaPha?: string;  // ✅ NEW: Admin có thể filter theo gia phả từ dropdown
     },
     userInfo?: { MaLoaiTK: string; MaGiaPha: string | null }
   ) {
@@ -113,12 +125,16 @@ class ThanhTichService {
     const params: any[] = [];
 
     // ✅ PHÂN QUYỀN: 
-    // - Admin (LTK01): xem tất cả
+    // - Admin (LTK01): xem tất cả, nhưng có thể filter theo MaGiaPha từ query
     // - Owner (LTK02): xem tất cả nếu MaGiaPha = NULL, hoặc chỉ gia phả của mình
     // - User (LTK03): chỉ xem trong gia phả
     if (userInfo) {
       if (userInfo.MaLoaiTK === 'LTK01') {
-        // Admin: xem tất cả, không filter
+        // Admin: nếu có MaGiaPha từ filter thì dùng, không thì xem tất cả
+        if (filters?.MaGiaPha) {
+          sql += ' AND tv.MaGiaPha = ?';
+          params.push(filters.MaGiaPha);
+        }
       } else if (userInfo.MaLoaiTK === 'LTK02') {
         // Owner: nếu có MaGiaPha thì filter, không thì xem tất cả
         if (userInfo.MaGiaPha) {
@@ -274,18 +290,16 @@ class ThanhTichService {
       throw new Error(`Năm kết thúc không được vượt quá năm hiện tại (${currentYear})`);
     }
 
+    // ⭐ FIX: Query nhóm theo năm VÀ loại thành tích
     let sql = `
       SELECT 
-        ROW_NUMBER() OVER (ORDER BY SUM(g.cnt) DESC) AS STT,
+        YEAR(g.NgayPhatSinh) AS Nam,
         ltt.TenLTT AS LoaiThanhTich,
-        SUM(g.cnt) AS SoLuong
-      FROM (
-        SELECT 
-          g.MaLTT,
-          COUNT(*) as cnt
-        FROM GHINHANTHANHTICH g
-        INNER JOIN THANHVIEN tv ON g.MaTV = tv.MaTV
-        WHERE YEAR(g.NgayPhatSinh) BETWEEN ? AND ?
+        COUNT(*) AS SoLuong
+      FROM GHINHANTHANHTICH g
+      INNER JOIN THANHVIEN tv ON g.MaTV = tv.MaTV
+      INNER JOIN LOAITHANHTICH ltt ON g.MaLTT = ltt.MaLTT
+      WHERE YEAR(g.NgayPhatSinh) BETWEEN ? AND ?
     `;
 
     const params: any[] = [NamBatDau, NamKetThuc];
@@ -318,28 +332,33 @@ class ThanhTichService {
     }
 
     sql += `
-        GROUP BY g.MaLTT
-      ) g
-      INNER JOIN LOAITHANHTICH ltt ON g.MaLTT = ltt.MaLTT
-      GROUP BY g.MaLTT, ltt.TenLTT
-      HAVING SUM(g.cnt) > 0
-      ORDER BY SoLuong DESC
+      GROUP BY YEAR(g.NgayPhatSinh), g.MaLTT, ltt.TenLTT
+      HAVING COUNT(*) > 0
+      ORDER BY Nam ASC, SoLuong DESC
     `;
 
     interface BaoCaoRow extends RowDataPacket {
-      STT: number;
+      Nam: number;
       LoaiThanhTich: string;
       SoLuong: number;
     }
 
     const rows = await databaseService.query<BaoCaoRow[]>(sql, params);
 
+    // ⭐ Thêm STT
+    const rowsWithSTT = rows.map((row, index) => ({
+      STT: index + 1,
+      Nam: row.Nam,
+      LoaiThanhTich: row.LoaiThanhTich,
+      SoLuong: parseInt(row.SoLuong.toString())
+    }));
+
     return {
       NamBatDau,
       NamKetThuc,
       TongLoaiThanhTich: rows.length,
       TongSoLuong: rows.reduce((sum, row) => sum + parseInt(row.SoLuong.toString()), 0),
-      DanhSach: rows
+      DanhSach: rowsWithSTT
     };
   }
 

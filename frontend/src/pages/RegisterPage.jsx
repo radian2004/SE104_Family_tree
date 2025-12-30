@@ -20,12 +20,12 @@ export default function RegisterPage() {
   // Mode: 'join' = gia nhập có sẵn, 'create' = tạo mới
   const [mode, setMode] = useState('join');
 
-  // Dropdown data
+  // Dropdown data (chỉ dùng cho mode create)
   const [genealogies, setGenealogies] = useState([]);
-  const [availableMembers, setAvailableMembers] = useState([]);
-  const [loadingGenealogies, setLoadingGenealogies] = useState(true);
-  const [loadingMembers, setLoadingMembers] = useState(false);
+  const [loadingGenealogies, setLoadingGenealogies] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verifiedMember, setVerifiedMember] = useState(null); // Thông tin thành viên đã xác minh
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
@@ -35,60 +35,22 @@ export default function RegisterPage() {
     email: '',
     password: '',
     confirm_password: '',
-    // Join mode
-    selectedGiaPha: '',
-    selectedMaTV: '',
+    // Join mode - nhập mã trực tiếp
+    MaGiaPha: '',
+    MaTV: '',
     // Create mode
     newGiaPhaName: '',
   });
 
-  const [selectedMember, setSelectedMember] = useState(null);
   const [formErrors, setFormErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Load danh sách gia phả khi mount
+  // Reset verified member khi thay đổi mode hoặc mã
   useEffect(() => {
-    loadGenealogies();
-  }, []);
-
-  // Load members khi chọn gia phả (join mode)
-  useEffect(() => {
-    if (mode === 'join' && formData.selectedGiaPha) {
-      loadMembers(formData.selectedGiaPha);
-    } else {
-      setAvailableMembers([]);
-      setSelectedMember(null);
-    }
-  }, [formData.selectedGiaPha, mode]);
-
-  const loadGenealogies = async () => {
-    try {
-      setLoadingGenealogies(true);
-      const response = await apiClient.get('/users/genealogies');
-      setGenealogies(response.data.result || []);
-    } catch (err) {
-      console.error('Error loading genealogies:', err);
-    } finally {
-      setLoadingGenealogies(false);
-    }
-  };
-
-  const loadMembers = async (giaPhaName) => {
-    try {
-      setLoadingMembers(true);
-      setAvailableMembers([]);
-      setSelectedMember(null);
-      setFormData(prev => ({ ...prev, selectedMaTV: '' }));
-
-      const response = await apiClient.get(`/users/available-members?giapha=${encodeURIComponent(giaPhaName)}`);
-      setAvailableMembers(response.data.result || []);
-    } catch (err) {
-      console.error('Error loading members:', err);
-    } finally {
-      setLoadingMembers(false);
-    }
-  };
+    setVerifiedMember(null);
+    setError(null);
+  }, [mode, formData.MaGiaPha, formData.MaTV]);
 
   if (isAuthenticated) {
     navigate('/dashboard');
@@ -103,11 +65,33 @@ export default function RegisterPage() {
     setError(null);
   };
 
-  const handleMemberSelect = (e) => {
-    const MaTV = e.target.value;
-    const member = availableMembers.find(m => m.MaTV === MaTV);
-    setSelectedMember(member || null);
-    setFormData(prev => ({ ...prev, selectedMaTV: MaTV, name: member?.HoTen || '' }));
+  // Xác minh mã gia phả và mã thành viên
+  const handleVerifyMember = async () => {
+    if (!formData.MaGiaPha.trim() || !formData.MaTV.trim()) {
+      setError('Vui lòng nhập cả Mã gia phả và Mã thành viên');
+      return;
+    }
+
+    setIsVerifying(true);
+    setError(null);
+    setVerifiedMember(null);
+
+    try {
+      // Gọi API để xác minh
+      const response = await apiClient.get(`/users/verify-member?MaGiaPha=${formData.MaGiaPha}&MaTV=${formData.MaTV}`);
+
+      if (response.data.result) {
+        setVerifiedMember(response.data.result);
+        setFormData(prev => ({ ...prev, name: response.data.result.HoTen }));
+      } else {
+        setError('Không tìm thấy thành viên với mã này trong gia phả đã chỉ định');
+      }
+    } catch (err) {
+      console.error('Verify error:', err);
+      setError(err.response?.data?.message || 'Không tìm thấy thành viên. Vui lòng kiểm tra lại mã.');
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   const validateForm = () => {
@@ -117,8 +101,10 @@ export default function RegisterPage() {
       if (!formData.name.trim()) errors.name = 'Vui lòng nhập họ tên';
       if (!formData.newGiaPhaName.trim()) errors.newGiaPhaName = 'Vui lòng nhập tên gia phả';
     } else {
-      if (!formData.selectedGiaPha) errors.selectedGiaPha = 'Vui lòng chọn gia phả';
-      if (!formData.selectedMaTV) errors.selectedMaTV = 'Vui lòng chọn tên của bạn';
+      // Mode join: cần đã xác minh thành viên
+      if (!formData.MaGiaPha.trim()) errors.MaGiaPha = 'Vui lòng nhập mã gia phả';
+      if (!formData.MaTV.trim()) errors.MaTV = 'Vui lòng nhập mã thành viên';
+      if (!verifiedMember) errors.MaTV = 'Vui lòng xác minh thành viên trước khi đăng ký';
     }
 
     if (!formData.email) errors.email = 'Vui lòng nhập email';
@@ -146,13 +132,13 @@ export default function RegisterPage() {
 
     try {
       const payload = {
-        name: mode === 'create' ? formData.name : selectedMember?.HoTen || formData.name,
+        name: mode === 'create' ? formData.name : verifiedMember?.HoTen || formData.name,
         email: formData.email,
         password: formData.password,
         confirm_password: formData.confirm_password,
         giapha: mode === 'create'
           ? { name: formData.newGiaPhaName.trim(), exist: false }
-          : { name: formData.selectedGiaPha, exist: true, MaTV: formData.selectedMaTV }
+          : { name: verifiedMember?.TenGiaPha || formData.MaGiaPha, exist: true, MaTV: formData.MaTV }
       };
 
       const response = await apiClient.post('/users/register', payload);
@@ -168,12 +154,6 @@ export default function RegisterPage() {
       console.error('Register error:', err);
       const errorMsg = err.response?.data?.message || 'Đăng ký thất bại';
       setError(errorMsg);
-
-      // Xử lý trường hợp có nhiều người trùng tên
-      if (err.response?.status === 300 && err.response?.data?.candidates) {
-        setAvailableMembers(err.response.data.candidates);
-        setError('Có nhiều thành viên cùng tên. Vui lòng chọn đúng thành viên.');
-      }
     } finally {
       setIsSubmitting(false);
     }
@@ -200,8 +180,8 @@ export default function RegisterPage() {
             type="button"
             onClick={() => setMode('join')}
             className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${mode === 'join'
-                ? 'bg-white shadow text-emerald-600'
-                : 'text-neutral-500 hover:text-neutral-700'
+              ? 'bg-white shadow text-emerald-600'
+              : 'text-neutral-500 hover:text-neutral-700'
               }`}
           >
             <FiUsers className="w-4 h-4" />
@@ -211,8 +191,8 @@ export default function RegisterPage() {
             type="button"
             onClick={() => setMode('create')}
             className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${mode === 'create'
-                ? 'bg-white shadow text-emerald-600'
-                : 'text-neutral-500 hover:text-neutral-700'
+              ? 'bg-white shadow text-emerald-600'
+              : 'text-neutral-500 hover:text-neutral-700'
               }`}
           >
             <FiPlus className="w-4 h-4" />
@@ -291,78 +271,92 @@ export default function RegisterPage() {
               {/* Info banner */}
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex gap-3">
                 <FiInfo className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-blue-700">
-                  Bạn chỉ có thể đăng ký nếu tên của bạn đã được Trưởng tộc thêm vào gia phả.
-                </p>
+                <div className="text-sm text-blue-700">
+                  <p>Nhập mã gia phả và mã thành viên được Trưởng tộc cung cấp.</p>
+                  <p className="mt-1 text-blue-600">Ví dụ: Mã gia phả <strong>GP01</strong>, Mã thành viên <strong>TV001</strong></p>
+                </div>
               </div>
 
-              {/* Chọn Gia phả */}
+              {/* Nhập mã Gia phả */}
               <div>
                 <label className="form-label flex items-center gap-1">
-                  <FiUsers className="w-4 h-4" />
-                  Chọn Gia phả *
+                  <FiHome className="w-4 h-4" />
+                  Mã gia phả *
                 </label>
-                <select
-                  name="selectedGiaPha"
-                  value={formData.selectedGiaPha}
+                <input
+                  type="text"
+                  name="MaGiaPha"
+                  value={formData.MaGiaPha}
                   onChange={handleChange}
-                  className={`input-field ${formErrors.selectedGiaPha ? 'border-red-400' : ''}`}
-                  disabled={isSubmitting || loadingGenealogies}
-                >
-                  <option value="">-- Chọn gia phả --</option>
-                  {genealogies.map(gp => (
-                    <option key={gp.MaGiaPha} value={gp.TenGiaPha}>
-                      {gp.TenGiaPha}
-                    </option>
-                  ))}
-                </select>
-                {formErrors.selectedGiaPha && <p className="text-red-500 text-xs mt-1">{formErrors.selectedGiaPha}</p>}
+                  placeholder="VD: GP01"
+                  className={`input-field ${formErrors.MaGiaPha ? 'border-red-400' : ''}`}
+                  disabled={isSubmitting || verifiedMember}
+                />
+                {formErrors.MaGiaPha && <p className="text-red-500 text-xs mt-1">{formErrors.MaGiaPha}</p>}
               </div>
 
-              {/* Chọn tên */}
-              {formData.selectedGiaPha && (
-                <div className="animate-fade-in">
-                  <label className="form-label flex items-center gap-1">
-                    <FiUser className="w-4 h-4" />
-                    Chọn tên của bạn *
-                  </label>
-                  {loadingMembers ? (
-                    <div className="text-neutral-500 text-sm py-2">Đang tải...</div>
-                  ) : availableMembers.length === 0 ? (
-                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-700">
-                      Không có thành viên nào khả dụng trong gia phả này.
-                      Vui lòng liên hệ Trưởng tộc để được thêm vào.
-                    </div>
-                  ) : (
-                    <select
-                      name="selectedMaTV"
-                      value={formData.selectedMaTV}
-                      onChange={handleMemberSelect}
-                      className={`input-field ${formErrors.selectedMaTV ? 'border-red-400' : ''}`}
-                      disabled={isSubmitting}
-                    >
-                      <option value="">-- Chọn tên của bạn --</option>
-                      {availableMembers.map(m => (
-                        <option key={m.MaTV} value={m.MaTV}>
-                          {m.HoTen} (Đời {m.DOI || 1}{m.GioiTinh ? `, ${m.GioiTinh}` : ''})
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                  {formErrors.selectedMaTV && <p className="text-red-500 text-xs mt-1">{formErrors.selectedMaTV}</p>}
+              {/* Nhập mã Thành viên */}
+              <div>
+                <label className="form-label flex items-center gap-1">
+                  <FiUser className="w-4 h-4" />
+                  Mã thành viên *
+                </label>
+                <input
+                  type="text"
+                  name="MaTV"
+                  value={formData.MaTV}
+                  onChange={handleChange}
+                  placeholder="VD: TV001"
+                  className={`input-field ${formErrors.MaTV ? 'border-red-400' : ''}`}
+                  disabled={isSubmitting || verifiedMember}
+                />
+                {formErrors.MaTV && <p className="text-red-500 text-xs mt-1">{formErrors.MaTV}</p>}
+              </div>
 
-                  {/* Thông tin thành viên được chọn */}
-                  {selectedMember && (
-                    <div className="mt-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
-                      <p className="text-sm font-medium text-emerald-800 mb-2">Thông tin xác nhận:</p>
-                      <div className="grid grid-cols-2 gap-2 text-xs text-emerald-700">
-                        <div>Họ tên: <span className="font-medium">{selectedMember.HoTen}</span></div>
-                        <div>Đời: <span className="font-medium">{selectedMember.DOI || 1}</span></div>
-                        <div>Giới tính: <span className="font-medium">{selectedMember.GioiTinh || 'Chưa rõ'}</span></div>
-                        <div>Cha: <span className="font-medium">{selectedMember.TenCha || 'Không rõ'}</span></div>
-                      </div>
-                    </div>
+              {/* Nút xác minh */}
+              {!verifiedMember && (
+                <button
+                  type="button"
+                  onClick={handleVerifyMember}
+                  disabled={isVerifying || !formData.MaGiaPha.trim() || !formData.MaTV.trim()}
+                  className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isVerifying ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Đang xác minh...
+                    </>
+                  ) : (
+                    <>
+                      <FiCheck className="w-4 h-4" />
+                      Xác minh thành viên
+                    </>
                   )}
+                </button>
+              )}
+
+              {/* Thông tin thành viên đã xác minh */}
+              {verifiedMember && (
+                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-medium text-emerald-800">✅ Xác minh thành công!</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setVerifiedMember(null);
+                        setFormData(prev => ({ ...prev, MaGiaPha: '', MaTV: '', name: '' }));
+                      }}
+                      className="text-xs text-emerald-600 hover:text-emerald-800"
+                    >
+                      Đổi thành viên
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs text-emerald-700">
+                    <div>Họ tên: <span className="font-medium">{verifiedMember.HoTen}</span></div>
+                    <div>Đời: <span className="font-medium">{verifiedMember.DOI ?? 0}</span></div>
+                    <div>Giới tính: <span className="font-medium">{verifiedMember.GioiTinh || 'Chưa rõ'}</span></div>
+                    <div>Gia phả: <span className="font-medium">{verifiedMember.TenGiaPha}</span></div>
+                  </div>
                 </div>
               )}
             </>

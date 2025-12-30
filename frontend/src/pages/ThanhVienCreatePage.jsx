@@ -56,9 +56,12 @@ export default function ThanhVienCreatePage() {
   };
 
   // Form data
+  // For Owner (LTK02): auto-set to their gia pha if no preselected
+  const defaultMaGiaPha = preselectedMaGiaPha || (user?.MaLoaiTK === 'LTK02' ? user?.MaGiaPha : '') || '';
+
   const [formData, setFormData] = useState({
     // Step 1: Quan hệ
-    MaGiaPha: preselectedMaGiaPha || '',
+    MaGiaPha: defaultMaGiaPha,
     MaTVCu: '',
     LoaiQuanHe: '', // 'Con cái' hoặc 'Vợ/Chồng'
     NgayPhatSinh: new Date().toISOString().split('T')[0],
@@ -175,6 +178,26 @@ export default function ThanhVienCreatePage() {
       return;
     }
 
+    // Validate dates against future
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (formData.NgayGioSinh) {
+      const dob = new Date(formData.NgayGioSinh);
+      if (dob > today) {
+        setError('Ngày sinh không được lớn hơn ngày hiện tại');
+        return;
+      }
+    }
+
+    if (formData.NgayPhatSinh) {
+      const pdate = new Date(formData.NgayPhatSinh);
+      if (pdate > today) {
+        setError('Ngày phát sinh quan hệ không được lớn hơn ngày hiện tại');
+        return;
+      }
+    }
+
     setIsLoading(true);
     try {
       const payload = {
@@ -193,8 +216,10 @@ export default function ThanhVienCreatePage() {
 
       alert('Thêm thành viên thành công!');
 
-      // Navigate back to gia pha detail
-      navigate(`/giapha/${formData.MaGiaPha}`);
+      // Navigate back to gia pha detail WITH reload trigger
+      navigate(`/giapha/${formData.MaGiaPha}`, {
+        state: { reload: true, timestamp: Date.now() }
+      });
     } catch (err) {
       console.error('Error creating member:', err);
       console.error('Error response data:', err.response?.data);
@@ -203,9 +228,43 @@ export default function ThanhVienCreatePage() {
       let errorMessage = 'Lỗi thêm thành viên';
       if (err.response?.data) {
         const data = err.response.data;
-        // Try different possible error message locations - prioritize error over message
-        errorMessage = data.error || data.details || data.msg || data.message ||
-          (typeof data === 'string' ? data : JSON.stringify(data));
+
+        // If backend返回 validation error with field list
+        const rawError = data.error || data.details || data.msg || data.message || '';
+
+        // Check if error contains field list (format: "...các trường: Field1, Field2, ...")
+        if (typeof rawError === 'string' && rawError.includes('các trường:')) {
+          const fieldsMatch = rawError.match(/các trường:\s*(.+)/);
+          if (fieldsMatch) {
+            const fieldList = fieldsMatch[1].split(',').map(f => f.trim());
+
+            // Filter to only show fields relevant to Step 2 form
+            const step2Fields = ['HoTen', 'NgayGioSinh', 'GioiTinh', 'DiaChi', 'MaQueQuan'];
+            const missingStep2Fields = fieldList.filter(field => step2Fields.includes(field));
+
+            // Map to Vietnamese names
+            const fieldNameMap = {
+              'HoTen': 'Họ tên',
+              'NgayGioSinh': 'Ngày sinh',
+              'GioiTinh': 'Giới tính',
+              'DiaChi': 'Địa chỉ',
+              'MaQueQuan': 'Quê quán'
+            };
+
+            if (missingStep2Fields.length > 0) {
+              const vietnameseFields = missingStep2Fields.map(f => fieldNameMap[f] || f);
+              errorMessage = `Vui lòng điền đầy đủ các trường: ${vietnameseFields.join(', ')}`;
+            } else {
+              // All missing fields are from Step 1, user needs to go back
+              errorMessage = 'Thiếu thông tin quan hệ. Vui lòng quay lại Bước 1 và chọn thành viên';
+            }
+          } else {
+            errorMessage = rawError;
+          }
+        } else {
+          // Use raw error if not field validation
+          errorMessage = typeof rawError === 'string' ? rawError : JSON.stringify(data);
+        }
       } else if (err.message) {
         errorMessage = err.message;
       }
@@ -283,14 +342,24 @@ export default function ThanhVienCreatePage() {
                   value={formData.MaGiaPha}
                   onChange={handleChange}
                   className="input-field"
-                  disabled={!!preselectedMaGiaPha}
+                  disabled={!!preselectedMaGiaPha || (user?.MaLoaiTK === 'LTK02' && user?.MaGiaPha)}
                 >
                   <option value="">-- Chọn gia phả --</option>
-                  {cayGiaPha.map(gp => (
-                    <option key={gp.MaGiaPha} value={gp.MaGiaPha}>
-                      {gp.TenGiaPha} ({gp.MaGiaPha})
-                    </option>
-                  ))}
+                  {/* Filter gia pha: Admin sees all, Owner sees only their gia pha */}
+                  {cayGiaPha
+                    .filter(gp => {
+                      // Admin (LTK01) sees all
+                      if (user?.MaLoaiTK === 'LTK01') return true;
+                      // Owner (LTK02) sees only their gia pha
+                      if (user?.MaLoaiTK === 'LTK02') return gp.MaGiaPha === user?.MaGiaPha;
+                      // User (LTK03) sees their gia pha
+                      return gp.MaGiaPha === user?.MaGiaPha;
+                    })
+                    .map(gp => (
+                      <option key={gp.MaGiaPha} value={gp.MaGiaPha}>
+                        {gp.TenGiaPha} ({gp.MaGiaPha})
+                      </option>
+                    ))}
                 </select>
               </div>
 
@@ -317,7 +386,7 @@ export default function ThanhVienCreatePage() {
                         <option value="">-- Chọn thành viên để liên kết --</option>
                         {thanhVienList.map(tv => (
                           <option key={tv.MaTV} value={tv.MaTV}>
-                            {tv.HoTen} (Đời {tv.DOI || 1}, {tv.GioiTinh})
+                            {tv.HoTen} (Đời {tv.DOI ?? 0}, {tv.GioiTinh})
                           </option>
                         ))}
                       </select>
@@ -332,7 +401,7 @@ export default function ThanhVienCreatePage() {
                             <div>
                               <p className="font-semibold text-neutral-800">{selectedMember.HoTen}</p>
                               <p className="text-sm text-neutral-500">
-                                Đời {selectedMember.DOI || 1} • {selectedMember.GioiTinh} • {selectedMember.MaTV}
+                                Đời {selectedMember.DOI ?? 0} • {selectedMember.GioiTinh} • {selectedMember.MaTV}
                               </p>
                             </div>
                           </div>
@@ -347,7 +416,7 @@ export default function ThanhVienCreatePage() {
               {formData.MaTVCu && (
                 <div className="mb-6 animate-fade-in">
                   <label className="form-label">Loại quan hệ *</label>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-3 gap-4">
                     <button
                       type="button"
                       onClick={() => setFormData(prev => ({ ...prev, LoaiQuanHe: 'Con cái' }))}
@@ -359,11 +428,11 @@ export default function ThanhVienCreatePage() {
                       <div className="text-2xl mb-2">👶</div>
                       <div className="font-semibold text-neutral-800">Con cái</div>
                       <div className="text-xs text-neutral-500 mt-1">
-                        Thành viên mới là CON của {selectedMember?.HoTen}
+                        Thêm CON của {selectedMember?.HoTen}
                       </div>
                       {formData.LoaiQuanHe === 'Con cái' && (
                         <div className="mt-2 text-xs text-emerald-600">
-                          → Đời sẽ = {(selectedMember?.DOI || 1) + 1}
+                          → Đời sẽ = {(selectedMember?.DOI ?? 0) + 1}
                         </div>
                       )}
                     </button>
@@ -379,11 +448,32 @@ export default function ThanhVienCreatePage() {
                       <div className="text-2xl mb-2">💑</div>
                       <div className="font-semibold text-neutral-800">Vợ/Chồng</div>
                       <div className="text-xs text-neutral-500 mt-1">
-                        Thành viên mới là VỢ/CHỒNG của {selectedMember?.HoTen}
+                        Thêm VỢ/CHỒNG của {selectedMember?.HoTen}
                       </div>
                       {formData.LoaiQuanHe === 'Vợ/Chồng' && (
                         <div className="mt-2 text-xs text-pink-600">
                           → Kết hôn với {selectedMember?.HoTen}
+                        </div>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, LoaiQuanHe: 'Cha', GioiTinh: 'Nam' }))}
+                      className={`p-4 rounded-xl border-2 transition-all text-left ${formData.LoaiQuanHe === 'Cha'
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-neutral-200 hover:border-blue-300'
+                        }`}
+                    >
+                      <div className="text-2xl mb-2">👨</div>
+                      <div className="font-semibold text-neutral-800">Cha</div>
+                      <div className="text-xs text-neutral-500 mt-1">
+                        Thêm CHA của {selectedMember?.HoTen}
+                      </div>
+                      {formData.LoaiQuanHe === 'Cha' && (
+                        <div className="mt-2 text-xs text-blue-600">
+                          → Đời sẽ = {(selectedMember?.DOI ?? 0) - 1}
+                          {(selectedMember?.DOI ?? 0) === 0 && " (shift +1)"}
                         </div>
                       )}
                     </button>
@@ -434,7 +524,19 @@ export default function ThanhVienCreatePage() {
                           Thêm CON của {selectedMember?.HoTen}
                         </p>
                         <p className="text-sm text-emerald-600">
-                          Thành viên mới sẽ thuộc Đời {(selectedMember?.DOI || 1) + 1}
+                          Thành viên mới sẽ thuộc Đời {(selectedMember?.DOI ?? 0) + 1}
+                        </p>
+                      </div>
+                    </>
+                  ) : formData.LoaiQuanHe === 'Cha' || formData.LoaiQuanHe === 'Mẹ' ? (
+                    <>
+                      <span className="text-2xl">{formData.LoaiQuanHe === 'Cha' ? '👨' : '👩'}</span>
+                      <div>
+                        <p className="font-medium text-blue-800">
+                          Thêm {formData.LoaiQuanHe.toUpperCase()} của {selectedMember?.HoTen}
+                        </p>
+                        <p className="text-sm text-blue-600">
+                          Thành viên mới sẽ thuộc Đời {Math.max(0, (selectedMember?.DOI ?? 1) - 1)}
                         </p>
                       </div>
                     </>
