@@ -260,6 +260,16 @@ export default function KetThucPage() {
             return;
         }
 
+        // Validate Death Date vs Birth Date
+        const member = members.find(m => m.MaTV === selectedMember);
+        if (member && member.NgayGioSinh) {
+            const birthDate = new Date(member.NgayGioSinh);
+            if (deathDate < birthDate) {
+                setError('Ngày giờ mất không được nhỏ hơn ngày sinh');
+                return;
+            }
+        }
+
         try {
             setIsAdding(true);
             setError(null);
