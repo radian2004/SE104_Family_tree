@@ -729,9 +729,9 @@ class PhieuThuService {
       SELECT pt.MaPhieuThu, pt.MaTV, tv.MaGiaPha,
              ctpt.MaDMT, dm.NguoiDamNhan
       FROM PHIEUTHUQUY pt
-      JOIN THANHVIEN tv ON pt.MaTV = tv.MaTV
-      LEFT JOIN CHITIETPHIEUTHU ctpt ON pt.MaPhieuThu = ctpt.MaPhieuThu
-      LEFT JOIN DANHMUCTHU dm ON ctpt.MaDMT = dm.MaDMT
+      LEFT JOIN THANHVIEN tv ON pt.MaTV = tv.MaTV
+      LEFT JOIN CT_PHIEUTHU ctpt ON pt.MaPhieuThu = ctpt.MaPhieuThu
+      LEFT JOIN DANHMUC dm ON ctpt.MaDMT = dm.MaDM
       WHERE pt.MaPhieuThu = ?
     `;
 
@@ -760,8 +760,14 @@ class PhieuThuService {
 
     // Owner: được phép xóa phiếu thu trong gia phả của mình
     if (isOwner) {
-      // Owner được phép - không cần kiểm tra thêm
-      // (Phiếu thu đã được filter theo gia phả từ frontend)
+      // Nếu phiếu thu thuộc thành viên đã bị xóa (MaGiaPha null), Owner vẫn được xóa
+      // Nếu phiếu thu thuộc thành viên còn tồn tại, phải check MaGiaPha
+      if (phieuThu.MaGiaPha && phieuThu.MaGiaPha !== userInfo.MaGiaPha) {
+        throw new ErrorWithStatus({
+          message: 'Bạn chỉ có thể xóa phiếu thu trong gia phả của mình',
+          status: HTTP_STATUS.FORBIDDEN
+        });
+      }
     } else {
       // User thường: phải là người đảm nhận danh mục
       const isNguoiDamNhan = rows.some(row => row.NguoiDamNhan === userInfo.MaTV);
@@ -773,9 +779,9 @@ class PhieuThuService {
       }
     }
 
-    // 3. Xóa chi tiết phiếu thu trước
+    // 3. Xóa chi tiết phiếu thu trước (CT_PHIEUTHU)
     await databaseService.query(
-      'DELETE FROM CHITIETPHIEUTHU WHERE MaPhieuThu = ?',
+      'DELETE FROM CT_PHIEUTHU WHERE MaPhieuThu = ?',
       [MaPhieuThu]
     );
 

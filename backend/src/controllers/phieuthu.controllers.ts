@@ -321,7 +321,7 @@ export const deletePhieuThuController = async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('Lỗi deletePhieuThu:', error);
     return res.status(error.status || HTTP_STATUS.BAD_REQUEST).json({
-      message: 'Xóa phiếu thu thất bại',
+      message: error.message || 'Xóa phiếu thu thất bại',
       error: error.message
     });
   }
