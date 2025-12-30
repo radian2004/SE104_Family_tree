@@ -215,7 +215,7 @@ export const checkDeleteMemberPermission = async (req: Request, res: Response, n
 
     // Owner: chỉ xóa được thành viên trong gia phả
     if (userInfo.MaLoaiTK === 'LTK02') {
-      const [memberRows] = await databaseService.query<RowDataPacket[]>(
+      const memberRows = await databaseService.query<RowDataPacket[]>(
         'SELECT MaTV, MaGiaPha FROM THANHVIEN WHERE MaTV = ?',
         [MaTV]
       );

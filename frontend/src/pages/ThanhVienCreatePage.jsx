@@ -193,8 +193,10 @@ export default function ThanhVienCreatePage() {
 
       alert('Thêm thành viên thành công!');
 
-      // Navigate back to gia pha detail
-      navigate(`/giapha/${formData.MaGiaPha}`);
+      // Navigate back to gia pha detail WITH reload trigger
+      navigate(`/giapha/${formData.MaGiaPha}`, {
+        state: { reload: true, timestamp: Date.now() }
+      });
     } catch (err) {
       console.error('Error creating member:', err);
       console.error('Error response data:', err.response?.data);

@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { FiArrowLeft, FiUsers, FiUserPlus, FiRefreshCw, FiCheck, FiCalendar, FiX } from 'react-icons/fi';
 import giaPhaService from '../services/giapha.js';
 import thanhvienService from '../services/thanhvien.js';
@@ -18,6 +18,7 @@ import FamilyTreeView from '../components/giapha/FamilyTreeView.jsx';
 export default function GiaPhaDetailPage() {
     const { MaGiaPha } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const { cayGiaPha } = useLookupsStore();
     const { isAdmin, isOwner } = usePermissions();
     const canManage = isAdmin || isOwner;
@@ -59,6 +60,15 @@ export default function GiaPhaDetailPage() {
             loadData();
         }
     }, [MaGiaPha]);
+
+    // Listen for reload signal from navigation state
+    useEffect(() => {
+        if (location.state?.reload) {
+            loadData();
+            // Clear the state to prevent reload on next navigation
+            window.history.replaceState({}, document.title);
+        }
+    }, [location.state]);
 
     // Clear success message after 3 seconds
     useEffect(() => {
