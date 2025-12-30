@@ -443,7 +443,7 @@ export default function QuanLyTaiKhoanPage() {
                                     { name: 'Phân quyền', admin: true, owner: false, user: false, highlight: true },
                                     { name: 'Thêm danh mục thu/chi', admin: true, owner: true, user: false },
                                     { name: 'Ghi nhận thu quỹ họ', admin: true, owner: true, user: true },
-                                    { name: 'Ghi nhận chi quỹ họ', admin: true, owner: true, user: false },
+                                    { name: 'Ghi nhận chi quỹ họ', admin: false, owner: true, user: true },
                                     { name: 'Tra cứu danh mục thu/chi', admin: true, owner: true, user: true },
                                 ].map((row, index) => (
                                     <tr

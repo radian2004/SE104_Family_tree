@@ -101,7 +101,8 @@ export default function KetThucPage() {
                 const params = filterGiaPha ? { MaGiaPha: filterGiaPha } : {};
                 const data = await thanhVienService.getAll(params);
                 const memberList = Array.isArray(data) ? data : (data.items || []);
-                const livingMembers = memberList.filter(m => !m.NgayGioMat);
+                // ✅ Add null check để tránh lỗi "Cannot read properties of undefined"
+                const livingMembers = memberList.filter(m => m && !m.NgayGioMat);
                 setMembers(livingMembers);
             } catch (err) {
                 console.error('Error loading members:', err);
@@ -114,8 +115,10 @@ export default function KetThucPage() {
     useEffect(() => {
         if (memberSearch.trim()) {
             const filtered = members.filter(m =>
-                m.HoTen?.toLowerCase().includes(memberSearch.toLowerCase()) ||
-                m.MaTV?.toLowerCase().includes(memberSearch.toLowerCase())
+                m && ( // Add null check
+                    m.HoTen?.toLowerCase().includes(memberSearch.toLowerCase()) ||
+                    m.MaTV?.toLowerCase().includes(memberSearch.toLowerCase())
+                )
             ).slice(0, 8);
             setFilteredMembers(filtered);
         } else {
