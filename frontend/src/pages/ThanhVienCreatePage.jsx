@@ -205,9 +205,43 @@ export default function ThanhVienCreatePage() {
       let errorMessage = 'Lỗi thêm thành viên';
       if (err.response?.data) {
         const data = err.response.data;
-        // Try different possible error message locations - prioritize error over message
-        errorMessage = data.error || data.details || data.msg || data.message ||
-          (typeof data === 'string' ? data : JSON.stringify(data));
+
+        // If backend返回 validation error with field list
+        const rawError = data.error || data.details || data.msg || data.message || '';
+
+        // Check if error contains field list (format: "...các trường: Field1, Field2, ...")
+        if (typeof rawError === 'string' && rawError.includes('các trường:')) {
+          const fieldsMatch = rawError.match(/các trường:\s*(.+)/);
+          if (fieldsMatch) {
+            const fieldList = fieldsMatch[1].split(',').map(f => f.trim());
+
+            // Filter to only show fields relevant to Step 2 form
+            const step2Fields = ['HoTen', 'NgayGioSinh', 'GioiTinh', 'DiaChi', 'MaQueQuan'];
+            const missingStep2Fields = fieldList.filter(field => step2Fields.includes(field));
+
+            // Map to Vietnamese names
+            const fieldNameMap = {
+              'HoTen': 'Họ tên',
+              'NgayGioSinh': 'Ngày sinh',
+              'GioiTinh': 'Giới tính',
+              'DiaChi': 'Địa chỉ',
+              'MaQueQuan': 'Quê quán'
+            };
+
+            if (missingStep2Fields.length > 0) {
+              const vietnameseFields = missingStep2Fields.map(f => fieldNameMap[f] || f);
+              errorMessage = `Vui lòng điền đầy đủ các trường: ${vietnameseFields.join(', ')}`;
+            } else {
+              // All missing fields are from Step 1, user needs to go back
+              errorMessage = 'Thiếu thông tin quan hệ. Vui lòng quay lại Bước 1 và chọn thành viên';
+            }
+          } else {
+            errorMessage = rawError;
+          }
+        } else {
+          // Use raw error if not field validation
+          errorMessage = typeof rawError === 'string' ? rawError : JSON.stringify(data);
+        }
       } else if (err.message) {
         errorMessage = err.message;
       }
