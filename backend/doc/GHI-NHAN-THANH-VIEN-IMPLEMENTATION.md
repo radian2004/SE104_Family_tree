@@ -32,15 +32,15 @@ Chức năng "Ghi Nhận Thành Viên" cho phép thêm một thành viên mới 
 
 | STT | Thuộc Tính | Mô Tả | Bắt Buộc | Ghi Chú |
 |-----|-----------|-------|----------|---------|
-| 1 | Họ tên | Họ và tên đầy đủ của thành viên mới | ✅ | Tối đa 50 ký tự |
-| 2 | Ngày giờ sinh | Ngày tháng năm sinh | ✅ | Format: DATETIME |
-| 3 | Ngày phát sinh | Ngày làm giấy khai sinh / Ngày kết hôn | ✅ | Phụ thuộc vào loại quan hệ |
-| 4 | Giới tính | Nam hoặc Nữ | ✅ | Giá trị: 'Nam' / 'Nữ' |
-| 5 | Quê quán | Mã quê quán (FK) | ✅ | Tham chiếu bảng QUEQUAN |
+| 1 | Họ tên | Họ và tên đầy đủ của thành viên mới | Sửa | Tối đa 50 ký tự |
+| 2 | Ngày giờ sinh | Ngày tháng năm sinh | Sửa | Format: DATETIME |
+| 3 | Ngày phát sinh | Ngày làm giấy khai sinh / Ngày kết hôn | Sửa | Phụ thuộc vào loại quan hệ |
+| 4 | Giới tính | Nam hoặc Nữ | Sửa | Giá trị: 'Nam' / 'Nữ' |
+| 5 | Quê quán | Mã quê quán (FK) | Sửa | Tham chiếu bảng QUEQUAN |
 | 6 | Nghề nghiệp | Mã nghề nghiệp (FK) | ❌ | Có thể NULL, tham chiếu bảng NGHENGHIEP |
-| 7 | Địa chỉ | Địa chỉ hiện tại | ✅ | Tối đa 50 ký tự |
-| 8 | Mã thành viên cũ | Mã TV của cha/mẹ hoặc chồng/vợ | ✅ | Tham chiếu bảng THANHVIEN |
-| 9 | Loại quan hệ | Loại quan hệ với thành viên cũ | ✅ | Giá trị: 'Con cái' / 'Vợ/Chồng' |
+| 7 | Địa chỉ | Địa chỉ hiện tại | Sửa | Tối đa 50 ký tự |
+| 8 | Mã thành viên cũ | Mã TV của cha/mẹ hoặc chồng/vợ | Sửa | Tham chiếu bảng THANHVIEN |
+| 9 | Loại quan hệ | Loại quan hệ với thành viên cũ | Sửa | Giá trị: 'Con cái' / 'Vợ/Chồng' |
 
 ---
 
@@ -51,15 +51,15 @@ Chức năng "Ghi Nhận Thành Viên" cho phép thêm một thành viên mới 
 ```sql
 CREATE TABLE THANHVIEN (
     MaTV VARCHAR(5) PRIMARY KEY,              -- Auto-gen: TV01, TV02... (Trigger)
-    HoTen VARCHAR(50),                        -- ✅ Họ tên
-    NgayGioSinh DATETIME,                     -- ✅ Ngày giờ sinh
-    DiaChi VARCHAR(50),                       -- ✅ Địa chỉ
+    HoTen VARCHAR(50),                        -- Sửa Họ tên
+    NgayGioSinh DATETIME,                     -- Sửa Ngày giờ sinh
+    DiaChi VARCHAR(50),                       -- Sửa Địa chỉ
     TrangThai VARCHAR(20) DEFAULT 'Còn Sống', -- Mặc định 'Còn Sống'
     TGTaoMoi TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
     DOI INT DEFAULT 0,                        -- Tự động tính qua trigger
-    MaQueQuan VARCHAR(5),                     -- ✅ FK → QUEQUAN
-    MaNgheNghiep VARCHAR(5),                  -- ✅ FK → NGHENGHIEP (NULL được)
-    GioiTinh VARCHAR(3),                      -- ✅ 'Nam' / 'Nữ'
+    MaQueQuan VARCHAR(5),                     -- Sửa FK → QUEQUAN
+    MaNgheNghiep VARCHAR(5),                  -- Sửa FK → NGHENGHIEP (NULL được)
+    GioiTinh VARCHAR(3),                      -- Sửa 'Nam' / 'Nữ'
     MaNguyenNhanMat VARCHAR(5),               -- NULL khi còn sống
     NgayGioMat DATETIME,                      -- NULL khi còn sống
     MaDiaDiem VARCHAR(5),                     -- NULL khi còn sống
@@ -82,7 +82,7 @@ CREATE TABLE QUANHECON(
     MaTV VARCHAR(5) PRIMARY KEY,              -- Mã thành viên CON
     MaTVCha VARCHAR(5),                       -- Mã thành viên CHA (có thể NULL)
     MaTVMe VARCHAR(5),                        -- Mã thành viên MẸ (tự động gán từ trigger)
-    NgayPhatSinh TIMESTAMP DEFAULT CURRENT_TIMESTAMP(), -- ✅ Ngày làm giấy khai sinh
+    NgayPhatSinh TIMESTAMP DEFAULT CURRENT_TIMESTAMP(), -- Sửa Ngày làm giấy khai sinh
     FOREIGN KEY(MaTV) REFERENCES THANHVIEN(MaTV),
     FOREIGN KEY(MaTVCha) REFERENCES THANHVIEN(MaTV),
     FOREIGN KEY(MaTVMe) REFERENCES THANHVIEN(MaTV)
@@ -106,7 +106,7 @@ CREATE TABLE QUANHECON(
 CREATE TABLE QUANHEVOCHONG(
     MaTV VARCHAR(5),                          -- Mã TV trong gia phả (thường là chồng/con trai)
     MaTVVC VARCHAR(5),                        -- Mã TV vợ/chồng (thường là vợ từ ngoài)
-    NgayBatDau DATE,                          -- ✅ Ngày kết hôn (= Ngày phát sinh)
+    NgayBatDau DATE,                          -- Sửa Ngày kết hôn (= Ngày phát sinh)
     NgayKetThuc DATE,                         -- Ngày ly hôn (NULL = còn hôn nhân)
     PRIMARY KEY(MaTV, MaTVVC),
     FOREIGN KEY(MaTV) REFERENCES THANHVIEN(MaTV),
@@ -1052,7 +1052,7 @@ curl -X POST http://localhost:3000/thanhvien/ghi-nhan \
 
 ---
 
-## ✅ Checklist Triển Khai
+## Sửa Checklist Triển Khai
 
 - [ ] Tạo file `GhiNhanThanhVien.requests.ts`
 - [ ] Thêm import vào `thanhvien.services.ts`

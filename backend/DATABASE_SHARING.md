@@ -9,7 +9,7 @@ Bạn có thể đang dùng lệnh **SAI** để tắt Docker:
 # ❌ SAI - Lệnh này XÓA HẾT volumes (bao gồm database!)
 docker-compose down -v
 
-# ✅ ĐÚNG - Lệnh này GIỮ LẠI dữ liệu
+# Sửa ĐÚNG - Lệnh này GIỮ LẠI dữ liệu
 docker-compose down
 ```
 
@@ -119,7 +119,7 @@ docker volume rm backend_mysql_data
 
 ---
 
-## ✅ Workflow Khuyến Nghị
+## Sửa Workflow Khuyến Nghị
 
 ### Khi Phát Triển (Hằng Ngày)
 ```bash

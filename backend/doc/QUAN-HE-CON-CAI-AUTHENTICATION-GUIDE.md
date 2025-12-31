@@ -30,20 +30,20 @@ TRƯỚC KHI SỬA (không có xác thực):
   └── GET /detail/:MaTV          ❌ Không cần đăng nhập
 
 SAU KHI SỬA (có xác thực):
-/users                           ✅ Public - không cần token
-  ├── /register                  ✅ Đăng ký
-  └── /login                     ✅ Đăng nhập
+/users                           Sửa Public - không cần token
+  ├── /register                  Sửa Đăng ký
+  └── /login                     Sửa Đăng nhập
   
-/users/quanhecon/*               ✅ Protected - CẦN token
-  ├── accessTokenValidator       ✅ Middleware bảo vệ
-  └── quanHeConRouter            ✅ Các routes con
-      ├── POST /thietlap         ✅ CẦN đăng nhập
-      ├── GET /                  ✅ CẦN đăng nhập
-      ├── GET /con/:MaTV         ✅ CẦN đăng nhập
-      ├── GET /chame/:MaTV       ✅ CẦN đăng nhập
-      ├── PUT /capnhat           ✅ CẦN đăng nhập
-      ├── DELETE /               ✅ CẦN đăng nhập
-      └── GET /detail/:MaTV      ✅ CẦN đăng nhập
+/users/quanhecon/*               Sửa Protected - CẦN token
+  ├── accessTokenValidator       Sửa Middleware bảo vệ
+  └── quanHeConRouter            Sửa Các routes con
+      ├── POST /thietlap         Sửa CẦN đăng nhập
+      ├── GET /                  Sửa CẦN đăng nhập
+      ├── GET /con/:MaTV         Sửa CẦN đăng nhập
+      ├── GET /chame/:MaTV       Sửa CẦN đăng nhập
+      ├── PUT /capnhat           Sửa CẦN đăng nhập
+      ├── DELETE /               Sửa CẦN đăng nhập
+      └── GET /detail/:MaTV      Sửa CẦN đăng nhập
 ```
 
 ---
@@ -95,7 +95,7 @@ import thanhtichRouter from './thanhtich.routes';      // Đã có
 import ketthucRouter from './ketthuc.routes';          // Đã có
 import thanhvienRouter from './thanhvien.routes';      // Đã có
 import honNhanRouter from './honnhan.routes';          // Đã có
-import quanHeConRouter from './quanhecon.routes';      // ✅ THÊM DÒNG NÀY
+import quanHeConRouter from './quanhecon.routes';      // Sửa THÊM DÒNG NÀY
 ```
 
 #### 1.2. Thêm route cho quan hệ con cái
@@ -148,7 +148,7 @@ import thanhtichRouter from './thanhtich.routes';
 import ketthucRouter from './ketthuc.routes';
 import thanhvienRouter from './thanhvien.routes';
 import honNhanRouter from './honnhan.routes';
-import quanHeConRouter from './quanhecon.routes';      // ✅ THÊM DÒNG NÀY
+import quanHeConRouter from './quanhecon.routes';      // Sửa THÊM DÒNG NÀY
 
 const usersRouter = Router();
 
@@ -222,7 +222,7 @@ usersRouter.use('/honnhan', accessTokenValidator, honNhanRouter);
  * - DELETE /users/quanhecon                 - Xóa quan hệ con cái
  * - GET    /users/quanhecon/detail/:MaTV    - Lấy chi tiết quan hệ con cái
  */
-usersRouter.use('/quanhecon', accessTokenValidator, quanHeConRouter); // ✅ THÊM DÒNG NÀY
+usersRouter.use('/quanhecon', accessTokenValidator, quanHeConRouter); // Sửa THÊM DÒNG NÀY
 
 export default usersRouter;
 ```
@@ -360,7 +360,7 @@ Request: POST /users/quanhecon/thietlap
          ↓
     usersRouter
          ↓
-    accessTokenValidator (kiểm tra token) ✅
+    accessTokenValidator (kiểm tra token) Sửa
          ↓
     quanHeConRouter
          ↓
@@ -688,13 +688,13 @@ curl -X POST http://localhost:3000/users/refresh-token \
 
 | Endpoint | Method | Route | Bảo mật | Cải thiện |
 |----------|--------|-------|---------|-----------|
-| Thiết lập quan hệ | POST | `/users/quanhecon/thietlap` | ✅ Token | Chỉ user đã login |
-| Lấy tất cả | GET | `/users/quanhecon` | ✅ Token | Chỉ user đã login |
-| Lấy danh sách con | GET | `/users/quanhecon/con/:MaTV` | ✅ Token | Chỉ user đã login |
-| Lấy cha mẹ | GET | `/users/quanhecon/chame/:MaTV` | ✅ Token | Chỉ user đã login |
-| Cập nhật | PUT | `/users/quanhecon/capnhat` | ✅ Token | Chỉ user đã login |
-| Xóa | DELETE | `/users/quanhecon` | ✅ Token | Chỉ user đã login |
-| Chi tiết | GET | `/users/quanhecon/detail/:MaTV` | ✅ Token | Chỉ user đã login |
+| Thiết lập quan hệ | POST | `/users/quanhecon/thietlap` | Sửa Token | Chỉ user đã login |
+| Lấy tất cả | GET | `/users/quanhecon` | Sửa Token | Chỉ user đã login |
+| Lấy danh sách con | GET | `/users/quanhecon/con/:MaTV` | Sửa Token | Chỉ user đã login |
+| Lấy cha mẹ | GET | `/users/quanhecon/chame/:MaTV` | Sửa Token | Chỉ user đã login |
+| Cập nhật | PUT | `/users/quanhecon/capnhat` | Sửa Token | Chỉ user đã login |
+| Xóa | DELETE | `/users/quanhecon` | Sửa Token | Chỉ user đã login |
+| Chi tiết | GET | `/users/quanhecon/detail/:MaTV` | Sửa Token | Chỉ user đã login |
 
 ---
 
@@ -836,7 +836,7 @@ Cookie: refresh_token=eyJhbG...
 - Đảm bảo gửi cookies trong mỗi request:
   ```javascript
   axios.post('/users/quanhecon/thietlap', data, {
-    withCredentials: true  // ✅ Quan trọng
+    withCredentials: true  // Sửa Quan trọng
   })
   ```
 
@@ -853,7 +853,7 @@ Cookie: refresh_token=eyJhbG...
 
 ## 🎓 LƯU Ý QUAN TRỌNG
 
-### ✅ Nên làm:
+### Sửa Nên làm:
 1. **Đọc kỹ guide** trước khi sửa code
 2. **Backup code** trước khi thay đổi
 3. **Test từng bước** một để dễ debug
@@ -883,9 +883,9 @@ Nếu gặp lỗi, kiểm tra:
 ## ✨ KẾT LUẬN
 
 Sau khi hoàn thành guide này, chức năng **Quan hệ Con cái** sẽ:
-- ✅ **Bảo mật**: Chỉ user đã đăng nhập mới truy cập được
-- ✅ **Nhất quán**: Giống với các chức năng khác (hôn nhân, thành tích, kết thúc)
-- ✅ **Dễ bảo trì**: Routes được tổ chức rõ ràng trong `/users/*`
-- ✅ **Chuẩn RESTful**: Prefix `/users` cho tất cả protected resources
+- Sửa **Bảo mật**: Chỉ user đã đăng nhập mới truy cập được
+- Sửa **Nhất quán**: Giống với các chức năng khác (hôn nhân, thành tích, kết thúc)
+- Sửa **Dễ bảo trì**: Routes được tổ chức rõ ràng trong `/users/*`
+- Sửa **Chuẩn RESTful**: Prefix `/users` cho tất cả protected resources
 
 **Chúc bạn thực hiện thành công! 🎉**

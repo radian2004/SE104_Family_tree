@@ -67,7 +67,7 @@ SELECT
   g.MaTV, 
   g.NgayPhatSinh,
   tv.HoTen,
-  tv.MaGiaPha  -- ✅ Dùng để phân quyền
+  tv.MaGiaPha  -- Sửa Dùng để phân quyền
 FROM GHINHANTHANHTICH g
 INNER JOIN THANHVIEN tv ON g.MaTV = tv.MaTV;
 ```
@@ -79,21 +79,21 @@ INNER JOIN THANHVIEN tv ON g.MaTV = tv.MaTV;
 ### 1. QUYỀN GHI NHẬN THÀNH TÍCH
 
 #### Admin (LTK01)
-- ✅ **Thêm** thành tích cho **MỌI** thành viên từ **MỌI** gia phả
-- ✅ **Xóa** thành tích của **MỌI** thành viên từ **MỌI** gia phả
-- ✅ **Chỉnh sửa** thành tích của **MỌI** thành viên từ **MỌI** gia phả
+- Sửa **Thêm** thành tích cho **MỌI** thành viên từ **MỌI** gia phả
+- Sửa **Xóa** thành tích của **MỌI** thành viên từ **MỌI** gia phả
+- Sửa **Chỉnh sửa** thành tích của **MỌI** thành viên từ **MỌI** gia phả
 - ⚠️ Không bị giới hạn bởi MaGiaPha
 
 #### Owner/TruongToc (LTK02)
-- ✅ **Thêm** thành tích cho **MỌI** thành viên **TRONG GIA PHẠ**
-- ✅ **Xóa** thành tích của **MỌI** thành viên **TRONG GIA PHẠ**
-- ✅ **Chỉnh sửa** thành tích của **MỌI** thành viên **TRONG GIA PHẠ**
+- Sửa **Thêm** thành tích cho **MỌI** thành viên **TRONG GIA PHẠ**
+- Sửa **Xóa** thành tích của **MỌI** thành viên **TRONG GIA PHẠ**
+- Sửa **Chỉnh sửa** thành tích của **MỌI** thành viên **TRONG GIA PHẠ**
 - ⚠️ Kiểm tra: `THANHVIEN.MaGiaPha = (MaGiaPha của Owner)`
 
 #### User (LTK03)
-- ✅ Chỉ được **THÊM** thành tích cho **CHÍNH MÌNH**
-- ✅ Được **XÓA** thành tích của **MỌI THÀNH VIÊN TRONG GIA PHẠ**
-- ✅ Được **SỬA** thành tích của **CHÍNH MÌNH**
+- Sửa Chỉ được **THÊM** thành tích cho **CHÍNH MÌNH**
+- Sửa Được **XÓA** thành tích của **MỌI THÀNH VIÊN TRONG GIA PHẠ**
+- Sửa Được **SỬA** thành tích của **CHÍNH MÌNH**
 - ⚠️ Kiểm tra xóa: `THANHVIEN.MaGiaPha = (MaGiaPha của User)`
 - ⚠️ Kiểm tra sửa: `TAIKHOAN.MaTV = MaTV_trong_request`
 
@@ -102,15 +102,15 @@ INNER JOIN THANHVIEN tv ON g.MaTV = tv.MaTV;
 ### 2. QUYỀN TRA CỨU THÀNH TÍCH
 
 #### Admin (LTK01)
-- ✅ Tra cứu thành tích của **MỌI** thành viên từ **TẤT CẢ** các gia phả
-- ✅ Không có giới hạn MaGiaPha
+- Sửa Tra cứu thành tích của **MỌI** thành viên từ **TẤT CẢ** các gia phả
+- Sửa Không có giới hạn MaGiaPha
 
 #### Owner/TruongToc (LTK02)
-- ✅ Tra cứu thành tích của **MỌI** thành viên **TRONG GIA PHẠ**
+- Sửa Tra cứu thành tích của **MỌI** thành viên **TRONG GIA PHẠ**
 - ⚠️ Kiểm tra: Chỉ trả về thành tích của thành viên có `MaGiaPha = (MaGiaPha của Owner)`
 
 #### User (LTK03)
-- ✅ Tra cứu thành tích của **MỌI** thành viên **TRONG GIA PHẠ**
+- Sửa Tra cứu thành tích của **MỌI** thành viên **TRONG GIA PHẠ**
 - ⚠️ Kiểm tra: Chỉ trả về thành tích của thành viên có `MaGiaPha = (MaGiaPha của User)`
 
 ---
@@ -118,15 +118,15 @@ INNER JOIN THANHVIEN tv ON g.MaTV = tv.MaTV;
 ### 3. QUYỀN BÁO CÁO THÀNH TÍCH
 
 #### Admin (LTK01)
-- ✅ Lập báo cáo năm cho **MỌI** gia phả
-- ✅ Có thể xem báo cáo thành tích tổng hợp của tất cả gia phả
+- Sửa Lập báo cáo năm cho **MỌI** gia phả
+- Sửa Có thể xem báo cáo thành tích tổng hợp của tất cả gia phả
 
 #### Owner/TruongToc (LTK02)
-- ✅ Lập báo cáo năm **TRONG GIA PHẠ**
+- Sửa Lập báo cáo năm **TRONG GIA PHẠ**
 - ⚠️ Chỉ thống kê thành tích của thành viên thuộc MaGiaPha của mình
 
 #### User (LTK03)
-- ✅ Lập báo cáo năm **TRONG GIA PHẠ**
+- Sửa Lập báo cáo năm **TRONG GIA PHẠ**
 - ⚠️ Chỉ thống kê thành tích của thành viên thuộc MaGiaPha của mình
 
 ---
@@ -608,7 +608,7 @@ async traCuuThanhTich(
 
   const params: any[] = [];
 
-  // ✅ PHÂN QUYỀN: Nếu không phải Admin, chỉ tra cứu trong gia phả
+  // Sửa PHÂN QUYỀN: Nếu không phải Admin, chỉ tra cứu trong gia phả
   if (userInfo && userInfo.MaLoaiTK !== 'LTK01') {
     if (!userInfo.MaGiaPha) {
       throw new Error('Bạn chưa thuộc gia phả nào');
@@ -673,7 +673,7 @@ async getThanhTichByHoTen(
 
   const params: any[] = [`%${HoTen}%`];
 
-  // ✅ PHÂN QUYỀN: Nếu không phải Admin, chỉ lấy trong gia phả
+  // Sửa PHÂN QUYỀN: Nếu không phải Admin, chỉ lấy trong gia phả
   if (userInfo && userInfo.MaLoaiTK !== 'LTK01') {
     if (!userInfo.MaGiaPha) {
       throw new Error('Bạn chưa thuộc gia phả nào');
@@ -728,7 +728,7 @@ async getBaoCaoThanhTich(
 
   const params: any[] = [NamBatDau, NamKetThuc];
 
-  // ✅ PHÂN QUYỀN: Nếu không phải Admin, chỉ thống kê gia phả của mình
+  // Sửa PHÂN QUYỀN: Nếu không phải Admin, chỉ thống kê gia phả của mình
   if (userInfo && userInfo.MaLoaiTK !== 'LTK01') {
     if (!userInfo.MaGiaPha) {
       throw new Error('Bạn chưa thuộc gia phả nào');
@@ -828,14 +828,14 @@ Body: {
   "MaLTT": "LTT01",
   "NgayPhatSinh": "2025-01-15"
 }
-# ✅ Kết quả: Ghi nhận thành công
+# Sửa Kết quả: Ghi nhận thành công
 
 # Test 2: Admin tra cứu thành tích tất cả gia phả
 GET http://localhost:3000/users/thanhtich/tracuu?HoTen=Nguyễn
 Headers: {
   "Authorization": "Bearer <admin_access_token>"
 }
-# ✅ Kết quả: Trả về thành tích từ TẤT CẢ gia phả
+# Sửa Kết quả: Trả về thành tích từ TẤT CẢ gia phả
 
 # Test 3: Admin xóa thành tích bất kỳ
 DELETE http://localhost:3000/users/thanhtich/xoa
@@ -847,7 +847,7 @@ Body: {
   "MaLTT": "LTT02",
   "NgayPhatSinh": "2024-02-20"
 }
-# ✅ Kết quả: Xóa thành công
+# Sửa Kết quả: Xóa thành công
 
 # Test 4: Admin cập nhật thành tích bất kỳ
 PUT http://localhost:3000/users/thanhtich/capnhat
@@ -860,14 +860,14 @@ Body: {
   "MaLTT_Moi": "LTT01",
   "NgayPhatSinh": "2023-01-11"
 }
-# ✅ Kết quả: Cập nhật thành công
+# Sửa Kết quả: Cập nhật thành công
 
 # Test 5: Admin xem báo cáo tất cả gia phả
 GET http://localhost:3000/users/thanhtich/baocao?NamBatDau=2020&NamKetThuc=2025
 Headers: {
   "Authorization": "Bearer <admin_access_token>"
 }
-# ✅ Kết quả: Báo cáo tất cả gia phả
+# Sửa Kết quả: Báo cáo tất cả gia phả
 ```
 
 ---
@@ -892,7 +892,7 @@ Body: {
   "MaLTT": "LTT01",
   "NgayPhatSinh": "2025-01-15"
 }
-# ✅ Kết quả: Ghi nhận thành công
+# Sửa Kết quả: Ghi nhận thành công
 
 # Test 2: Owner ghi nhận thành tích NGOÀI gia phả
 POST http://localhost:3000/users/thanhtich/ghinhan
@@ -911,7 +911,7 @@ GET http://localhost:3000/users/thanhtich/tracuu?HoTen=Nguyễn
 Headers: {
   "Authorization": "Bearer <owner_access_token>"
 }
-# ✅ Kết quả: Chỉ trả về thành tích của gia phả GP02
+# Sửa Kết quả: Chỉ trả về thành tích của gia phả GP02
 
 # Test 4: Owner xóa thành tích trong gia phả
 DELETE http://localhost:3000/users/thanhtich/xoa
@@ -923,7 +923,7 @@ Body: {
   "MaLTT": "LTT02",
   "NgayPhatSinh": "2024-02-20"
 }
-# ✅ Kết quả: Xóa thành công
+# Sửa Kết quả: Xóa thành công
 
 # Test 5: Owner xóa thành tích NGOÀI gia phả
 DELETE http://localhost:3000/users/thanhtich/xoa
@@ -948,14 +948,14 @@ Body: {
   "MaLTT_Moi": "LTT01",
   "NgayPhatSinh": "2023-01-11"
 }
-# ✅ Kết quả: Cập nhật thành công
+# Sửa Kết quả: Cập nhật thành công
 
 # Test 7: Owner xem báo cáo gia phả
 GET http://localhost:3000/users/thanhtich/baocao?NamBatDau=2020&NamKetThuc=2025
 Headers: {
   "Authorization": "Bearer <owner_access_token>"
 }
-# ✅ Kết quả: Chỉ báo cáo gia phả GP02
+# Sửa Kết quả: Chỉ báo cáo gia phả GP02
 ```
 
 ---
@@ -980,7 +980,7 @@ Body: {
   "MaLTT": "LTT05",
   "NgayPhatSinh": "2025-01-15"
 }
-# ✅ Kết quả: Ghi nhận thành công
+# Sửa Kết quả: Ghi nhận thành công
 
 # Test 2: User ghi nhận thành tích cho NGƯỜI KHÁC (cùng gia phả)
 POST http://localhost:3000/users/thanhtich/ghinhan
@@ -999,14 +999,14 @@ GET http://localhost:3000/users/thanhtich/tracuu?HoTen=Nguyễn
 Headers: {
   "Authorization": "Bearer <user_access_token>"
 }
-# ✅ Kết quả: Trả về thành tích của gia phả GP02
+# Sửa Kết quả: Trả về thành tích của gia phả GP02
 
 # Test 4: User xem thành tích theo tên trong gia phả
 GET http://localhost:3000/users/thanhtich/thanhvien?HoTen=Nguyễn Văn Nam
 Headers: {
   "Authorization": "Bearer <user_access_token>"
 }
-# ✅ Kết quả: Trả về thành tích của TV06 (nếu tên khớp)
+# Sửa Kết quả: Trả về thành tích của TV06 (nếu tên khớp)
 xóa thành tích trong gia phả
 DELETE http://localhost:3000/users/thanhtich/xoa
 Headers: {
@@ -1017,7 +1017,7 @@ Body: {
   "MaLTT": "LTT02",
   "NgayPhatSinh": "2024-02-20"
 }
-# ✅ Kết quả: Xóa thành công (vì cùng gia phả)
+# Sửa Kết quả: Xóa thành công (vì cùng gia phả)
 
 # Test 5.1: User xóa thành tích NGOÀI gia phả
 DELETE http://localhost:3000/users/thanhtich/xoa
@@ -1042,7 +1042,7 @@ Body: {
   "MaLTT_Moi": "LTT01",
   "NgayPhatSinh": "2025-01-15"
 }
-# ✅ Kết quả: Cập nhật thành công
+# Sửa Kết quả: Cập nhật thành công
 
 # Test 6.1: User cố cập nhật thành tích của người khác
 PUT http://localhost:3000/users/thanhtich/capnhat
@@ -1063,7 +1063,7 @@ GET http://localhost:3000/users/thanhtich/baocao?NamBatDau=2020&NamKetThuc=2025
 Headers: {
   "Authorization": "Bearer <user_access_token>"
 }
-# ✅ Kết quả: Chỉ báo cáo gia phả GP02
+# Sửa Kết quả: Chỉ báo cáo gia phả GP02
 ```
 
 ---
@@ -1072,13 +1072,13 @@ Headers: {
 
 | Chức năng | Admin (LTK01) | Owner (LTK02) | User (LTK03) |
 |-----------|--------------|---------------|--------------|
-| **Ghi nhận thành tích** | ✅ Mọi thành viên | ✅ Trong gia p✅ Trong gia phả |
-| **Sửa thành tích** | ✅ Mọi thành viên | ✅ Trong gia phả | ✅ Của bản thân |
-| **Sửa thành tích** | ✅ Mọi thành viên | ✅ Trong gia phả | ❌ Không |
-| **Tra cứu thành tích** | ✅ Tất cả gia phả | ✅ Trong gia phả | ✅ Trong gia phả |
-| **Xem theo tên** | ✅ Tất cả gia phả | ✅ Trong gia phả | ✅ Trong gia phả |
-| **Báo cáo thành tích** | ✅ Tất cả gia phả | ✅ Trong gia phả | ✅ Trong gia phả |
-| **Xem loại thành tích** | ✅ Tất cả | ✅ Tất cả | ✅ Tất cả |
+| **Ghi nhận thành tích** | Sửa Mọi thành viên | Sửa Trong gia pSửa Trong gia phả |
+| **Sửa thành tích** | Sửa Mọi thành viên | Sửa Trong gia phả | Sửa Của bản thân |
+| **Sửa thành tích** | Sửa Mọi thành viên | Sửa Trong gia phả | ❌ Không |
+| **Tra cứu thành tích** | Sửa Tất cả gia phả | Sửa Trong gia phả | Sửa Trong gia phả |
+| **Xem theo tên** | Sửa Tất cả gia phả | Sửa Trong gia phả | Sửa Trong gia phả |
+| **Báo cáo thành tích** | Sửa Tất cả gia phả | Sửa Trong gia phả | Sửa Trong gia phả |
+| **Xem loại thành tích** | Sửa Tất cả | Sửa Tất cả | Sửa Tất cả |
 
 ---
 
@@ -1123,10 +1123,10 @@ Headers: {
   - [ ] getBaoCaoThanhTich (thêm phân quyền)
 - [ ] Thêm messages vào constants/messages.ts
 - [ ] TQuyền User Được Mở Rộng
-- ✅ User được **THÊM** thành tích cho MaTV của chính mình
-- ✅ User được **XÓA** thành tích của mọi người **TRONG GIA PHẠ** (không chỉ của mình)
-- ✅ User được **SỬA** thành tích của **CHÍNH MÌNH**
-- ✅ User được **XEM**cases (không thuộc gia phả, composite key, etc.)
+- Sửa User được **THÊM** thành tích cho MaTV của chính mình
+- Sửa User được **XÓA** thành tích của mọi người **TRONG GIA PHẠ** (không chỉ của mình)
+- Sửa User được **SỬA** thành tích của **CHÍNH MÌNH**
+- Sửa User được **XEM**cases (không thuộc gia phả, composite key, etc.)
 - [ ] Test transaction rollback
 - [ ] Review security
 

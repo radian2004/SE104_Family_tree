@@ -8,7 +8,7 @@ interface ThanhVienType {
   DOI?: number;
   MaQueQuan?: string;
   MaNgheNghiep?: string;
-  GioiTinh?: string;  // ✅ Đúng: VARCHAR(3) - 'Nam'/'Nữ'
+  GioiTinh?: string;  // Sửa Đúng: VARCHAR(3) - 'Nam'/'Nữ'
   MaNguyenNhanMat?: string;
   NgayGioMat?: Date;
   MaDiaDiem?: string;
@@ -25,7 +25,7 @@ export default class ThanhVien {
   DOI: number;
   MaQueQuan: string;
   MaNgheNghiep: string;
-  GioiTinh: string;  // ✅ Đúng: 'Nam' hoặc 'Nữ'
+  GioiTinh: string;  // Sửa Đúng: 'Nam' hoặc 'Nữ'
   MaNguyenNhanMat?: string;
   NgayGioMat?: Date;
   MaDiaDiem?: string;
@@ -42,7 +42,7 @@ export default class ThanhVien {
     this.DOI = thanhvien.DOI || 0;
     this.MaQueQuan = thanhvien.MaQueQuan || '';
     this.MaNgheNghiep = thanhvien.MaNgheNghiep || '';
-    this.GioiTinh = thanhvien.GioiTinh || 'Nam';  // ✅ Đúng: Mặc định 'Nam'
+    this.GioiTinh = thanhvien.GioiTinh || 'Nam';  // Sửa Đúng: Mặc định 'Nam'
     this.MaNguyenNhanMat = thanhvien.MaNguyenNhanMat;
     this.NgayGioMat = thanhvien.NgayGioMat;
     this.MaDiaDiem = thanhvien.MaDiaDiem;

@@ -24,10 +24,10 @@ interface ThanhVienRow extends RowDataPacket {
   DOI: number;
   MaQueQuan: string;
   MaNgheNghiep: string;
-  GioiTinh: string;  // ✅ ĐÚNG: VARCHAR(3) - 'Nam'/'Nữ'
-  MaNguyenNhanMat: string | null;  // ✅ THÊM: Cột này có trong DB
-  NgayGioMat: Date | null;  // ✅ THÊM: Cột này có trong DB
-  MaDiaDiem: string | null;  // ✅ THÊM: Cột này có trong DB
+  GioiTinh: string;  // Sửa ĐÚNG: VARCHAR(3) - 'Nam'/'Nữ'
+  MaNguyenNhanMat: string | null;  // Sửa THÊM: Cột này có trong DB
+  NgayGioMat: Date | null;  // Sửa THÊM: Cột này có trong DB
+  MaDiaDiem: string | null;  // Sửa THÊM: Cột này có trong DB
   MaGiaPha: string | null;
 }
 
@@ -53,7 +53,7 @@ class ThanhVienService {
     DiaChi: string;
     MaQueQuan: string;
     MaNgheNghiep: string;
-    GioiTinh: string;  // ✅ ĐÚNG: 'Nam' hoặc 'Nữ'
+    GioiTinh: string;  // Sửa ĐÚNG: 'Nam' hoặc 'Nữ'
     MaGiaPha?: string;
   }) {
     const thanhvien = new ThanhVien(payload);
@@ -74,7 +74,7 @@ class ThanhVienService {
       thanhvien.DOI,
       thanhvien.MaQueQuan,
       thanhvien.MaNgheNghiep,
-      thanhvien.GioiTinh,  // ✅ ĐÚNG
+      thanhvien.GioiTinh,  // Sửa ĐÚNG
       thanhvien.MaGiaPha || null
     ];
 
@@ -179,19 +179,19 @@ class ThanhVienService {
       fields.push('MaNgheNghiep = ?');
       values.push(payload.MaNgheNghiep);
     }
-    if (payload.GioiTinh !== undefined) {  // ✅ THÊM
+    if (payload.GioiTinh !== undefined) {  // Sửa THÊM
       fields.push('GioiTinh = ?');
       values.push(payload.GioiTinh);
     }
-    if (payload.MaNguyenNhanMat !== undefined) {  // ✅ THÊM
+    if (payload.MaNguyenNhanMat !== undefined) {  // Sửa THÊM
       fields.push('MaNguyenNhanMat = ?');
       values.push(payload.MaNguyenNhanMat);
     }
-    if (payload.NgayGioMat !== undefined) {  // ✅ THÊM
+    if (payload.NgayGioMat !== undefined) {  // Sửa THÊM
       fields.push('NgayGioMat = ?');
       values.push(payload.NgayGioMat);
     }
-    if (payload.MaDiaDiem !== undefined) {  // ✅ THÊM
+    if (payload.MaDiaDiem !== undefined) {  // Sửa THÊM
       fields.push('MaDiaDiem = ?');
       values.push(payload.MaDiaDiem);
     }
@@ -297,7 +297,7 @@ class ThanhVienService {
   }
 
   /**
-   * ✅ MỚI: Lấy báo cáo tăng giảm thành viên theo khoảng năm
+   * Sửa MỚI: Lấy báo cáo tăng giảm thành viên theo khoảng năm
    * Thống kê: Số sinh, số kết hôn, số mất theo từng năm
    * CHỈ HIỂN THỊ những năm có ít nhất 1 sự kiện (bỏ qua năm có cả 3 đều = 0)
    */
@@ -545,6 +545,23 @@ class ThanhVienService {
       // Bắt đầu transaction
       await connection.beginTransaction();
 
+      // Sửa [0] VALIDATE: Các ngày không được lớn hơn hiện tại
+      const now = new Date();
+
+      if (payload.NgayGioSinh) {
+        const ngaySinh = new Date(payload.NgayGioSinh);
+        if (ngaySinh > now) {
+          throw new Error('Ngày sinh không được lớn hơn ngày hiện tại');
+        }
+      }
+
+      if (payload.NgayPhatSinh) {
+        const ngayPhatSinh = new Date(payload.NgayPhatSinh);
+        if (ngayPhatSinh > now) {
+          throw new Error('Ngày phát sinh quan hệ không được lớn hơn ngày hiện tại');
+        }
+      }
+
       // [1] Validate: Lấy thông tin thành viên cũ
       const thanhvienCu = await this.getThanhVienCuWithConnection(connection, payload.MaTVCu);
       if (!thanhvienCu) {
@@ -558,7 +575,7 @@ class ThanhVienService {
           throw new Error('Thành viên cũ phải có giới tính hợp lệ');
         }
 
-        // ✅ THÊM MỚI: Kiểm tra trùng lặp con
+        // Sửa THÊM MỚI: Kiểm tra trùng lặp con
         const isDuplicateChild = await this.checkDuplicateChildWithConnection(
           connection,
           payload.HoTen,
@@ -586,7 +603,7 @@ class ThanhVienService {
           throw new Error('Thành viên cũ đã có vợ/chồng hiện tại');
         }
 
-        // ✅ THÊM MỚI: Kiểm tra người này đã tồn tại trong hệ thống chưa
+        // Sửa THÊM MỚI: Kiểm tra người này đã tồn tại trong hệ thống chưa
         const duplicatePerson = await this.checkDuplicatePersonWithConnection(
           connection,
           payload.HoTen,
@@ -601,7 +618,7 @@ class ThanhVienService {
           );
         }
       } else if (payload.LoaiQuanHe === 'Cha') {
-        // ✅ Thêm cha cho thành viên đã tồn tại
+        // Sửa Thêm cha cho thành viên đã tồn tại
         // Cha phải là nam
         if (payload.GioiTinh !== 'Nam') {
           throw new Error('Cha phải là giới tính Nam');
@@ -620,7 +637,7 @@ class ThanhVienService {
           throw new Error('Ngày sinh của cha phải trước ngày sinh của con');
         }
       } else if (payload.LoaiQuanHe === 'Mẹ') {
-        // ✅ Thêm mẹ cho thành viên đã tồn tại
+        // Sửa Thêm mẹ cho thành viên đã tồn tại
         // Mẹ phải là nữ
         if (payload.GioiTinh !== 'Nữ') {
           throw new Error('Mẹ phải là giới tính Nữ');

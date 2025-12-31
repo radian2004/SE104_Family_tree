@@ -568,7 +568,7 @@ import thanhTichRouter from '~/routes/thanhtich.routes';
 app.use('/users', usersRouter);
 app.use('/thanhvien', thanhvienRouter);
 app.use('/lookups', lookupsRouter);
-app.use('/thanhtich', thanhTichRouter);  // ✅ THÊM DÒNG NÀY
+app.use('/thanhtich', thanhTichRouter);  // Sửa THÊM DÒNG NÀY
 
 // ... rest of code ...
 ```
@@ -1068,11 +1068,11 @@ Frontend hiển thị trong bảng với phân trang
 ## 📝 Validation Rules
 
 ### Ghi Nhận Thành Tích
-- ✅ MaTV: Required, phải tồn tại trong bảng THANHVIEN
-- ✅ MaLTT: Required, phải tồn tại trong bảng LOAITHANHTICH
-- ✅ NgayPhatSinh: Optional, mặc định ngày hiện tại
-- ✅ NgayPhatSinh phải sau ngày sinh của thành viên (trigger kiểm tra)
-- ✅ Không duplicate (MaTV, MaLTT, NgayPhatSinh) - Primary Key
+- Sửa MaTV: Required, phải tồn tại trong bảng THANHVIEN
+- Sửa MaLTT: Required, phải tồn tại trong bảng LOAITHANHTICH
+- Sửa NgayPhatSinh: Optional, mặc định ngày hiện tại
+- Sửa NgayPhatSinh phải sau ngày sinh của thành viên (trigger kiểm tra)
+- Sửa Không duplicate (MaTV, MaLTT, NgayPhatSinh) - Primary Key
 
 ---
 
@@ -1093,24 +1093,24 @@ Frontend hiển thị trong bảng với phân trang
 ## 🚀 Các Bước Triển Khai
 
 ### Bước 1: Tạo Models
-1. ✅ Tạo file `LoaiThanhTich.schema.ts`
-2. ✅ Tạo file `GhiNhanThanhTich.schema.ts`
+1. Sửa Tạo file `LoaiThanhTich.schema.ts`
+2. Sửa Tạo file `GhiNhanThanhTich.schema.ts`
 
 ### Bước 2: Tạo Service
-1. ✅ Tạo file `thanhtich.services.ts`
-2. ✅ Implement các methods: getAllLoaiThanhTich, ghiNhanThanhTich, traCuuThanhTich, getThanhTichByMaTV, xoaThanhTich
+1. Sửa Tạo file `thanhtich.services.ts`
+2. Sửa Implement các methods: getAllLoaiThanhTich, ghiNhanThanhTich, traCuuThanhTich, getThanhTichByMaTV, xoaThanhTich
 
 ### Bước 3: Tạo Controller
-1. ✅ Tạo file `thanhtich.controllers.ts`
-2. ✅ Implement các controllers: getLoaiThanhTichController, ghiNhanThanhTichController, traCuuThanhTichController, getThanhTichByMaTVController, xoaThanhTichController
+1. Sửa Tạo file `thanhtich.controllers.ts`
+2. Sửa Implement các controllers: getLoaiThanhTichController, ghiNhanThanhTichController, traCuuThanhTichController, getThanhTichByMaTVController, xoaThanhTichController
 
 ### Bước 4: Tạo Routes
-1. ✅ Tạo file `thanhtich.routes.ts`
-2. ✅ Định nghĩa các routes
+1. Sửa Tạo file `thanhtich.routes.ts`
+2. Sửa Định nghĩa các routes
 
 ### Bước 5: Cập Nhật index.ts
-1. ✅ Import `thanhTichRouter`
-2. ✅ Thêm `app.use('/thanhtich', thanhTichRouter)`
+1. Sửa Import `thanhTichRouter`
+2. Sửa Thêm `app.use('/thanhtich', thanhTichRouter)`
 
 ### Bước 6: Test
 1. 🧪 Restart server: `npm run dev`

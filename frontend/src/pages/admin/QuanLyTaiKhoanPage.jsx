@@ -110,7 +110,7 @@ export default function QuanLyTaiKhoanPage() {
         setSuccess(null);
         try {
             const response = await taikhoanService.promoteToOwner(email);
-            setSuccess(`✅ ${response.message}`);
+            setSuccess(`Sửa ${response.message}`);
             loadAccounts();
         } catch (err) {
             setError(err.response?.data?.message || 'Lỗi cấp quyền');
@@ -130,7 +130,7 @@ export default function QuanLyTaiKhoanPage() {
         setSuccess(null);
         try {
             const response = await taikhoanService.demoteToUser(email);
-            setSuccess(`✅ ${response.message}`);
+            setSuccess(`Sửa ${response.message}`);
             loadAccounts();
         } catch (err) {
             setError(err.response?.data?.message || 'Lỗi hạ quyền');

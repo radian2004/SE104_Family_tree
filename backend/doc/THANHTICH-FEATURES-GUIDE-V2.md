@@ -5,10 +5,10 @@
 Cập nhật chức năng thành tích để ưu tiên tra cứu theo **TÊN** thay vì **MÃ**:
 
 ### Các Thay Đổi Chính:
-1. ✅ **Bỏ tra cứu theo MaTV** - chỉ giữ tra cứu theo họ tên thành viên
-2. ✅ **Tra cứu theo tên loại thành tích** - tìm kiếm linh hoạt với LIKE (VD: "huân" → tìm tất cả loại có chứa "huân")
-3. ✅ **Lấy thành tích của thành viên bằng tên** - thay vì dùng MaTV
-4. ✅ **Đơn giản hóa endpoint xóa** - dùng DELETE với request body thay vì URL params phức tạp
+1. Sửa **Bỏ tra cứu theo MaTV** - chỉ giữ tra cứu theo họ tên thành viên
+2. Sửa **Tra cứu theo tên loại thành tích** - tìm kiếm linh hoạt với LIKE (VD: "huân" → tìm tất cả loại có chứa "huân")
+3. Sửa **Lấy thành tích của thành viên bằng tên** - thay vì dùng MaTV
+4. Sửa **Đơn giản hóa endpoint xóa** - dùng DELETE với request body thay vì URL params phức tạp
 
 ---
 
@@ -120,7 +120,7 @@ async xoaThanhTich(MaTV: string, MaLTT: string, NgayPhatSinh: Date) {
 
 ---
 
-#### ✅ CODE MỚI - Thay Thế Hoàn Toàn
+#### Sửa CODE MỚI - Thay Thế Hoàn Toàn
 
 **File:** `backend/src/services/thanhtich.services.ts`
 
@@ -209,14 +209,14 @@ class ThanhTichService {
   }
 
   /**
-   * ✅ MỚI: Tra cứu thành tích với tìm kiếm linh hoạt theo TÊN
+   * Sửa MỚI: Tra cứu thành tích với tìm kiếm linh hoạt theo TÊN
    * - HoTen: Tìm theo tên thành viên (LIKE)
    * - TenLoaiThanhTich: Tìm theo tên loại thành tích (LIKE) - VD: "huân" sẽ tìm tất cả loại có chứa "huân"
    * - TuNgay, DenNgay: Lọc theo khoảng thời gian
    */
   async traCuuThanhTich(filters?: {
     HoTen?: string;
-    TenLoaiThanhTich?: string;  // ✅ MỚI: Search theo TÊN loại thành tích
+    TenLoaiThanhTich?: string;  // Sửa MỚI: Search theo TÊN loại thành tích
     TuNgay?: Date;
     DenNgay?: Date;
   }) {
@@ -237,20 +237,20 @@ class ThanhTichService {
 
     // Thêm điều kiện filter
     if (filters) {
-      // ✅ Tìm theo tên thành viên
+      // Sửa Tìm theo tên thành viên
       if (filters.HoTen) {
         sql += ' AND tv.HoTen LIKE ?';
         params.push(`%${filters.HoTen}%`);
       }
 
-      // ✅ MỚI: Tìm theo TÊN loại thành tích (LIKE search)
+      // Sửa MỚI: Tìm theo TÊN loại thành tích (LIKE search)
       // VD: "huân" → tìm tất cả loại có chứa "huân"
       if (filters.TenLoaiThanhTich) {
         sql += ' AND ltt.TenLTT LIKE ?';
         params.push(`%${filters.TenLoaiThanhTich}%`);
       }
 
-      // ✅ Lọc theo khoảng thời gian
+      // Sửa Lọc theo khoảng thời gian
       if (filters.TuNgay) {
         sql += ' AND DATE(g.NgayPhatSinh) >= ?';
         params.push(filters.TuNgay);
@@ -268,7 +268,7 @@ class ThanhTichService {
   }
 
   /**
-   * ✅ MỚI: Lấy thành tích của thành viên theo HỌ TÊN
+   * Sửa MỚI: Lấy thành tích của thành viên theo HỌ TÊN
    * Thay thế getThanhTichByMaTV
    */
   async getThanhTichByHoTen(HoTen: string) {
@@ -290,7 +290,7 @@ class ThanhTichService {
   }
 
   /**
-   * ✅ MỚI: Xóa thành tích - Đơn giản hóa với object payload
+   * Sửa MỚI: Xóa thành tích - Đơn giản hóa với object payload
    * Thay vì dùng 3 params riêng lẻ
    */
   async xoaThanhTich(payload: {
@@ -344,7 +344,7 @@ export default thanhTichService;
 
 **File:** `backend/src/controllers/thanhtich.controllers.ts`
 
-#### ✅ CODE MỚI - Thay Thế Hoàn Toàn
+#### Sửa CODE MỚI - Thay Thế Hoàn Toàn
 
 ```typescript
 // src/controllers/thanhtich.controllers.ts
@@ -413,7 +413,7 @@ export const ghiNhanThanhTichController = async (req: Request, res: Response) =>
 };
 
 /**
- * ✅ MỚI: Controller tra cứu thành tích với tìm kiếm linh hoạt
+ * Sửa MỚI: Controller tra cứu thành tích với tìm kiếm linh hoạt
  * GET /thanhtich/tracuu
  * Query params: 
  * - HoTen?: Tên thành viên (LIKE search)
@@ -448,7 +448,7 @@ export const traCuuThanhTichController = async (req: Request, res: Response) => 
 };
 
 /**
- * ✅ MỚI: Controller lấy thành tích theo HỌ TÊN
+ * Sửa MỚI: Controller lấy thành tích theo HỌ TÊN
  * GET /thanhtich/thanhvien?HoTen=Nguyễn Văn
  * Query param: HoTen (LIKE search)
  */
@@ -480,7 +480,7 @@ export const getThanhTichByHoTenController = async (req: Request, res: Response)
 };
 
 /**
- * ✅ MỚI: Controller xóa thành tích - Đơn giản hóa với DELETE + body
+ * Sửa MỚI: Controller xóa thành tích - Đơn giản hóa với DELETE + body
  * DELETE /thanhtich/xoa
  * Body: { MaTV, MaLTT, NgayPhatSinh }
  */
@@ -524,7 +524,7 @@ export const xoaThanhTichController = async (req: Request, res: Response) => {
 
 **File:** `backend/src/routes/thanhtich.routes.ts`
 
-#### ✅ CODE MỚI - Thay Thế Hoàn Toàn
+#### Sửa CODE MỚI - Thay Thế Hoàn Toàn
 
 ```typescript
 // src/routes/thanhtich.routes.ts
@@ -553,7 +553,7 @@ thanhTichRouter.get('/loai', getLoaiThanhTichController);
 thanhTichRouter.post('/ghinhan', ghiNhanThanhTichController);
 
 /**
- * ✅ MỚI: GET /thanhtich/tracuu - Tra cứu thành tích linh hoạt
+ * Sửa MỚI: GET /thanhtich/tracuu - Tra cứu thành tích linh hoạt
  * Query params:
  * - HoTen?: Tên thành viên (LIKE search) - VD: "Nguyễn Văn"
  * - TenLoaiThanhTich?: Tên loại thành tích (LIKE search) - VD: "huân" → tìm tất cả loại có "huân"
@@ -565,7 +565,7 @@ thanhTichRouter.post('/ghinhan', ghiNhanThanhTichController);
 thanhTichRouter.get('/tracuu', traCuuThanhTichController);
 
 /**
- * ✅ MỚI: GET /thanhtich/thanhvien - Lấy thành tích của thành viên theo TÊN
+ * Sửa MỚI: GET /thanhtich/thanhvien - Lấy thành tích của thành viên theo TÊN
  * Query param: HoTen (LIKE search)
  * VD: /thanhtich/thanhvien?HoTen=Nguyễn Văn
  * 
@@ -574,7 +574,7 @@ thanhTichRouter.get('/tracuu', traCuuThanhTichController);
 thanhTichRouter.get('/thanhvien', getThanhTichByHoTenController);
 
 /**
- * ✅ MỚI: DELETE /thanhtich/xoa - Xóa thành tích (Đơn giản hóa)
+ * Sửa MỚI: DELETE /thanhtich/xoa - Xóa thành tích (Đơn giản hóa)
  * Body: { MaTV, MaLTT, NgayPhatSinh }
  * Response: { message, affectedRows }
  * 
@@ -626,7 +626,7 @@ export default thanhTichRouter;
 
 ---
 
-### 2. ✅ Tra Cứu Theo Họ Tên
+### 2. Sửa Tra Cứu Theo Họ Tên
 
 **Endpoint:** `GET http://localhost:3000/thanhtich/tracuu?HoTen=Nguyễn Văn`
 
@@ -663,7 +663,7 @@ export default thanhTichRouter;
 
 ---
 
-### 3. ✅ Tra Cứu Theo TÊN Loại Thành Tích (LIKE Search)
+### 3. Sửa Tra Cứu Theo TÊN Loại Thành Tích (LIKE Search)
 
 **Ví dụ 1: Tìm "huân" - sẽ tìm tất cả loại thành tích có chứa từ "huân"**
 
@@ -737,7 +737,7 @@ export default thanhTichRouter;
 
 ---
 
-### 4. ✅ Kết Hợp: Tìm Theo Tên + Loại Thành Tích
+### 4. Sửa Kết Hợp: Tìm Theo Tên + Loại Thành Tích
 
 **Endpoint:** `GET http://localhost:3000/thanhtich/tracuu?HoTen=Nguyễn&TenLoaiThanhTich=huân`
 
@@ -760,7 +760,7 @@ export default thanhTichRouter;
 
 ---
 
-### 5. ✅ Tra Cứu Theo Khoảng Thời Gian
+### 5. Sửa Tra Cứu Theo Khoảng Thời Gian
 
 **Endpoint:** `GET http://localhost:3000/thanhtich/tracuu?TuNgay=2020-01-01&DenNgay=2024-12-31`
 
@@ -790,7 +790,7 @@ export default thanhTichRouter;
 
 ---
 
-### 6. ✅ Lấy Thành Tích Của Thành Viên Theo TÊN
+### 6. Sửa Lấy Thành Tích Của Thành Viên Theo TÊN
 
 **Endpoint:** `GET http://localhost:3000/thanhtich/thanhvien?HoTen=Nguyễn Văn Hùng`
 
@@ -843,7 +843,7 @@ export default thanhTichRouter;
 
 ---
 
-### 7. ✅ Xóa Thành Tích - Đơn Giản Hóa
+### 7. Sửa Xóa Thành Tích - Đơn Giản Hóa
 
 **Endpoint:** `DELETE http://localhost:3000/thanhtich/xoa`
 
@@ -889,13 +889,13 @@ Content-Type: application/json
 
 | Feature | Version 1 (CŨ) | Version 2 (MỚI) |
 |---------|----------------|-----------------|
-| **Tra cứu theo mã TV** | ✅ `?MaTV=TV04` | ❌ Đã bỏ |
-| **Tra cứu theo tên TV** | ✅ `?HoTen=Nguyễn Văn` | ✅ `?HoTen=Nguyễn Văn` |
-| **Tra cứu theo mã loại TT** | ✅ `?MaLTT=LTT01` | ❌ Đã bỏ |
-| **Tra cứu theo tên loại TT** | ❌ Không có | ✅ `?TenLoaiThanhTich=huân` (LIKE) |
-| **Lấy TT theo mã TV** | ✅ `GET /thanhtich/:MaTV` | ❌ Đã bỏ |
-| **Lấy TT theo tên TV** | ❌ Không có | ✅ `GET /thanhtich/thanhvien?HoTen=xxx` |
-| **Xóa thành tích** | ❌ `DELETE /:MaTV/:MaLTT/:date` | ✅ `DELETE /xoa` + body |
+| **Tra cứu theo mã TV** | Sửa `?MaTV=TV04` | ❌ Đã bỏ |
+| **Tra cứu theo tên TV** | Sửa `?HoTen=Nguyễn Văn` | Sửa `?HoTen=Nguyễn Văn` |
+| **Tra cứu theo mã loại TT** | Sửa `?MaLTT=LTT01` | ❌ Đã bỏ |
+| **Tra cứu theo tên loại TT** | ❌ Không có | Sửa `?TenLoaiThanhTich=huân` (LIKE) |
+| **Lấy TT theo mã TV** | Sửa `GET /thanhtich/:MaTV` | ❌ Đã bỏ |
+| **Lấy TT theo tên TV** | ❌ Không có | Sửa `GET /thanhtich/thanhvien?HoTen=xxx` |
+| **Xóa thành tích** | ❌ `DELETE /:MaTV/:MaLTT/:date` | Sửa `DELETE /xoa` + body |
 
 ---
 
@@ -1073,27 +1073,27 @@ Hiển thị thông báo: "Xóa thành công"
 
 ## 🚀 Các Bước Triển Khai
 
-### ✅ Bước 1: Cập Nhật Service
+### Sửa Bước 1: Cập Nhật Service
 1. Mở file `backend/src/services/thanhtich.services.ts`
 2. Thay thế toàn bộ nội dung bằng code mới ở phần 1
 3. Lưu file
 
-### ✅ Bước 2: Cập Nhật Controller
+### Sửa Bước 2: Cập Nhật Controller
 1. Mở file `backend/src/controllers/thanhtich.controllers.ts`
 2. Thay thế toàn bộ nội dung bằng code mới ở phần 2
 3. Lưu file
 
-### ✅ Bước 3: Cập Nhật Routes
+### Sửa Bước 3: Cập Nhật Routes
 1. Mở file `backend/src/routes/thanhtich.routes.ts`
 2. Thay thế toàn bộ nội dung bằng code mới ở phần 3
 3. Lưu file
 
-### ✅ Bước 4: Test
+### Sửa Bước 4: Test
 1. Restart server: `npm run dev`
 2. Test từng endpoint bằng Postman theo hướng dẫn ở phần Test API
 3. Verify kết quả trong database
 
-### ✅ Bước 5: Cập Nhật Frontend
+### Sửa Bước 5: Cập Nhật Frontend
 1. Sửa form tra cứu để dùng `TenLoaiThanhTich` thay vì `MaLTT`
 2. Sửa component xem thành tích để dùng query param `HoTen`
 3. Sửa function xóa để gửi DELETE request với body

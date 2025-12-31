@@ -25,7 +25,7 @@ export default function ThanhVienDetailPage() {
   const { user } = useAuth();
   const { isAdmin, isOwner } = usePermissions();
 
-  // ✅ Permission: Only Admin/Owner can edit relationships
+  // Sửa Permission: Only Admin/Owner can edit relationships
   const canEditRelations = isAdmin || isOwner;
 
   const [isLoading, setIsLoading] = useState(false);

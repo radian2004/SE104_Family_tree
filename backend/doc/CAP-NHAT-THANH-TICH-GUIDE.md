@@ -129,10 +129,10 @@ COMMIT;
 ```
 
 **Lợi ích**:
-- ✅ Đảm bảo tính toàn vẹn dữ liệu (ACID)
-- ✅ Nếu có lỗi, toàn bộ thao tác sẽ rollback
-- ✅ Trigger INSERT vẫn hoạt động bình thường
-- ✅ Bảng BAOCAOTHANHTICH được cập nhật tự động
+- Sửa Đảm bảo tính toàn vẹn dữ liệu (ACID)
+- Sửa Nếu có lỗi, toàn bộ thao tác sẽ rollback
+- Sửa Trigger INSERT vẫn hoạt động bình thường
+- Sửa Bảng BAOCAOTHANHTICH được cập nhật tự động
 
 ---
 
@@ -146,7 +146,7 @@ COMMIT;
 
 ```typescript
   /**
-   * ✅ MỚI: Cập nhật loại thành tích
+   * Sửa MỚI: Cập nhật loại thành tích
    * Do MaLTT là primary key nên phải dùng DELETE + INSERT trong transaction
    */
   async capNhatThanhTich(payload: {
@@ -293,7 +293,7 @@ class DatabaseService {
 
 ```typescript
 /**
- * ✅ MỚI: Controller cập nhật thành tích
+ * Sửa MỚI: Controller cập nhật thành tích
  * PUT /thanhtich/capnhat
  * Body: { 
  *   MaTV: string, 
@@ -375,7 +375,7 @@ import {
   traCuuThanhTichController,
   getThanhTichByHoTenController,
   xoaThanhTichController,
-  capNhatThanhTichController,  // ✅ THÊM DÒNG NÀY
+  capNhatThanhTichController,  // Sửa THÊM DÒNG NÀY
   getBaoCaoThanhTichController
 } from '~/controllers/thanhtich.controllers';
 ```
@@ -384,7 +384,7 @@ import {
 
 ```typescript
 /**
- * ✅ MỚI: PUT /thanhtich/capnhat - Cập nhật loại thành tích
+ * Sửa MỚI: PUT /thanhtich/capnhat - Cập nhật loại thành tích
  * Body: { 
  *   MaTV: string,           // Mã thành viên
  *   MaLTT_Cu: string,       // Mã loại thành tích hiện tại (cũ)
@@ -421,7 +421,7 @@ thanhTichRouter.post('/ghinhan', ghiNhanThanhTichController);
 thanhTichRouter.get('/tracuu', traCuuThanhTichController);
 thanhTichRouter.get('/thanhvien', getThanhTichByHoTenController);
 thanhTichRouter.delete('/xoa', xoaThanhTichController);
-thanhTichRouter.put('/capnhat', capNhatThanhTichController);  // ✅ THÊM Ở ĐÂY
+thanhTichRouter.put('/capnhat', capNhatThanhTichController);  // Sửa THÊM Ở ĐÂY
 thanhTichRouter.get('/baocao', getBaoCaoThanhTichController);
 
 export default thanhTichRouter;
@@ -458,7 +458,7 @@ class DatabaseService {
   async connect() {
     try {
       await this.pool.getConnection();
-      console.log('✅ Kết nối database thành công');
+      console.log('Sửa Kết nối database thành công');
     } catch (error) {
       console.error('❌ Lỗi kết nối database:', error);
       throw error;
@@ -471,7 +471,7 @@ class DatabaseService {
   }
 
   /**
-   * ✅ THÊM METHOD NÀY (nếu chưa có)
+   * Sửa THÊM METHOD NÀY (nếu chưa có)
    * Lấy connection từ pool để thực hiện transaction
    */
   async getConnection(): Promise<PoolConnection> {
@@ -1244,9 +1244,9 @@ UPDATE GHINHANTHANHTICH SET MaLTT = 'LTT01' WHERE ...
 
 ### 2. Về Transaction
 
-- ✅ Dùng `connection.beginTransaction()` và `connection.commit()`
-- ✅ Dùng `connection.rollback()` trong catch block
-- ✅ Dùng `connection.release()` trong finally block
+- Sửa Dùng `connection.beginTransaction()` và `connection.commit()`
+- Sửa Dùng `connection.rollback()` trong catch block
+- Sửa Dùng `connection.release()` trong finally block
 - ⚠️ Không quên release connection để tránh memory leak
 
 ### 3. Về Trigger
@@ -1283,12 +1283,12 @@ UPDATE GHINHANTHANHTICH SET MaLTT = 'LTT01' WHERE ...
 const [checkResult] = await connection.query<RowDataPacket[]>(checkSql, [...]);
 if (checkResult.count === 0) { ... }  // Lỗi!
 
-// ✅ ĐÚNG - Cách 1: Lấy phần tử đầu tiên
+// Sửa ĐÚNG - Cách 1: Lấy phần tử đầu tiên
 const [checkRows] = await connection.query<RowDataPacket[]>(checkSql, [...]);
 const checkResult = checkRows[0] as any;
 if (checkResult.count === 0) { ... }  // OK!
 
-// ✅ ĐÚNG - Cách 2: Destructure 2 lần
+// Sửa ĐÚNG - Cách 2: Destructure 2 lần
 const [[checkResult]] = await connection.query<RowDataPacket[]>(checkSql, [...]);
 if ((checkResult as any).count === 0) { ... }  // OK!
 ```
@@ -1326,12 +1326,12 @@ if ((checkResult as any).count === 0) { ... }  // OK!
 
 Tính năng "Cập nhật thông tin thành tích" đã được thiết kế với:
 
-✅ **Transaction đảm bảo ACID**: DELETE + INSERT trong transaction  
-✅ **Validation đầy đủ**: Kiểm tra tồn tại, hợp lệ, không trùng  
-✅ **Error handling tốt**: Rollback khi có lỗi, release connection  
-✅ **Trigger hoạt động**: Tự động cập nhật BAOCAOTHANHTICH  
-✅ **API RESTful**: PUT method với body JSON chuẩn  
-✅ **Frontend thân thiện**: Form 2 bước, search và select  
+Sửa **Transaction đảm bảo ACID**: DELETE + INSERT trong transaction  
+Sửa **Validation đầy đủ**: Kiểm tra tồn tại, hợp lệ, không trùng  
+Sửa **Error handling tốt**: Rollback khi có lỗi, release connection  
+Sửa **Trigger hoạt động**: Tự động cập nhật BAOCAOTHANHTICH  
+Sửa **API RESTful**: PUT method với body JSON chuẩn  
+Sửa **Frontend thân thiện**: Form 2 bước, search và select  
 
 **Thời gian ước tính**: 1-2 giờ implement backend + 2-3 giờ frontend
 

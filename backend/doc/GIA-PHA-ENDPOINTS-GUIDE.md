@@ -681,8 +681,8 @@ thanhvienRouter.delete('/:MaTV/gia-pha', wrapAsync(xoaMaGiaPhaController));
 **⚠️ LƯU Ý THỨ TỰ ROUTES:**
 ```typescript
 // Routes cụ thể phải đặt TRƯỚC routes có param
-thanhvienRouter.get('/gia-pha/danh-sach', ...);  // ✅ Đặt trước
-thanhvienRouter.get('/:MaTV', ...);               // ✅ Đặt sau
+thanhvienRouter.get('/gia-pha/danh-sach', ...);  // Sửa Đặt trước
+thanhvienRouter.get('/:MaTV', ...);               // Sửa Đặt sau
 
 // SAI: /:MaTV sẽ match trước /gia-pha/danh-sach
 thanhvienRouter.get('/:MaTV', ...);               // ❌ 
@@ -1227,7 +1227,7 @@ async capNhatTruongTocGiaPha(MaTVTruongTocMoi: string) {
 
 ## 8. CHECKLIST TRIỂN KHAI
 
-### ✅ Các bước thực hiện
+### Sửa Các bước thực hiện
 
 - [ ] **Bước 1:** Backup database và code hiện tại
 - [ ] **Bước 2:** Thêm method mới vào `thanhvien.services.ts`
@@ -1283,9 +1283,9 @@ backend/src/
 
 ### 9.3. Điểm cần lưu ý
 
-1. ✅ **Thay đổi bảng**: Endpoint PATCH giờ cập nhật bảng `CAYGIAPHA` (trường `TruongToc`) thay vì bảng `THANHVIEN` (trường `MaGiaPha`)
-2. ✅ **Trigger tự động**: Khi cập nhật trưởng tộc, trigger `TRG_UPDATE_TAIKHOAN_LOAITK_GIAPHA` sẽ tự động nâng quyền tài khoản lên `LTK02`
-3. ✅ **Validation**: Thành viên mới phải thuộc cùng gia phả với trưởng tộc cũ
+1. Sửa **Thay đổi bảng**: Endpoint PATCH giờ cập nhật bảng `CAYGIAPHA` (trường `TruongToc`) thay vì bảng `THANHVIEN` (trường `MaGiaPha`)
+2. Sửa **Trigger tự động**: Khi cập nhật trưởng tộc, trigger `TRG_UPDATE_TAIKHOAN_LOAITK_GIAPHA` sẽ tự động nâng quyền tài khoản lên `LTK02`
+3. Sửa **Validation**: Thành viên mới phải thuộc cùng gia phả với trưởng tộc cũ
 4. ⚠️ **Param không dùng**: Route `/:MaTV` giữ nguyên nhưng param `:MaTV` không được sử dụng trong logic
 5. 💡 **Request body**: Đổi từ `{ "MaGiaPha": "..." }` sang `{ "MaTVTruongTocMoi": "..." }`
 6. 🔒 **Optional validation**: Có thể thêm check về đời, tuổi, hoặc tư cách của trưởng tộc mới
@@ -1573,7 +1573,7 @@ WHERE tv.MaTV = 'TV04';
 **🎉 HOÀN THÀNH HƯỚNG DẪN CẬP NHẬT! 🎉**
 
 **📌 TÓM TẮT:**
-- ✅ Endpoint PATCH đã được sửa từ "cập nhật mã gia phả thành viên" → "cập nhật trưởng tộc gia phả"
-- ✅ Thay đổi từ cập nhật bảng `THANHVIEN` → bảng `CAYGIAPHA`
-- ✅ Trigger tự động nâng quyền tài khoản lên `LTK02` cho trưởng tộc mới
-- ✅ Request body đổi từ `{ "MaGiaPha": "..." }` → `{ "MaTVTruongTocMoi": "..." }`
+- Sửa Endpoint PATCH đã được sửa từ "cập nhật mã gia phả thành viên" → "cập nhật trưởng tộc gia phả"
+- Sửa Thay đổi từ cập nhật bảng `THANHVIEN` → bảng `CAYGIAPHA`
+- Sửa Trigger tự động nâng quyền tài khoản lên `LTK02` cho trưởng tộc mới
+- Sửa Request body đổi từ `{ "MaGiaPha": "..." }` → `{ "MaTVTruongTocMoi": "..." }`

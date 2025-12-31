@@ -104,7 +104,7 @@ export const loginController = async (req: Request<ParamsDictionary, any, LoginR
     });
   }
 
-  // ✅ Set HTTP-only cookies cho tokens
+  // Sửa Set HTTP-only cookies cho tokens
   res.cookie('access_token', result.access_token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -133,20 +133,20 @@ export const loginController = async (req: Request<ParamsDictionary, any, LoginR
 /**
  * Controller đăng xuất
  * POST /users/logout
- * ✅ Lấy refresh_token từ cookies và xóa cả access + refresh cookies
+ * Sửa Lấy refresh_token từ cookies và xóa cả access + refresh cookies
  */
 export const logoutController = async (
   req: Request<ParamsDictionary, any, LogoutReqBody>,
   res: Response
 ) => {
-  // ✅ Lấy refresh_token từ cookies
+  // Sửa Lấy refresh_token từ cookies
   const refresh_token = req.cookies.refresh_token;
 
   if (refresh_token) {
     await usersService.logout(refresh_token);
   }
 
-  // ✅ XÓA COOKIES - ĐÂY LÀ CÁCH BACKEND "XÓA LOCALSTORAGE"
+  // Sửa XÓA COOKIES - ĐÂY LÀ CÁCH BACKEND "XÓA LOCALSTORAGE"
   res.clearCookie('access_token', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -167,7 +167,7 @@ export const logoutController = async (
 /**
  * Controller refresh token
  * POST /users/refresh-token
- * ✅ Lấy refresh_token từ cookies
+ * Sửa Lấy refresh_token từ cookies
  */
 export const refreshTokenController = async (
   req: Request,

@@ -30,7 +30,7 @@ Lỗi xảy ra do **2 vấn đề** trong method `traCuuThanhVien`:
 
 ---
 
-## ✅ Giải Pháp
+## Sửa Giải Pháp
 
 ### CÁCH 1: Sửa Nhanh (Recommended)
 
@@ -105,20 +105,20 @@ Lỗi xảy ra do **2 vấn đề** trong method `traCuuThanhVien`:
         }
       }
       
-      // [3] ✅ FIX: Query đếm tổng số record
+      // [3] Sửa FIX: Query đếm tổng số record
       const countSql = `
         SELECT COUNT(*) as total
         FROM THANHVIEN tv
         WHERE ${whereClause}
       `;
       
-      // ✅ FIX: Xử lý kết quả đúng cách
+      // Sửa FIX: Xử lý kết quả đúng cách
       const countResult = await databaseService.query<any[]>(countSql, params);
       // Kiểm tra xem result trả về [rows, fields] hay chỉ rows
       const countRows = Array.isArray(countResult[0]) ? countResult[0] : countResult;
       const total = countRows[0]?.total || 0;
       
-      // [4] ✅ FIX: Tính toán pagination với validation
+      // [4] Sửa FIX: Tính toán pagination với validation
       const page = Math.max(1, parseInt(String(query.page || 1)));
       const limit = Math.max(1, Math.min(100, parseInt(String(query.limit || 10))));
       const offset = (page - 1) * limit;
@@ -144,11 +144,11 @@ Lỗi xảy ra do **2 vấn đề** trong method `traCuuThanhVien`:
         LIMIT ? OFFSET ?
       `;
       
-      // ✅ FIX: Đảm bảo limit và offset là số nguyên
+      // Sửa FIX: Đảm bảo limit và offset là số nguyên
       const dataParams = [...params, limit, offset];
       const dataResult = await databaseService.query<any[]>(dataSql, dataParams);
       
-      // ✅ FIX: Xử lý kết quả đúng cách
+      // Sửa FIX: Xử lý kết quả đúng cách
       const rows = Array.isArray(dataResult[0]) ? dataResult[0] : dataResult;
       
       // [6] Format kết quả với STT
@@ -344,7 +344,7 @@ Nếu vẫn gặp lỗi, thêm console.log để debug:
       console.log('📝 Count Params:', queryParams);
       
       const countResultRaw = await databaseService.query<any[]>(countSQL, queryParams);
-      console.log('✅ Count Result Raw:', countResultRaw);
+      console.log('Sửa Count Result Raw:', countResultRaw);
       
       // ... rest of code ...
       
@@ -352,7 +352,7 @@ Nếu vẫn gặp lỗi, thêm console.log để debug:
       console.log('📝 Data Params:', queryParams);
       
       const dataResultRaw = await databaseService.query<any[]>(dataSQL, queryParams);
-      console.log('✅ Data Result Raw:', dataResultRaw);
+      console.log('Sửa Data Result Raw:', dataResultRaw);
       
       // ... rest of code ...
       

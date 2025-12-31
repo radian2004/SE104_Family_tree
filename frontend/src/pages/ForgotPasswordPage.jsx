@@ -44,7 +44,7 @@ export default function ForgotPasswordPage() {
                 {message ? (
                     <div className="alert alert-success mb-6 border border-emerald-200 bg-emerald-50 text-emerald-800 rounded-xl p-4">
                         <div className="flex flex-col items-center text-center gap-3">
-                            <span className="text-4xl">✅</span>
+                            <span className="text-4xl">Sửa</span>
                             <p className="font-medium">{message}</p>
                             <Link
                                 to="/login"

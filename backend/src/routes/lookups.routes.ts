@@ -10,7 +10,7 @@ const lookupsRouter = Router();
  */
 lookupsRouter.get('/gioitinh', async (req: Request, res: Response) => {
   try {
-    // ✅ ĐÚNG: Trả về danh sách giới tính hardcoded vì không có bảng GIOITINH
+    // Sửa ĐÚNG: Trả về danh sách giới tính hardcoded vì không có bảng GIOITINH
     const result = [
       { MaGioiTinh: 'Nam', TenGioiTinh: 'Nam' },
       { MaGioiTinh: 'Nữ', TenGioiTinh: 'Nữ' }
@@ -70,7 +70,7 @@ lookupsRouter.get('/nghenghiep', async (req: Request, res: Response) => {
  */
 lookupsRouter.get('/caygiapha', async (req: Request, res: Response) => {
   try {
-    const sql = 'SELECT * FROM CAYGIAPHA ORDER BY TenGiaPha';  // ✅ ĐÚNG: Tên bảng và cột đúng
+    const sql = 'SELECT * FROM CAYGIAPHA ORDER BY TenGiaPha';  // Sửa ĐÚNG: Tên bảng và cột đúng
     const result = await databaseService.query(sql);
     return res.json({
       message: 'Lấy danh sách gia phả thành công',

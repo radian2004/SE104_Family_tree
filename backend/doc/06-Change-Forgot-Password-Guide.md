@@ -142,7 +142,7 @@ if (!value.endsWith('@gmail.com')) {
 }
 
 // Các trường hợp:
-'user@gmail.com'     // ✅ PASS
+'user@gmail.com'     // Sửa PASS
 'test@yahoo.com'     // ❌ REJECT - Email must be @gmail.com
 'admin@outlook.com'  // ❌ REJECT - Email must be @gmail.com
 'hello@gmail.vn'     // ❌ REJECT - Phải là .com
@@ -182,7 +182,7 @@ Nếu OK → Hash password mới → Update DB → Trả về success
 CREATE TABLE TAIKHOAN(
     TenDangNhap VARCHAR(50) PRIMARY KEY,
     MaTV VARCHAR(5),
-    MatKhau VARCHAR(100),          -- ✅ Đã có
+    MatKhau VARCHAR(100),          -- Sửa Đã có
     MaLoaiTK VARCHAR(5),
     TGTaoMoi TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
     FOREIGN KEY(MaTV) REFERENCES THANHVIEN(MaTV),
@@ -570,7 +570,7 @@ File: `src/constants/enums.ts`
 export enum TokenType {
   AccessToken,
   RefreshToken,
-  ForgotPasswordToken,  // ✅ Đã có sẵn
+  ForgotPasswordToken,  // Sửa Đã có sẵn
   EmailVerifyToken
 }
 
@@ -679,7 +679,7 @@ export const sendResetPasswordEmail = async (to: string, forgot_password_token: 
 
   try {
     const info = await transporter.sendMail(mailOptions)
-    console.log('✅ Email reset password đã gửi thành công!')
+    console.log('Sửa Email reset password đã gửi thành công!')
     console.log('📧 Message ID:', info.messageId)
     console.log('📬 Email gửi tới:', to)
     return true
@@ -1444,7 +1444,7 @@ Content-Type: application/json
 }
 ```
 
-**Expected:** Login thành công ✅
+**Expected:** Login thành công Sửa
 
 ---
 
@@ -1470,9 +1470,9 @@ Content-Type: application/json
 **Status:** `200 OK`
 
 **Kiểm tra email:**
-- ✅ Nhận được email từ hệ thống
-- ✅ Có link reset password
-- ✅ Link có dạng: `http://localhost:3000/reset-password?token=eyJhbGc...`
+- Sửa Nhận được email từ hệ thống
+- Sửa Có link reset password
+- Sửa Link có dạng: `http://localhost:3000/reset-password?token=eyJhbGc...`
 
 **Bước 2: Copy token từ email → Verify token**
 
@@ -1526,7 +1526,7 @@ Content-Type: application/json
 }
 ```
 
-**Expected:** Login thành công ✅
+**Expected:** Login thành công Sửa
 
 **Bước 5: Thử dùng lại forgot_password_token cũ**
 
@@ -1549,36 +1549,36 @@ Content-Type: application/json
 ```
 **Status:** `401 Unauthorized`
 
-✅ **Token đã bị xóa khỏi database → Không thể dùng lại**
+Sửa **Token đã bị xóa khỏi database → Không thể dùng lại**
 
 ---
 
 ## 🎯 Tổng kết
 
-### ✅ **Đã hoàn thành:**
+### Sửa **Đã hoàn thành:**
 
 1. **Fix email validation:**
-   - ✅ Chỉ chấp nhận `@gmail.com`
-   - ✅ Reject email khác
+   - Sửa Chỉ chấp nhận `@gmail.com`
+   - Sửa Reject email khác
 
 2. **Change Password:**
-   - ✅ Verify old password
-   - ✅ Check new password khác old password
-   - ✅ Hash và update database
+   - Sửa Verify old password
+   - Sửa Check new password khác old password
+   - Sửa Hash và update database
 
 3. **Forgot Password:**
-   - ✅ Tạo forgot_password_token
-   - ✅ Lưu token vào database
-   - ✅ Gửi email với link reset
+   - Sửa Tạo forgot_password_token
+   - Sửa Lưu token vào database
+   - Sửa Gửi email với link reset
 
 4. **Verify Forgot Password Token:**
-   - ✅ Verify JWT signature
-   - ✅ Check token trong database
+   - Sửa Verify JWT signature
+   - Sửa Check token trong database
 
 5. **Reset Password:**
-   - ✅ Hash password mới
-   - ✅ Update database
-   - ✅ Xóa forgot_password_token (không dùng lại)
+   - Sửa Hash password mới
+   - Sửa Update database
+   - Sửa Xóa forgot_password_token (không dùng lại)
 
 ### 📊 **API Endpoints:**
 
@@ -1586,26 +1586,26 @@ Content-Type: application/json
 |--------|------|------|-------|
 | POST | `/users/register` | ❌ | Đăng ký (chỉ @gmail.com) |
 | POST | `/users/login` | ❌ | Đăng nhập |
-| PUT | `/users/change-password` | ✅ | Đổi mật khẩu |
+| PUT | `/users/change-password` | Sửa | Đổi mật khẩu |
 | POST | `/users/forgot-password` | ❌ | Quên mật khẩu |
 | POST | `/users/verify-forgot-password` | ❌ | Verify token |
 | POST | `/users/reset-password` | ❌ | Reset password |
 
 ### 🔒 **Bảo mật:**
 
-- ✅ Password được hash (SHA-256 + secret)
-- ✅ JWT tokens có expiration
-- ✅ Forgot password token chỉ dùng 1 lần
-- ✅ Verify old password trước khi change
-- ✅ Strong password policy
-- ✅ Email validation (@gmail.com only)
+- Sửa Password được hash (SHA-256 + secret)
+- Sửa JWT tokens có expiration
+- Sửa Forgot password token chỉ dùng 1 lần
+- Sửa Verify old password trước khi change
+- Sửa Strong password policy
+- Sửa Email validation (@gmail.com only)
 
 ### 📧 **Email Configuration:**
 
 **Gmail SMTP (Miễn phí):**
-- ✅ 500 email/ngày
-- ✅ Gửi email thật
-- ✅ HTML template đẹp
+- Sửa 500 email/ngày
+- Sửa Gửi email thật
+- Sửa HTML template đẹp
 
 **Setup:**
 1. Bật 2-Step Verification

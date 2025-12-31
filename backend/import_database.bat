@@ -22,5 +22,5 @@ echo Importing database from %SQL_FILE% into Docker container...
 docker exec -i cnpm_mysql mysql -u root -p123456 app < "%SQL_FILE%"
 
 echo.
-echo ✅ Database imported successfully!
+echo Sửa Database imported successfully!
 pause

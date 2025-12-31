@@ -26,7 +26,7 @@ File `thanhvien.services.ts` có **2 class `ThanhVienService`** được định
 
 ---
 
-## ✅ Giải Pháp Đã Thực Hiện
+## Sửa Giải Pháp Đã Thực Hiện
 
 ### 1. Gộp 2 Class Thành 1
 - Giữ lại **1 class `ThanhVienService`** duy nhất
@@ -88,17 +88,17 @@ class ThanhVienService {
 ### File: `src/services/thanhvien.services.ts`
 
 **Thay đổi:**
-1. ✅ Xóa class `ThanhVienService` thứ 2
-2. ✅ Thêm imports ở đầu file
-3. ✅ Thêm interfaces `QuanHeConRow` và `QuanHeVoChongRow`
-4. ✅ Thêm 6 methods mới vào class gốc:
+1. Sửa Xóa class `ThanhVienService` thứ 2
+2. Sửa Thêm imports ở đầu file
+3. Sửa Thêm interfaces `QuanHeConRow` và `QuanHeVoChongRow`
+4. Sửa Thêm 6 methods mới vào class gốc:
    - `getThanhVienCu()`
    - `checkExistingSpouse()`
    - `ghiNhanThanhVien()`
    - `getThanhVienCuWithConnection()` (private)
    - `checkExistingSpouseWithConnection()` (private)
    - `getAvailableParents()`
-5. ✅ Giữ nguyên export ở cuối: `export default thanhvienService;`
+5. Sửa Giữ nguyên export ở cuối: `export default thanhvienService;`
 
 ---
 
@@ -166,7 +166,7 @@ curl http://localhost:3000/thanhvien/available-relations
 
 ---
 
-## ✅ Checklist
+## Sửa Checklist
 
 - [x] Gộp 2 class `ThanhVienService` thành 1
 - [x] Thêm imports cần thiết
@@ -186,11 +186,11 @@ curl http://localhost:3000/thanhvien/available-relations
 - ❌ Server không khởi động được
 
 **Sau khi sửa:**
-- ✅ Build thành công
-- ✅ Tất cả methods đều có sẵn trong class
-- ✅ Server chạy bình thường
-- ✅ API `/thanhvien/ghi-nhan` hoạt động
-- ✅ API `/thanhvien/available-relations` hoạt động
+- Sửa Build thành công
+- Sửa Tất cả methods đều có sẵn trong class
+- Sửa Server chạy bình thường
+- Sửa API `/thanhvien/ghi-nhan` hoạt động
+- Sửa API `/thanhvien/available-relations` hoạt động
 
 ---
 

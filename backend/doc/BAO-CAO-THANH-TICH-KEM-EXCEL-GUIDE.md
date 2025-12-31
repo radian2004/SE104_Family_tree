@@ -92,9 +92,9 @@ END;
 ```
 
 **Kết luận**: 
-- ✅ Bảng `BAOCAOTHANHTICH` đã tồn tại và được tự động cập nhật
-- ✅ Mỗi khi có thành tích mới được ghi nhận, trigger sẽ tự động cập nhật số lượng
-- ✅ Không cần thêm logic update thủ công
+- Sửa Bảng `BAOCAOTHANHTICH` đã tồn tại và được tự động cập nhật
+- Sửa Mỗi khi có thành tích mới được ghi nhận, trigger sẽ tự động cập nhật số lượng
+- Sửa Không cần thêm logic update thủ công
 
 ---
 
@@ -161,7 +161,7 @@ export default class BaoCaoThanhTich {
 
 ```typescript
   /**
-   * ✅ MỚI: Lấy báo cáo thành tích theo khoảng năm
+   * Sửa MỚI: Lấy báo cáo thành tích theo khoảng năm
    * Tổng hợp số lượng thành tích từ bảng BAOCAOTHANHTICH
    */
   async getBaoCaoThanhTich(NamBatDau: number, NamKetThuc: number) {
@@ -225,7 +225,7 @@ export default class BaoCaoThanhTich {
 
 ```typescript
 /**
- * ✅ MỚI: Controller lấy báo cáo thành tích theo khoảng năm
+ * Sửa MỚI: Controller lấy báo cáo thành tích theo khoảng năm
  * GET /thanhtich/baocao
  * Query params: 
  * - NamBatDau: Năm bắt đầu (required)
@@ -313,7 +313,7 @@ import {
   traCuuThanhTichController,
   getThanhTichByHoTenController,
   xoaThanhTichController,
-  getBaoCaoThanhTichController // ✅ THÊM DÒNG NÀY
+  getBaoCaoThanhTichController // Sửa THÊM DÒNG NÀY
 } from '~/controllers/thanhtich.controllers';
 ```
 
@@ -321,7 +321,7 @@ import {
 
 ```typescript
 /**
- * ✅ MỚI: GET /thanhtich/baocao - Lấy báo cáo thành tích theo khoảng năm
+ * Sửa MỚI: GET /thanhtich/baocao - Lấy báo cáo thành tích theo khoảng năm
  * Query params:
  * - NamBatDau: Năm bắt đầu (required, số nguyên)
  * - NamKetThuc: Năm kết thúc (required, số nguyên)
@@ -885,7 +885,7 @@ import { checkBaoCaoPermission } from '~/middlewares/users.middlewares';
 // Thêm middleware vào route
 thanhTichRouter.get(
   '/baocao', 
-  checkBaoCaoPermission, // ✅ Thêm middleware này
+  checkBaoCaoPermission, // Sửa Thêm middleware này
   getBaoCaoThanhTichController
 );
 ```
@@ -1033,8 +1033,8 @@ Frontend có thể dùng thư viện như **Chart.js** hoặc **Recharts** để
 
 ### 1. Về Dữ Liệu
 
-- ✅ Bảng `BAOCAOTHANHTICH` **ĐÃ TỒN TẠI** trong database
-- ✅ Trigger `TRG_UPDATE_BAOCAOTHANHTICH_AFTER_INSERT` **TỰ ĐỘNG CẬP NHẬT** mỗi khi có thành tích mới
+- Sửa Bảng `BAOCAOTHANHTICH` **ĐÃ TỒN TẠI** trong database
+- Sửa Trigger `TRG_UPDATE_BAOCAOTHANHTICH_AFTER_INSERT` **TỰ ĐỘNG CẬP NHẬT** mỗi khi có thành tích mới
 - ⚠️ Nếu bạn thêm thành tích thủ công vào bảng `GHINHANTHANHTICH` trước khi trigger được tạo, cần chạy script cập nhật:
 
 ```sql
@@ -1128,12 +1128,12 @@ docker-compose up -d
 
 Tính năng "Báo cáo thành tích các thành viên" đã được thiết kế với:
 
-✅ **Backend hoàn chỉnh**: Service, Controller, Route, Validation  
-✅ **Database tối ưu**: Sử dụng bảng báo cáo có sẵn + Trigger tự động  
-✅ **API RESTful**: Endpoint rõ ràng, response chuẩn  
-✅ **Validation đầy đủ**: Kiểm tra input, xử lý lỗi chi tiết  
-✅ **Scalable**: Dễ mở rộng (Excel export, biểu đồ, chi tiết...)  
-✅ **Documentation đầy đủ**: Hướng dẫn chi tiết từng bước  
+Sửa **Backend hoàn chỉnh**: Service, Controller, Route, Validation  
+Sửa **Database tối ưu**: Sử dụng bảng báo cáo có sẵn + Trigger tự động  
+Sửa **API RESTful**: Endpoint rõ ràng, response chuẩn  
+Sửa **Validation đầy đủ**: Kiểm tra input, xử lý lỗi chi tiết  
+Sửa **Scalable**: Dễ mở rộng (Excel export, biểu đồ, chi tiết...)  
+Sửa **Documentation đầy đủ**: Hướng dẫn chi tiết từng bước  
 
 **Thời gian ước tính**: 30-60 phút implement backend + 1-2 giờ làm frontend (nếu cần)
 

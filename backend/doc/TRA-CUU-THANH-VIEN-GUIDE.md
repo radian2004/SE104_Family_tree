@@ -50,13 +50,13 @@ Chức năng "Tra Cứu Thành Viên" cho phép **tìm kiếm và hiển thị d
 
 ```sql
 CREATE TABLE THANHVIEN (
-    MaTV VARCHAR(5) PRIMARY KEY,              -- ✅ Mã thành viên
-    HoTen VARCHAR(50),                        -- ✅ Họ tên
-    NgayGioSinh DATETIME,                     -- ✅ Ngày giờ sinh
+    MaTV VARCHAR(5) PRIMARY KEY,              -- Sửa Mã thành viên
+    HoTen VARCHAR(50),                        -- Sửa Họ tên
+    NgayGioSinh DATETIME,                     -- Sửa Ngày giờ sinh
     DiaChi VARCHAR(50),
     TrangThai VARCHAR(20) DEFAULT 'Còn Sống',
     TGTaoMoi TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
-    DOI INT DEFAULT 0,                        -- ✅ Đời
+    DOI INT DEFAULT 0,                        -- Sửa Đời
     MaQueQuan VARCHAR(5),
     MaNgheNghiep VARCHAR(5),
     GioiTinh VARCHAR(3),
@@ -76,8 +76,8 @@ CREATE TABLE THANHVIEN (
 ```sql
 CREATE TABLE QUANHECON(
     MaTV VARCHAR(5) PRIMARY KEY,              -- Mã thành viên CON
-    MaTVCha VARCHAR(5),                       -- ✅ Mã thành viên CHA (có thể NULL)
-    MaTVMe VARCHAR(5),                        -- ✅ Mã thành viên MẸ (có thể NULL)
+    MaTVCha VARCHAR(5),                       -- Sửa Mã thành viên CHA (có thể NULL)
+    MaTVMe VARCHAR(5),                        -- Sửa Mã thành viên MẸ (có thể NULL)
     NgayPhatSinh TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
     FOREIGN KEY(MaTV) REFERENCES THANHVIEN(MaTV),
     FOREIGN KEY(MaTVCha) REFERENCES THANHVIEN(MaTV),
@@ -451,7 +451,7 @@ import {
   deleteThanhVienController,
   ghiNhanThanhVienController,
   getAvailableRelationsController,
-  traCuuThanhVienController  // ✅ THÊM MỚI
+  traCuuThanhVienController  // Sửa THÊM MỚI
 } from '~/controllers/thanhvien.controllers';
 
 const thanhvienRouter = Router();
@@ -469,7 +469,7 @@ thanhvienRouter.post('/ghi-nhan', ghiNhanThanhVienController);
 // GET /thanhvien/available-relations
 thanhvienRouter.get('/available-relations', getAvailableRelationsController);
 
-// ✅ THÊM MỚI: GET /thanhvien/tra-cuu
+// Sửa THÊM MỚI: GET /thanhvien/tra-cuu
 thanhvienRouter.get('/tra-cuu', traCuuThanhVienController);
 
 // ========================================
@@ -1088,7 +1088,7 @@ export interface TraCuuThanhVienResult {
   MaCha: string | null;
   MaMe: string | null;
   
-  // ✅ THÊM CÁC TRƯỜNG MỚI
+  // Sửa THÊM CÁC TRƯỜNG MỚI
   GioiTinh?: string;           // Nam/Nữ
   TrangThai?: string;          // Còn Sống/Mất
   DiaChi?: string;             // Địa chỉ hiện tại
@@ -1149,7 +1149,7 @@ Thêm các filter nâng cao:
 export interface TraCuuThanhVienQuery {
   // ... các filter hiện có ...
   
-  // ✅ THÊM FILTER MỚI
+  // Sửa THÊM FILTER MỚI
   namSinhFrom?: number;      // Lọc năm sinh từ
   namSinhTo?: number;        // Lọc năm sinh đến
   gioiTinh?: 'Nam' | 'Nữ';  // Lọc theo giới tính
@@ -1164,17 +1164,17 @@ export interface TraCuuThanhVienQuery {
 
 | Tính Năng | `GET /thanhvien` (Cũ) | `GET /thanhvien/tra-cuu` (Mới) |
 |-----------|---------------------|---------------------------|
-| Lấy danh sách | ✅ | ✅ |
-| Thông tin cha/mẹ | ❌ | ✅ |
-| Tìm kiếm | ❌ | ✅ |
-| Lọc theo đời | ❌ | ✅ |
-| Sắp xếp linh hoạt | ❌ | ✅ |
-| Phân trang | ❌ | ✅ |
-| Số thứ tự | ❌ | ✅ |
+| Lấy danh sách | Sửa | Sửa |
+| Thông tin cha/mẹ | ❌ | Sửa |
+| Tìm kiếm | ❌ | Sửa |
+| Lọc theo đời | ❌ | Sửa |
+| Sắp xếp linh hoạt | ❌ | Sửa |
+| Phân trang | ❌ | Sửa |
+| Số thứ tự | ❌ | Sửa |
 
 ---
 
-## ✅ Checklist Triển Khai
+## Sửa Checklist Triển Khai
 
 - [ ] Tạo file `TraCuuThanhVien.requests.ts` với các interfaces
 - [ ] Thêm method `traCuuThanhVien` vào `thanhvien.services.ts`
@@ -1192,11 +1192,11 @@ export interface TraCuuThanhVienQuery {
 
 ## 🎯 Lợi Ích
 
-1. ✅ **Thông tin đầy đủ:** Hiển thị luôn tên cha/mẹ, không cần gọi API nhiều lần
-2. ✅ **Tìm kiếm linh hoạt:** Hỗ trợ nhiều điều kiện lọc
-3. ✅ **Performance tốt:** Sử dụng JOIN thay vì N+1 queries
-4. ✅ **Phân trang:** Xử lý tốt với dữ liệu lớn
-5. ✅ **UX tốt:** Số thứ tự giúp người dùng dễ theo dõi
+1. Sửa **Thông tin đầy đủ:** Hiển thị luôn tên cha/mẹ, không cần gọi API nhiều lần
+2. Sửa **Tìm kiếm linh hoạt:** Hỗ trợ nhiều điều kiện lọc
+3. Sửa **Performance tốt:** Sử dụng JOIN thay vì N+1 queries
+4. Sửa **Phân trang:** Xử lý tốt với dữ liệu lớn
+5. Sửa **UX tốt:** Số thứ tự giúp người dùng dễ theo dõi
 
 ---
 

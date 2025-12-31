@@ -18,7 +18,7 @@ Cannot GET /users/ketthuc/tracuu
 
 ### 1. Cấu Trúc Routes Hiện Tại
 
-#### File: `src/users.routes.ts` ✅ (ĐÚNG)
+#### File: `src/users.routes.ts` Sửa (ĐÚNG)
 
 ```typescript
 import thanhvienRouter from './thanhvien.routes';
@@ -32,7 +32,7 @@ usersRouter.post('/register', registerValidator, wrapAsync(registerController));
 usersRouter.post('/login', loginValidator, wrapAsync(loginController));
 usersRouter.post('/logout', accessTokenValidator, refreshTokenValidator, wrapAsync(logoutController));
 
-// ✅ NESTED ROUTES - Đã đăng ký với authentication
+// Sửa NESTED ROUTES - Đã đăng ký với authentication
 usersRouter.use('/thanhvien', accessTokenValidator, thanhvienRouter);
 usersRouter.use('/thanhtich', accessTokenValidator, thanhTichRouter);
 usersRouter.use('/ketthuc', accessTokenValidator, ketthucRouter);
@@ -44,7 +44,7 @@ export default usersRouter;
 - Base: `/users` (từ index.ts)
 - Nested: `/ketthuc` (từ users.routes.ts)
 - Route: `/tracuu` (từ ketthuc.routes.ts)
-- **Kết quả:** `/users/ketthuc/tracuu` ✅
+- **Kết quả:** `/users/ketthuc/tracuu` Sửa
 
 #### File: `src/index.ts` ❌ (XUNG ĐỘT - VỪa SỬA)
 
@@ -82,9 +82,9 @@ Request → CORS → cookieParser → /users → accessTokenValidator → /ketth
 ```
 
 **Đặc điểm:**
-- ✅ CÓ xác thực (accessTokenValidator)
-- ✅ Cần gửi `Authorization: Bearer <token>` hoặc cookies
-- ✅ An toàn, đúng theo thiết kế
+- Sửa CÓ xác thực (accessTokenValidator)
+- Sửa Cần gửi `Authorization: Bearer <token>` hoặc cookies
+- Sửa An toàn, đúng theo thiết kế
 
 ### Trường Hợp 2: Routes qua index.ts (SAI - vừa thêm nhầm)
 
@@ -153,7 +153,7 @@ Theo file `CHUYEN-ROUTES-VAO-USERS-GUIDE.md`, cấu trúc routes đúng là:
 
 ---
 
-## ✅ Giải Pháp
+## Sửa Giải Pháp
 
 ### Bước 1: Xóa Import Thừa Trong index.ts
 
@@ -191,7 +191,7 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import databaseService from '~/services/database.services';
-import usersRouter from '~/routes/users.routes';  // ✅ CHỈ CẦN DÒNG NÀY
+import usersRouter from '~/routes/users.routes';  // Sửa CHỈ CẦN DÒNG NÀY
 import { defaultErrorHandler } from '~/middlewares/error.middlewares';
 
 const app = express();
@@ -222,7 +222,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// ✅ CHỈ 1 ROUTE DUY NHẤT
+// Sửa CHỈ 1 ROUTE DUY NHẤT
 app.use('/users', usersRouter);
 
 // Error handler
@@ -237,10 +237,10 @@ databaseService.connect().then(() => {
 ```
 
 **Giải thích:**
-- ✅ CHỈ import `usersRouter`
-- ✅ Các routers khác (`thanhvienRouter`, `thanhtichRouter`, `ketthucRouter`) đã được import TRONG `users.routes.ts`
-- ✅ CHỈ đăng ký 1 route: `app.use('/users', usersRouter)`
-- ✅ Tất cả sub-routes đều được xử lý bên trong `users.routes.ts`
+- Sửa CHỈ import `usersRouter`
+- Sửa Các routers khác (`thanhvienRouter`, `thanhtichRouter`, `ketthucRouter`) đã được import TRONG `users.routes.ts`
+- Sửa CHỈ đăng ký 1 route: `app.use('/users', usersRouter)`
+- Sửa Tất cả sub-routes đều được xử lý bên trong `users.routes.ts`
 
 ### Bước 2: Giữ Nguyên users.routes.ts (Đã Đúng)
 
@@ -271,7 +271,7 @@ usersRouter.post('/register', registerValidator, wrapAsync(registerController));
 usersRouter.post('/login', loginValidator, wrapAsync(loginController));
 usersRouter.post('/logout', accessTokenValidator, refreshTokenValidator, wrapAsync(logoutController));
 
-// ✅ Protected nested routes - TẤT CẢ ĐỀU CẦN AUTHENTICATION
+// Sửa Protected nested routes - TẤT CẢ ĐỀU CẦN AUTHENTICATION
 usersRouter.use('/thanhvien', accessTokenValidator, thanhvienRouter);
 usersRouter.use('/thanhtich', accessTokenValidator, thanhTichRouter);
 usersRouter.use('/ketthuc', accessTokenValidator, ketthucRouter);
@@ -280,9 +280,9 @@ export default usersRouter;
 ```
 
 **Giải thích:**
-- ✅ Đã đúng 100%, không cần sửa gì
-- ✅ `accessTokenValidator` bảo vệ tất cả routes con
-- ✅ Nếu không có token hoặc token hết hạn → 401 Unauthorized
+- Sửa Đã đúng 100%, không cần sửa gì
+- Sửa `accessTokenValidator` bảo vệ tất cả routes con
+- Sửa Nếu không có token hoặc token hết hạn → 401 Unauthorized
 
 ---
 
@@ -391,7 +391,7 @@ app.use('/ketthuc', ketthucRouter);      // ❌ Trùng lặp
 
 **index.ts:**
 ```typescript
-app.use('/users', usersRouter);  // ✅ Chỉ 1 dòng duy nhất
+app.use('/users', usersRouter);  // Sửa Chỉ 1 dòng duy nhất
 ```
 
 **users.routes.ts:**
@@ -402,9 +402,9 @@ usersRouter.use('/ketthuc', accessTokenValidator, ketthucRouter);
 ```
 
 **Endpoints:**
-- ✅ `/users/ketthuc/tracuu` (có auth)
-- ✅ `/users/thanhvien/tra-cuu` (có auth)
-- ✅ `/users/thanhtich/tracuu` (có auth)
+- Sửa `/users/ketthuc/tracuu` (có auth)
+- Sửa `/users/thanhvien/tra-cuu` (có auth)
+- Sửa `/users/thanhtich/tracuu` (có auth)
 
 **Ưu điểm:**
 - Routes rõ ràng, không trùng lặp
@@ -484,7 +484,7 @@ Response: 401 Unauthorized
 
 ---
 
-## ✅ Checklist Fix Lỗi
+## Sửa Checklist Fix Lỗi
 
 ### Bước 1: Kiểm tra index.ts
 
@@ -528,7 +528,7 @@ GET http://localhost:3000/users/ketthuc/tracuu
 Cookie: access_token=<auto>
 
 # 3. Kiểm tra response
-# ✅ Phải trả về dữ liệu, KHÔNG phải 404
+# Sửa Phải trả về dữ liệu, KHÔNG phải 404
 ```
 
 ---
@@ -541,22 +541,22 @@ Cookie: access_token=<auto>
 - ❌ Gây xung đột và bypass authentication
 
 **Giải pháp:**
-- ✅ XÓA các import thừa trong `index.ts`
-- ✅ XÓA các `app.use()` trùng lặp
-- ✅ CHỈ giữ lại `app.use('/users', usersRouter)`
-- ✅ Để `users.routes.ts` xử lý tất cả nested routes
+- Sửa XÓA các import thừa trong `index.ts`
+- Sửa XÓA các `app.use()` trùng lặp
+- Sửa CHỈ giữ lại `app.use('/users', usersRouter)`
+- Sửa Để `users.routes.ts` xử lý tất cả nested routes
 
 **Đường dẫn API đúng:**
-- ✅ `/users/ketthuc/tracuu` (ĐÚNG)
+- Sửa `/users/ketthuc/tracuu` (ĐÚNG)
 - ❌ `/ketthuc/tracuu` (SAI - không tồn tại sau khi fix)
-- ✅ `/users/thanhvien/tra-cuu` (ĐÚNG)
-- ✅ `/users/thanhtich/tracuu` (ĐÚNG)
+- Sửa `/users/thanhvien/tra-cuu` (ĐÚNG)
+- Sửa `/users/thanhtich/tracuu` (ĐÚNG)
 
 **Đặc điểm:**
-- ✅ Tất cả đều có authentication
-- ✅ Phải đăng nhập mới dùng được
-- ✅ Token tự động qua cookies hoặc Authorization header
-- ✅ An toàn, không có lỗ hổng
+- Sửa Tất cả đều có authentication
+- Sửa Phải đăng nhập mới dùng được
+- Sửa Token tự động qua cookies hoặc Authorization header
+- Sửa An toàn, không có lỗ hổng
 
 ---
 

@@ -213,7 +213,7 @@ export const deleteThanhVienController = async (req: Request, res: Response) => 
 
 
 /**
- * ✅ MỚI: Controller lấy báo cáo tăng giảm thành viên
+ * Sửa MỚI: Controller lấy báo cáo tăng giảm thành viên
  * GET /thanhvien/baocao/tanggiam
  * Query params: 
  * - NamBatDau: Năm bắt đầu (required)

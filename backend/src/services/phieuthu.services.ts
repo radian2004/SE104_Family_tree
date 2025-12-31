@@ -148,7 +148,7 @@ class PhieuThuService {
 
     if (userInfo.MaLoaiTK === 'LTK01') {
       // Admin: xem tất cả
-      // ✅ Allow Admin to filter by MaGiaPha
+      // Sửa Allow Admin to filter by MaGiaPha
       if (filters?.MaGiaPha) {
         conditions.push('tv.MaGiaPha = ?');
         params.push(filters.MaGiaPha);

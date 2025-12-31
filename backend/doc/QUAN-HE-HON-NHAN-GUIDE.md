@@ -121,11 +121,11 @@ BEGIN
         SET MESSAGE_TEXT = 'Ngày kết hôn phải sau ngày sinh thành viên!';
     END IF;
 
-    -- ✅ THÊM MỚI: Tính tuổi tại ngày kết hôn
+    -- Sửa THÊM MỚI: Tính tuổi tại ngày kết hôn
     SET age_1 = TIMESTAMPDIFF(YEAR, birth_date_1, NEW.NgayBatDau);
     SET age_2 = TIMESTAMPDIFF(YEAR, birth_date_2, NEW.NgayBatDau);
 
-    -- ✅ THÊM MỚI: Kiểm tra cả hai phải trên 14 tuổi
+    -- Sửa THÊM MỚI: Kiểm tra cả hai phải trên 14 tuổi
     IF age_1 < 14 THEN
         SIGNAL SQLSTATE '45011'
         SET MESSAGE_TEXT = 'Thành viên phải đủ 14 tuổi trở lên mới được kết hôn!';
@@ -173,7 +173,7 @@ BEGIN
     DECLARE existing_marriage_count INT;
     DECLARE last_end_date DATE;
 
-    -- ✅ Kiểm tra MaTV có đang trong hôn nhân nào không (NgayKetThuc IS NULL)
+    -- Sửa Kiểm tra MaTV có đang trong hôn nhân nào không (NgayKetThuc IS NULL)
     SELECT COUNT(*) INTO existing_marriage_count
     FROM HONNHAN
     WHERE (MaTV = NEW.MaTV OR MaTVVC = NEW.MaTV)
@@ -184,7 +184,7 @@ BEGIN
         SET MESSAGE_TEXT = 'Thành viên đang có hôn nhân hiện tại. Vui lòng kết thúc hôn nhân cũ trước khi kết hôn mới!';
     END IF;
 
-    -- ✅ Kiểm tra MaTVVC có đang trong hôn nhân nào không
+    -- Sửa Kiểm tra MaTVVC có đang trong hôn nhân nào không
     SELECT COUNT(*) INTO existing_marriage_count
     FROM HONNHAN
     WHERE (MaTV = NEW.MaTVVC OR MaTVVC = NEW.MaTVVC)
@@ -195,7 +195,7 @@ BEGIN
         SET MESSAGE_TEXT = 'Vợ/Chồng đang có hôn nhân hiện tại. Vui lòng kết thúc hôn nhân cũ trước khi kết hôn mới!';
     END IF;
 
-    -- ✅ Kiểm tra tái hôn: Ngày bắt đầu hôn nhân mới phải sau ngày kết thúc hôn nhân cũ
+    -- Sửa Kiểm tra tái hôn: Ngày bắt đầu hôn nhân mới phải sau ngày kết thúc hôn nhân cũ
     -- Kiểm tra cho MaTV
     SELECT MAX(NgayKetThuc) INTO last_end_date
     FROM HONNHAN
@@ -914,35 +914,35 @@ const honNhanRouter = Router();
  * POST /users/honnhan/thietlap
  * Thiết lập quan hệ hôn nhân
  * Body: { MaTV, MaTVVC, NgayBatDau, NgayKetThuc? }
- * ✅ YÊU CẦU: Access token (đã được validate ở users.routes.ts)
+ * Sửa YÊU CẦU: Access token (đã được validate ở users.routes.ts)
  */
 honNhanRouter.post('/thietlap', wrapAsync(thietLapHonNhanController));
 
 /**
  * GET /users/honnhan
  * Lấy tất cả quan hệ hôn nhân
- * ✅ YÊU CẦU: Access token (đã được validate ở users.routes.ts)
+ * Sửa YÊU CẦU: Access token (đã được validate ở users.routes.ts)
  */
 honNhanRouter.get('/', wrapAsync(getAllHonNhanController));
 
 /**
  * GET /users/honnhan/available/khong-co-gia-pha
  * Lấy danh sách thành viên chưa có trong gia phả
- * ✅ YÊU CẦU: Access token (đã được validate ở users.routes.ts)
+ * Sửa YÊU CẦU: Access token (đã được validate ở users.routes.ts)
  */
 honNhanRouter.get('/available/khong-co-gia-pha', wrapAsync(getThanhVienKhongCoGiaPhaController));
 
 /**
  * GET /users/honnhan/available/trong-gia-pha/:MaGiaPha
  * Lấy danh sách thành viên trong gia phả cụ thể
- * ✅ YÊU CẦU: Access token (đã được validate ở users.routes.ts)
+ * Sửa YÊU CẦU: Access token (đã được validate ở users.routes.ts)
  */
 honNhanRouter.get('/available/trong-gia-pha/:MaGiaPha', wrapAsync(getThanhVienTrongGiaPhaController));
 
 /**
  * GET /users/honnhan/:MaTV
  * Lấy quan hệ hôn nhân của một thành viên
- * ✅ YÊU CẦU: Access token (đã được validate ở users.routes.ts)
+ * Sửa YÊU CẦU: Access token (đã được validate ở users.routes.ts)
  */
 honNhanRouter.get('/:MaTV', wrapAsync(getHonNhanByMaTVController));
 
@@ -950,7 +950,7 @@ honNhanRouter.get('/:MaTV', wrapAsync(getHonNhanByMaTVController));
  * PUT /users/honnhan/ketthuc
  * Cập nhật ngày kết thúc hôn nhân
  * Body: { MaTV, MaTVVC, NgayKetThuc }
- * ✅ YÊU CẦU: Access token (đã được validate ở users.routes.ts)
+ * Sửa YÊU CẦU: Access token (đã được validate ở users.routes.ts)
  */
 honNhanRouter.put('/ketthuc', wrapAsync(ketThucHonNhanController));
 
@@ -958,7 +958,7 @@ honNhanRouter.put('/ketthuc', wrapAsync(ketThucHonNhanController));
  * DELETE /users/honnhan
  * Xóa quan hệ hôn nhân
  * Body: { MaTV, MaTVVC }
- * ✅ YÊU CẦU: Access token (đã được validate ở users.routes.ts)
+ * Sửa YÊU CẦU: Access token (đã được validate ở users.routes.ts)
  */
 honNhanRouter.delete('/', wrapAsync(xoaHonNhanController));
 
@@ -990,7 +990,7 @@ import { wrapAsync } from '~/utils/handlers';
 import thanhvienRouter from './thanhvien.routes';
 import thanhTichRouter from './thanhtich.routes';
 import ketthucRouter from './ketthuc.routes';
-import honNhanRouter from './honnhan.routes';  // ✅ THÊM DÒNG NÀY
+import honNhanRouter from './honnhan.routes';  // Sửa THÊM DÒNG NÀY
 
 const usersRouter = Router();
 
@@ -1020,19 +1020,19 @@ usersRouter.post('/login', loginValidator, wrapAsync(loginController));
 usersRouter.post('/logout', accessTokenValidator, refreshTokenValidator, wrapAsync(logoutController));
 
 // 🔍 DEBUG: Log khi route được đăng ký
-console.log('✅ Đang đăng ký nested routes...');
+console.log('Sửa Đang đăng ký nested routes...');
 console.log('  - /thanhvien');
 console.log('  - /thanhtich');
 console.log('  - /ketthuc');
-console.log('  - /honnhan');  // ✅ THÊM DÒNG NÀY
+console.log('  - /honnhan');  // Sửa THÊM DÒNG NÀY
 
-// ✅ Đăng ký nested routes với authentication
+// Sửa Đăng ký nested routes với authentication
 usersRouter.use('/thanhvien', accessTokenValidator, thanhvienRouter);
 usersRouter.use('/thanhtich', accessTokenValidator, thanhTichRouter);
 usersRouter.use('/ketthuc', accessTokenValidator, ketthucRouter);
-usersRouter.use('/honnhan', accessTokenValidator, honNhanRouter);  // ✅ THÊM DÒNG NÀY
+usersRouter.use('/honnhan', accessTokenValidator, honNhanRouter);  // Sửa THÊM DÒNG NÀY
 
-console.log('✅ Đã đăng ký xong nested routes!');
+console.log('Sửa Đã đăng ký xong nested routes!');
 
 export default usersRouter;
 ```
@@ -1458,13 +1458,13 @@ Authorization: Bearer <access_token>
 - **TRG_CHECK_NGAYMAT_HONNHAN**: Kiểm tra ngày mất phải sau ngày bắt đầu hôn nhân
 
 ### 4. Logic nghiệp vụ được kiểm tra:
-- ✅ Ngày kết hôn phải sau ngày sinh
-- ✅ Cả hai người phải đủ 14 tuổi trở lên
-- ✅ Một thành viên chỉ được có 1 vợ/chồng tại một thời điểm
-- ✅ Nếu ly hôn và tái hôn, ngày bắt đầu hôn nhân mới phải sau ngày kết thúc hôn nhân cũ
-- ✅ Ngày mất phải sau ngày bắt đầu hôn nhân
-- ✅ Frontend đã xử lý logic chọn thành viên phù hợp
-- ✅ Backend kiểm tra tất cả ràng buộc và để trigger xử lý
+- Sửa Ngày kết hôn phải sau ngày sinh
+- Sửa Cả hai người phải đủ 14 tuổi trở lên
+- Sửa Một thành viên chỉ được có 1 vợ/chồng tại một thời điểm
+- Sửa Nếu ly hôn và tái hôn, ngày bắt đầu hôn nhân mới phải sau ngày kết thúc hôn nhân cũ
+- Sửa Ngày mất phải sau ngày bắt đầu hôn nhân
+- Sửa Frontend đã xử lý logic chọn thành viên phù hợp
+- Sửa Backend kiểm tra tất cả ràng buộc và để trigger xử lý
 
 ### 5. Xử lý lỗi:
 - **401 Unauthorized**: Token không hợp lệ hoặc hết hạn
@@ -1828,7 +1828,7 @@ SELECT * FROM HONNHAN;
 
 ## 📋 SUMMARY: NHỮNG THAY ĐỔI CẦN THỰC HIỆN
 
-### ✅ File CẦN SỬA (2 files):
+### Sửa File CẦN SỬA (2 files):
 
 1. **`src/routes/users.routes.ts`** - Thêm 3 dòng:
    ```typescript
@@ -1851,7 +1851,7 @@ SELECT * FROM HONNHAN;
 
 ### 🔄 Thay đổi về API Path:
 - **CŨ**: `/honnhan/*` (không cần token) ❌
-- **MỚI**: `/users/honnhan/*` (YÊU CẦU token) ✅
+- **MỚI**: `/users/honnhan/*` (YÊU CẦU token) Sửa
 
 ### 🔐 Authentication Flow:
 ```
@@ -1871,7 +1871,7 @@ Client Request → accessTokenValidator (users.routes.ts)
 
 ---
 
-## ✅ KẾT LUẬN
+## Sửa KẾT LUẬN
 
 Hướng dẫn này cung cấp đầy đủ code và logic để implement chức năng quản lý quan hệ hôn nhân **VỚI XÁC THỰC VÀ LOGIC NGHIỆP VỤ ĐẦY ĐỦ**.
 
@@ -1925,7 +1925,7 @@ fetch('http://localhost:4000/honnhan')  // Không cần token
 - Không kiểm tra ngày mất
 ```
 
-### ✅ SAU (Có bảo mật, logic đầy đủ):
+### Sửa SAU (Có bảo mật, logic đầy đủ):
 ```typescript
 // users.routes.ts
 usersRouter.use('/honnhan', accessTokenValidator, honNhanRouter);
@@ -1938,11 +1938,11 @@ fetch('http://localhost:4000/users/honnhan', {
 })
 
 // Database - Triggers mới
-✅ TRG_CHECK_NGAY_KET_HON_HONNHAN: Ngày kết hôn + tuổi tối thiểu 14
-✅ TRG_CHECK_HONNHAN_HOPLE: Một vợ/chồng + tái hôn hợp lệ
-✅ TRG_CHECK_NGAYMAT_HONNHAN: Ngày mất sau ngày kết hôn
-✅ TRG_INSERT_MaGP_THANHVIEN_HONNHAN: Auto gán gia phả
-✅ TRG_INSERT_DOI_THANHVIEN_HONNHAN: Auto đồng bộ đời
+Sửa TRG_CHECK_NGAY_KET_HON_HONNHAN: Ngày kết hôn + tuổi tối thiểu 14
+Sửa TRG_CHECK_HONNHAN_HOPLE: Một vợ/chồng + tái hôn hợp lệ
+Sửa TRG_CHECK_NGAYMAT_HONNHAN: Ngày mất sau ngày kết hôn
+Sửa TRG_INSERT_MaGP_THANHVIEN_HONNHAN: Auto gán gia phả
+Sửa TRG_INSERT_DOI_THANHVIEN_HONNHAN: Auto đồng bộ đời
 ```
 
 ---
@@ -1950,27 +1950,27 @@ fetch('http://localhost:4000/users/honnhan', {
 ## 📋 SUMMARY: CÁC LOGIC NGHIỆP VỤ
 
 ### 1. Ràng buộc về tuổi:
-- ✅ Cả hai người phải đủ 14 tuổi trở lên
-- ✅ Tính tuổi tại thời điểm kết hôn (NgayBatDau)
+- Sửa Cả hai người phải đủ 14 tuổi trở lên
+- Sửa Tính tuổi tại thời điểm kết hôn (NgayBatDau)
 
 ### 2. Ràng buộc về hôn nhân hiện tại:
-- ✅ Một thành viên chỉ có 1 vợ/chồng tại một thời điểm
-- ✅ Không thể kết hôn khi còn hôn nhân hiện tại (NgayKetThuc IS NULL)
-- ✅ Áp dụng cho cả MaTV và MaTVVC
+- Sửa Một thành viên chỉ có 1 vợ/chồng tại một thời điểm
+- Sửa Không thể kết hôn khi còn hôn nhân hiện tại (NgayKetThuc IS NULL)
+- Sửa Áp dụng cho cả MaTV và MaTVVC
 
 ### 3. Ràng buộc về tái hôn:
-- ✅ Phải kết thúc hôn nhân cũ trước (set NgayKetThuc)
-- ✅ Ngày bắt đầu hôn nhân mới > Ngày kết thúc hôn nhân cũ
-- ✅ Kiểm tra cho cả hai bên
+- Sửa Phải kết thúc hôn nhân cũ trước (set NgayKetThuc)
+- Sửa Ngày bắt đầu hôn nhân mới > Ngày kết thúc hôn nhân cũ
+- Sửa Kiểm tra cho cả hai bên
 
 ### 4. Ràng buộc về ngày mất:
-- ✅ Ngày mất phải sau ngày bắt đầu hôn nhân
-- ✅ Kiểm tra khi cập nhật thông tin kết thúc
-- ✅ Tự động trigger khi UPDATE THANHVIEN.NgayGioMat
+- Sửa Ngày mất phải sau ngày bắt đầu hôn nhân
+- Sửa Kiểm tra khi cập nhật thông tin kết thúc
+- Sửa Tự động trigger khi UPDATE THANHVIEN.NgayGioMat
 
 ### 5. Tự động hóa:
-- ✅ Auto gán MaGiaPha cho vợ/chồng
-- ✅ Auto đồng bộ DOI (đời) của hai vợ chồng
+- Sửa Auto gán MaGiaPha cho vợ/chồng
+- Sửa Auto đồng bộ DOI (đời) của hai vợ chồng
 
 ---
 
@@ -2129,10 +2129,10 @@ Thêm vào **Phase 0: Cập nhật Database Triggers**:
 Thêm vào **📋 SUMMARY: CÁC LOGIC NGHIỆP VỤ**:
 
 ### 6. Ràng buộc về trạng thái sống:
-- ✅ Cả hai thành viên phải còn sống tại thời điểm kết hôn
-- ✅ Không thể thiết lập hôn nhân với người đã mất
-- ✅ NgayBatDau phải < NgayGioMat (nếu NgayGioMat có giá trị)
-- ✅ Áp dụng cho cả MaTV và MaTVVC
+- Sửa Cả hai thành viên phải còn sống tại thời điểm kết hôn
+- Sửa Không thể thiết lập hôn nhân với người đã mất
+- Sửa NgayBatDau phải < NgayGioMat (nếu NgayGioMat có giá trị)
+- Sửa Áp dụng cho cả MaTV và MaTVVC
 
 ---
 
@@ -2162,8 +2162,8 @@ Thêm vào **📋 SUMMARY: CÁC LOGIC NGHIỆP VỤ**:
 
 ### Lưu ý bổ sung:
 
-- ✅ Logic này đảm bảo dữ liệu hợp lý về mặt thực tế
-- ✅ Ngăn chặn tạo quan hệ hôn nhân "ma" (với người đã mất)
-- ✅ Trigger kiểm tra TRƯỚC khi insert, tránh dữ liệu bẩn
-- ✅ Message lỗi rõ ràng, dễ hiểu cho người dùng
-- ✅ Frontend cần xử lý và hiển thị lỗi 45018/45019 một cách thân thiện
+- Sửa Logic này đảm bảo dữ liệu hợp lý về mặt thực tế
+- Sửa Ngăn chặn tạo quan hệ hôn nhân "ma" (với người đã mất)
+- Sửa Trigger kiểm tra TRƯỚC khi insert, tránh dữ liệu bẩn
+- Sửa Message lỗi rõ ràng, dễ hiểu cho người dùng
+- Sửa Frontend cần xử lý và hiển thị lỗi 45018/45019 một cách thân thiện

@@ -1,6 +1,6 @@
 # Báo Cáo: Hoàn Thành Chuyển Đổi LocalStorage Sang HttpOnly Cookies
 
-## ✅ Tổng Quan
+## Sửa Tổng Quan
 
 Đã chuyển đổi hoàn toàn từ **localStorage** sang **HttpOnly Cookies** để backend có thể kiểm soát 100% việc lưu/xóa tokens.
 
@@ -8,7 +8,7 @@
 
 ### 1. **File: `package.json`**
 
-✅ **Đã cài đặt dependencies:**
+Sửa **Đã cài đặt dependencies:**
 
 ```json
 {
@@ -31,29 +31,29 @@ npm install --save-dev @types/cookie-parser
 
 ### 2. **File: `src/index.ts`**
 
-✅ **Đã thêm cookie-parser middleware và CORS config:**
+Sửa **Đã thêm cookie-parser middleware và CORS config:**
 
 **Thay đổi:**
 
 ```typescript
-import cookieParser from 'cookie-parser';  // ✅ Đã import
+import cookieParser from 'cookie-parser';  // Sửa Đã import
 
-// ✅ Đã thêm middleware
+// Sửa Đã thêm middleware
 app.use(express.json());
 app.use(cookieParser());  // Parse cookies
 
-// ✅ Đã config CORS để cho phép credentials
+// Sửa Đã config CORS để cho phép credentials
 app.use(cors({
   origin: ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'],
-  credentials: true,  // ✅ CHO PHÉP GỬI/NHẬN COOKIES
+  credentials: true,  // Sửa CHO PHÉP GỬI/NHẬN COOKIES
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// ✅ Đã thêm CORS headers bổ sung
+// Sửa Đã thêm CORS headers bổ sung
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
-  res.header('Access-Control-Allow-Credentials', 'true');  // ✅ Quan trọng!
+  res.header('Access-Control-Allow-Credentials', 'true');  // Sửa Quan trọng!
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   
@@ -73,7 +73,7 @@ app.use((req, res, next) => {
 
 ### 3. **File: `src/controllers/users.controllers.ts`**
 
-✅ **Đã sửa tất cả 3 controllers:**
+Sửa **Đã sửa tất cả 3 controllers:**
 
 #### 3.1. Register Controller
 
@@ -83,7 +83,7 @@ app.use((req, res, next) => {
 export const registerController = async (req, res) => {
   const result = await usersService.register(req.body);
 
-  // ✅ SET COOKIES THAY VÌ TRẢ TOKENS TRONG JSON
+  // Sửa SET COOKIES THAY VÌ TRẢ TOKENS TRONG JSON
   res.cookie('access_token', result.access_token, {
     httpOnly: true,        // Không thể đọc qua JavaScript (chống XSS)
     secure: process.env.NODE_ENV === 'production',  // HTTPS only trong production
@@ -98,7 +98,7 @@ export const registerController = async (req, res) => {
     maxAge: 7 * 24 * 60 * 60 * 1000  // 7 ngày
   });
 
-  // ✅ CHỈ TRẢ VỀ MESSAGE VÀ USER INFO (KHÔNG TRẢ TOKENS)
+  // Sửa CHỈ TRẢ VỀ MESSAGE VÀ USER INFO (KHÔNG TRẢ TOKENS)
   return res.status(HTTP_STATUS.CREATED).json({
     message: USERS_MESSAGES.REGISTER_SUCCESS,
     user: {
@@ -138,7 +138,7 @@ export const loginController = async (req, res) => {
     });
   }
 
-  // ✅ SET COOKIES
+  // Sửa SET COOKIES
   res.cookie('access_token', result.access_token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -166,14 +166,14 @@ export const loginController = async (req, res) => {
 
 ```typescript
 export const logoutController = async (req, res) => {
-  // ✅ LẤY REFRESH_TOKEN TỪ COOKIES (không còn từ body)
+  // Sửa LẤY REFRESH_TOKEN TỪ COOKIES (không còn từ body)
   const refresh_token = req.cookies.refresh_token;
 
   if (refresh_token) {
     await usersService.logout(refresh_token);
   }
 
-  // ✅ XÓA COOKIES - ĐÂY LÀ CÁCH BACKEND "XÓA LOCALSTORAGE"
+  // Sửa XÓA COOKIES - ĐÂY LÀ CÁCH BACKEND "XÓA LOCALSTORAGE"
   res.clearCookie('access_token', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -209,7 +209,7 @@ return res.json({ message: 'Logout success' });
 
 ### 4. **File: `src/middlewares/users.middlewares.ts`**
 
-✅ **Đã sửa 2 validators để đọc từ cookies:**
+Sửa **Đã sửa 2 validators để đọc từ cookies:**
 
 #### 4.1. Access Token Validator
 
@@ -219,14 +219,14 @@ return res.json({ message: 'Logout success' });
 export const accessTokenValidator = validate(
   checkSchema({
     Authorization: {
-      optional: true,  // ✅ Cho phép optional vì có thể lấy từ cookies
+      optional: true,  // Sửa Cho phép optional vì có thể lấy từ cookies
       trim: true,
       custom: {
         options: async (value: string, { req }) => {
-          // ✅ ƯU TIÊN ĐỌC TỪ COOKIES
+          // Sửa ƯU TIÊN ĐỌC TỪ COOKIES
           let access_token = (req as any).cookies?.access_token;
           
-          // ✅ NẾU KHÔNG CÓ TRONG COOKIES, ĐỌC TỪ HEADER (backward compatible)
+          // Sửa NẾU KHÔNG CÓ TRONG COOKIES, ĐỌC TỪ HEADER (backward compatible)
           if (!access_token && value) {
             const parts = value.split(' ');
             if (parts.length === 2 && parts[0] === 'Bearer') {
@@ -281,14 +281,14 @@ const access_token = value.split(' ')[1];
 export const refreshTokenValidator = validate(
   checkSchema({
     refresh_token: {
-      optional: true,  // ✅ Cho phép optional vì có thể lấy từ cookies
+      optional: true,  // Sửa Cho phép optional vì có thể lấy từ cookies
       trim: true,
       custom: {
         options: async (value: string, { req }) => {
-          // ✅ ƯU TIÊN ĐỌC TỪ COOKIES
+          // Sửa ƯU TIÊN ĐỌC TỪ COOKIES
           let refresh_token = (req as any).cookies?.refresh_token;
           
-          // ✅ NẾU KHÔNG CÓ TRONG COOKIES, ĐỌC TỪ BODY (backward compatible)
+          // Sửa NẾU KHÔNG CÓ TRONG COOKIES, ĐỌC TỪ BODY (backward compatible)
           if (!refresh_token && value) {
             refresh_token = value;
           }
@@ -345,7 +345,7 @@ if (!value) {
 
 ### 5. **File: `src/type.d.ts`**
 
-✅ **Đã thêm type definitions cho cookies:**
+Sửa **Đã thêm type definitions cho cookies:**
 
 **Thay đổi:**
 
@@ -357,7 +357,7 @@ declare module 'express' {
   interface Request {
     decoded_authorization?: TokenPayload;
     decoded_refresh_token?: TokenPayload;
-    // ✅ THÊM TYPE CHO COOKIES
+    // Sửa THÊM TYPE CHO COOKIES
     cookies: {
       access_token?: string;
       refresh_token?: string;
@@ -387,7 +387,7 @@ declare module 'express' {
 
 ### 6. **File: `src/services/users.services.ts`**
 
-✅ **Đã sửa register service để trả về user info:**
+Sửa **Đã sửa register service để trả về user info:**
 
 **Thay đổi:**
 
@@ -398,7 +398,7 @@ async register(payload: RegisterReqBody) {
   return {
     access_token,
     refresh_token,
-    // ✅ THÊM USER INFO
+    // Sửa THÊM USER INFO
     user: {
       TenDangNhap: email,
       MaTV: MaTV,
@@ -442,7 +442,7 @@ Client                          Backend                         Database
   |   Set-Cookie: refresh_token   |                                |
   |   {message, user}              |                                |
   |                                |                                |
-✅ Browser tự động lưu cookies    |                                |
+Sửa Browser tự động lưu cookies    |                                |
 ```
 
 **Client không cần làm gì!** Browser tự động lưu cookies.
@@ -479,7 +479,7 @@ Client                          Backend                         Database
   |   Clear-Cookie: refresh_token |                                |
   |   {message}                    |                                |
   |                                |                                |
-✅ Browser tự động xóa cookies    |                                |
+Sửa Browser tự động xóa cookies    |                                |
 ```
 
 **Client không cần làm gì!** Backend xóa cookies → Browser tự động xóa.
@@ -510,7 +510,7 @@ Client                          Backend                         Database
 | API Call | `req.cookies.token` | `credentials: 'include'` (browser tự gửi) |
 | Logout | `res.clearCookie('token')` | Không làm gì (browser tự xóa) |
 
-✅ **Lợi ích:**
+Sửa **Lợi ích:**
 - Backend kiểm soát 100% tokens
 - Khi logout, backend xóa → client **TỰ ĐỘNG** mất tokens
 - An toàn hơn (HttpOnly chống XSS)
@@ -524,17 +524,17 @@ Client                          Backend                         Database
 
 ```typescript
 res.cookie('access_token', token, {
-  httpOnly: true,      // ✅ JavaScript không thể đọc (chống XSS)
-  secure: true,        // ✅ Chỉ gửi qua HTTPS (production)
-  sameSite: 'strict',  // ✅ Chống CSRF attacks
-  maxAge: 900000       // ✅ Tự động hết hạn
+  httpOnly: true,      // Sửa JavaScript không thể đọc (chống XSS)
+  secure: true,        // Sửa Chỉ gửi qua HTTPS (production)
+  sameSite: 'strict',  // Sửa Chống CSRF attacks
+  maxAge: 900000       // Sửa Tự động hết hạn
 });
 ```
 
 **Bảo vệ khỏi:**
-- ✅ XSS (Cross-Site Scripting) - JavaScript không thể đọc cookies
-- ✅ CSRF (Cross-Site Request Forgery) - `sameSite: 'strict'`
-- ✅ Man-in-the-Middle - `secure: true` trong production
+- Sửa XSS (Cross-Site Scripting) - JavaScript không thể đọc cookies
+- Sửa CSRF (Cross-Site Request Forgery) - `sameSite: 'strict'`
+- Sửa Man-in-the-Middle - `secure: true` trong production
 
 ### localStorage (Không an toàn)
 
@@ -557,38 +557,38 @@ localStorage.setItem('token', 'xxx');  // ❌ Dễ bị tấn công
 ### Vanilla JavaScript / Fetch
 
 ```javascript
-// ✅ Login - Đơn giản hơn nhiều
+// Sửa Login - Đơn giản hơn nhiều
 const login = async (email, password) => {
   const response = await fetch('http://localhost:4000/users/login', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    credentials: 'include',  // ✅ QUAN TRỌNG: Cho phép cookies
+    credentials: 'include',  // Sửa QUAN TRỌNG: Cho phép cookies
     body: JSON.stringify({ email, password })
   });
 
   const data = await response.json();
   console.log(data.message);  // Chỉ nhận message, không nhận tokens
   
-  // ✅ KHÔNG CẦN localStorage.setItem() NỮA!
+  // Sửa KHÔNG CẦN localStorage.setItem() NỮA!
 };
 
-// ✅ Logout - Cực kỳ đơn giản
+// Sửa Logout - Cực kỳ đơn giản
 const logout = async () => {
   await fetch('http://localhost:4000/users/logout', {
     method: 'POST',
     credentials: 'include'  // Browser tự gửi cookies
   });
   
-  // ✅ KHÔNG CẦN localStorage.removeItem() NỮA!
+  // Sửa KHÔNG CẦN localStorage.removeItem() NỮA!
   window.location.href = '/login';
 };
 
-// ✅ API calls - Browser tự động gửi cookies
+// Sửa API calls - Browser tự động gửi cookies
 const getUserProfile = async () => {
   const response = await fetch('http://localhost:4000/users/profile', {
-    credentials: 'include'  // ✅ Tự động gửi cookies
+    credentials: 'include'  // Sửa Tự động gửi cookies
   });
   
   return response.json();
@@ -600,25 +600,25 @@ const getUserProfile = async () => {
 ```javascript
 import axios from 'axios';
 
-// ✅ Config một lần, dùng mãi mãi
+// Sửa Config một lần, dùng mãi mãi
 axios.defaults.withCredentials = true;
 
 const api = axios.create({
   baseURL: 'http://localhost:4000',
-  withCredentials: true  // ✅ Tự động gửi/nhận cookies
+  withCredentials: true  // Sửa Tự động gửi/nhận cookies
 });
 
 // Login
 const login = async (email, password) => {
   const { data } = await api.post('/users/login', { email, password });
   console.log(data.message);
-  // ✅ Cookies tự động được set, không cần làm gì
+  // Sửa Cookies tự động được set, không cần làm gì
 };
 
 // Logout
 const logout = async () => {
   await api.post('/users/logout');
-  // ✅ Cookies tự động bị xóa
+  // Sửa Cookies tự động bị xóa
   window.location.href = '/login';
 };
 
@@ -630,14 +630,14 @@ const getProfile = async () => {
 ```
 
 **Thay đổi Client:**
-- ✅ Thêm `credentials: 'include'` vào tất cả requests
+- Sửa Thêm `credentials: 'include'` vào tất cả requests
 - ❌ Xóa tất cả `localStorage.setItem()` cho tokens
 - ❌ Xóa tất cả `localStorage.removeItem()` cho tokens
 - ❌ Xóa code thêm `Authorization` header thủ công
 
 ---
 
-## ✅ Checklist Hoàn Thành
+## Sửa Checklist Hoàn Thành
 
 ### Backend Changes
 
@@ -665,15 +665,15 @@ const getProfile = async () => {
 
 ## 🎯 Kết Luận
 
-✅ **Backend giờ KIỂM SOÁT HOÀN TOÀN** việc lưu/xóa tokens
+Sửa **Backend giờ KIỂM SOÁT HOÀN TOÀN** việc lưu/xóa tokens
 
-✅ Khi logout, backend `res.clearCookie()` → Client **TỰ ĐỘNG** mất tokens
+Sửa Khi logout, backend `res.clearCookie()` → Client **TỰ ĐỘNG** mất tokens
 
-✅ An toàn hơn localStorage (HttpOnly chống XSS, sameSite chống CSRF)
+Sửa An toàn hơn localStorage (HttpOnly chống XSS, sameSite chống CSRF)
 
-✅ Client đơn giản hơn (chỉ cần `credentials: 'include'`)
+Sửa Client đơn giản hơn (chỉ cần `credentials: 'include'`)
 
-✅ Backward compatible (vẫn hỗ trợ đọc từ header/body nếu không có cookies)
+Sửa Backward compatible (vẫn hỗ trợ đọc từ header/body nếu không có cookies)
 
 ---
 

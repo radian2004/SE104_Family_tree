@@ -5,10 +5,10 @@
 Tạo endpoint mới để **Admin** cập nhật trưởng tộc của gia phả bằng cách thay đổi trường `TruongToc` trong bảng `CAYGIAPHA`.
 
 ### 🎯 YÊU CẦU:
-- ✅ Chỉ **Admin** mới có quyền đổi trưởng tộc
-- ✅ Endpoint **KHÔNG cần param `:MaTV`**
-- ✅ Request body chứa: `MaGiaPha` và `MaTVTruongTocMoi`
-- ✅ Trigger tự động nâng quyền tài khoản lên `LTK02`
+- Sửa Chỉ **Admin** mới có quyền đổi trưởng tộc
+- Sửa Endpoint **KHÔNG cần param `:MaTV`**
+- Sửa Request body chứa: `MaGiaPha` và `MaTVTruongTocMoi`
+- Sửa Trigger tự động nâng quyền tài khoản lên `LTK02`
 
 ---
 
@@ -506,7 +506,7 @@ WHERE tv.MaTV = 'TV04';
 ## ⚠️ LƯU Ý QUAN TRỌNG
 
 ### 1. Phân quyền
-- ✅ Chỉ **Admin** (`LTK01`) mới được phép đổi trưởng tộc
+- Sửa Chỉ **Admin** (`LTK01`) mới được phép đổi trưởng tộc
 - ❌ Owner (`LTK02`) và User (`LTK03`) **KHÔNG** có quyền
 
 ### 2. Trigger tự động
@@ -521,12 +521,12 @@ Khi cập nhật `TruongToc`, trigger `TRG_UPDATE_TAIKHOAN_LOAITK_GIAPHA` sẽ:
 - Không được trùng với trưởng tộc hiện tại
 
 ### 4. Endpoint design
-- ✅ Đúng: `PATCH /api/thanhvien/truong-toc`
+- Sửa Đúng: `PATCH /api/thanhvien/truong-toc`
 - ❌ Sai: `PATCH /api/thanhvien/:MaTV/gia-pha` (không cần param MaTV)
 
 ---
 
-## ✅ CHECKLIST TRIỂN KHAI
+## Sửa CHECKLIST TRIỂN KHAI
 
 ### Backend Implementation:
 - [ ] Tạo middleware `requireAdmin` trong `authorization.middlewares.ts`
@@ -591,8 +591,8 @@ thanhvienRouter.patch('/truong-toc', requireAdmin, wrapAsync(capNhatTruongTocCon
 **🎉 HOÀN TẤT! 🎉**
 
 Thiết kế này đảm bảo:
-- ✅ Chỉ Admin có quyền
-- ✅ Endpoint rõ ràng, không cần param MaTV
-- ✅ Request body đầy đủ thông tin
-- ✅ Validation chặt chẽ
-- ✅ Trigger tự động cập nhật quyền
+- Sửa Chỉ Admin có quyền
+- Sửa Endpoint rõ ràng, không cần param MaTV
+- Sửa Request body đầy đủ thông tin
+- Sửa Validation chặt chẽ
+- Sửa Trigger tự động cập nhật quyền

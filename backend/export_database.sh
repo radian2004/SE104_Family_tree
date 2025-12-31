@@ -12,7 +12,7 @@ timestamp=$(date +%Y%m%d_%H%M%S)
 docker exec cnpm_mysql mysqldump -u root -p123456 app > "database_backup_${timestamp}.sql"
 
 echo ""
-echo "✅ Database exported successfully!"
+echo "Sửa Database exported successfully!"
 echo "File: database_backup_${timestamp}.sql"
 echo ""
 echo "You can share this file with your team."

@@ -29,10 +29,10 @@ localStorage.setItem('refresh_token', result.refresh_token);
 Backend **tự động set cookies** khi login, **tự động xóa cookies** khi logout.
 
 **Ưu điểm:**
-- ✅ Backend kiểm soát hoàn toàn việc lưu/xóa tokens
-- ✅ HttpOnly cookies an toàn hơn (không thể truy cập qua JavaScript)
-- ✅ Client không cần làm gì thêm, browser tự động gửi cookies
-- ✅ Khi logout, backend clear cookies → client tự động mất tokens
+- Sửa Backend kiểm soát hoàn toàn việc lưu/xóa tokens
+- Sửa HttpOnly cookies an toàn hơn (không thể truy cập qua JavaScript)
+- Sửa Client không cần làm gì thêm, browser tự động gửi cookies
+- Sửa Khi logout, backend clear cookies → client tự động mất tokens
 
 ## 🔧 Cách Implement
 
@@ -59,7 +59,7 @@ export const registerController = async (
 ) => {
   const result = await usersService.register(req.body);
 
-  // ✅ SET COOKIES THAY VÌ TRẢ VỀ JSON
+  // Sửa SET COOKIES THAY VÌ TRẢ VỀ JSON
   res.cookie('access_token', result.access_token, {
     httpOnly: true,        // Không thể truy cập qua JavaScript (chống XSS)
     secure: process.env.NODE_ENV === 'production',  // Chỉ gửi qua HTTPS trong production
@@ -74,7 +74,7 @@ export const registerController = async (
     maxAge: 7 * 24 * 60 * 60 * 1000  // 7 ngày (giống refresh token expiry)
   });
 
-  // ✅ Chỉ trả về message và user info (KHÔNG trả tokens)
+  // Sửa Chỉ trả về message và user info (KHÔNG trả tokens)
   return res.status(HTTP_STATUS.CREATED).json({
     message: USERS_MESSAGES.REGISTER_SUCCESS,
     user: {
@@ -104,7 +104,7 @@ export const loginController = async (
     });
   }
 
-  // ✅ SET COOKIES
+  // Sửa SET COOKIES
   res.cookie('access_token', result.access_token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -128,20 +128,20 @@ export const loginController = async (
 /**
  * Controller đăng xuất
  * POST /users/logout
- * ✅ KHÔNG CẦN refresh_token trong body nữa, lấy từ cookies
+ * Sửa KHÔNG CẦN refresh_token trong body nữa, lấy từ cookies
  */
 export const logoutController = async (
   req: Request<ParamsDictionary, any, LogoutReqBody>,
   res: Response
 ) => {
-  // ✅ Lấy refresh_token từ cookies
+  // Sửa Lấy refresh_token từ cookies
   const refresh_token = req.cookies.refresh_token;
 
   if (refresh_token) {
     await usersService.logout(refresh_token);
   }
 
-  // ✅ XÓA COOKIES - ĐÂY LÀ CÁCH BACKEND "XÓA LOCALSTORAGE"
+  // Sửa XÓA COOKIES - ĐÂY LÀ CÁCH BACKEND "XÓA LOCALSTORAGE"
   res.clearCookie('access_token', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -188,7 +188,7 @@ npm install --save-dev @types/cookie-parser
 
 ```typescript
 import express from 'express';
-import cookieParser from 'cookie-parser';  // ✅ Import
+import cookieParser from 'cookie-parser';  // Sửa Import
 import usersRouter from '~/routes/users.routes';
 import { defaultErrorHandler } from '~/middlewares/error.middlewares';
 
@@ -197,12 +197,12 @@ const port = process.env.PORT || 4000;
 
 // Middlewares
 app.use(express.json());
-app.use(cookieParser());  // ✅ Thêm middleware này
+app.use(cookieParser());  // Sửa Thêm middleware này
 
 // CORS - QUAN TRỌNG: Phải cho phép credentials
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', 'http://localhost:3000'); // URL của client
-  res.header('Access-Control-Allow-Credentials', 'true');  // ✅ CHO PHÉP GỬI COOKIES
+  res.header('Access-Control-Allow-Credentials', 'true');  // Sửa CHO PHÉP GỬI COOKIES
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   
@@ -238,10 +238,10 @@ export const accessTokenValidator = async (
   res: Response,
   next: NextFunction
 ) => {
-  // ✅ ƯU TIÊN ĐỌC TỪ COOKIES
+  // Sửa ƯU TIÊN ĐỌC TỪ COOKIES
   let token = req.cookies.access_token;
   
-  // ✅ NẾU KHÔNG CÓ TRONG COOKIES, ĐỌC TỪ HEADER (để backward compatible)
+  // Sửa NẾU KHÔNG CÓ TRONG COOKIES, ĐỌC TỪ HEADER (để backward compatible)
   if (!token) {
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -282,7 +282,7 @@ declare module 'express' {
   }
 }
 
-// ✅ Thêm type cho cookies (nếu cần)
+// Sửa Thêm type cho cookies (nếu cần)
 declare global {
   namespace Express {
     interface Request {
@@ -302,40 +302,40 @@ Client giờ **KHÔNG CẦN** lưu localStorage nữa, chỉ cần:
 ### Vanilla JavaScript / Fetch
 
 ```javascript
-// ✅ Login - Cookies tự động được set
+// Sửa Login - Cookies tự động được set
 const login = async (email, password) => {
   const response = await fetch('http://localhost:4000/users/login', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    credentials: 'include',  // ✅ QUAN TRỌNG: Cho phép gửi/nhận cookies
+    credentials: 'include',  // Sửa QUAN TRỌNG: Cho phép gửi/nhận cookies
     body: JSON.stringify({ email, password })
   });
 
   const data = await response.json();
   console.log(data.message);  // Chỉ nhận message, không nhận tokens
   
-  // ✅ KHÔNG CẦN localStorage.setItem() NỮA!
+  // Sửa KHÔNG CẦN localStorage.setItem() NỮA!
 };
 
-// ✅ Logout - Cookies tự động được xóa
+// Sửa Logout - Cookies tự động được xóa
 const logout = async () => {
   await fetch('http://localhost:4000/users/logout', {
     method: 'POST',
-    credentials: 'include'  // ✅ Gửi cookies để backend biết user nào logout
+    credentials: 'include'  // Sửa Gửi cookies để backend biết user nào logout
   });
   
-  // ✅ KHÔNG CẦN localStorage.removeItem() NỮA!
+  // Sửa KHÔNG CẦN localStorage.removeItem() NỮA!
   // Cookies đã được backend xóa rồi
   
   window.location.href = '/login';
 };
 
-// ✅ Gọi API được protect - Browser tự động gửi cookies
+// Sửa Gọi API được protect - Browser tự động gửi cookies
 const getUserProfile = async () => {
   const response = await fetch('http://localhost:4000/users/profile', {
-    credentials: 'include'  // ✅ Tự động gửi cookies
+    credentials: 'include'  // Sửa Tự động gửi cookies
   });
   
   return response.json();
@@ -347,32 +347,32 @@ const getUserProfile = async () => {
 ```javascript
 import axios from 'axios';
 
-// ✅ Config axios để luôn gửi cookies
+// Sửa Config axios để luôn gửi cookies
 axios.defaults.withCredentials = true;
 
 const api = axios.create({
   baseURL: 'http://localhost:4000',
-  withCredentials: true  // ✅ Quan trọng
+  withCredentials: true  // Sửa Quan trọng
 });
 
 // Login
 const login = async (email, password) => {
   const { data } = await api.post('/users/login', { email, password });
   console.log(data.message);
-  // ✅ Cookies tự động được set, không cần làm gì thêm
+  // Sửa Cookies tự động được set, không cần làm gì thêm
 };
 
 // Logout
 const logout = async () => {
   await api.post('/users/logout');
-  // ✅ Cookies tự động bị xóa
+  // Sửa Cookies tự động bị xóa
   window.location.href = '/login';
 };
 
 // API calls
 const getProfile = async () => {
   const { data } = await api.get('/users/profile');
-  // ✅ Cookies tự động được gửi
+  // Sửa Cookies tự động được gửi
   return data;
 };
 ```
@@ -401,10 +401,10 @@ const getProfile = async () => {
 
 ```typescript
 res.cookie('access_token', token, {
-  httpOnly: true,      // ✅ JavaScript KHÔNG THỂ đọc được (chống XSS)
-  secure: true,        // ✅ Chỉ gửi qua HTTPS (production)
-  sameSite: 'strict',  // ✅ Chống CSRF attacks
-  maxAge: 900000       // ✅ Tự động hết hạn
+  httpOnly: true,      // Sửa JavaScript KHÔNG THỂ đọc được (chống XSS)
+  secure: true,        // Sửa Chỉ gửi qua HTTPS (production)
+  sameSite: 'strict',  // Sửa Chống CSRF attacks
+  maxAge: 900000       // Sửa Tự động hết hạn
 });
 ```
 
@@ -438,13 +438,13 @@ console.log(localStorage.getItem('token'));  // Lấy được token!
 
 ## 🎯 Kết Luận
 
-✅ **Backend giờ KIỂM SOÁT HOÀN TOÀN** việc lưu/xóa tokens
+Sửa **Backend giờ KIỂM SOÁT HOÀN TOÀN** việc lưu/xóa tokens
 
-✅ Khi logout, backend `res.clearCookie()` → Client TỰ ĐỘNG mất tokens
+Sửa Khi logout, backend `res.clearCookie()` → Client TỰ ĐỘNG mất tokens
 
-✅ An toàn hơn localStorage (HttpOnly chống XSS)
+Sửa An toàn hơn localStorage (HttpOnly chống XSS)
 
-✅ Client đơn giản hơn (không cần quản lý tokens)
+Sửa Client đơn giản hơn (không cần quản lý tokens)
 
 ---
 

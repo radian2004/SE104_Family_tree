@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import ketthucService from '~/services/ketthuc.services'
-import HTTP_STATUS from '~/constants/httpStatus' // ✅ SỬA DÒNG NÀY
+import HTTP_STATUS from '~/constants/httpStatus' // Sửa SỬA DÒNG NÀY
 
 /**
  * Controller 1: Ghi nhận kết thúc
@@ -43,7 +43,7 @@ export const traCuuKetThucController = async (req: Request, res: Response, next:
       TenDiaDiem,
       TuNgay,
       DenNgay,
-      MaGiaPha  // ✅ NEW: Extract MaGiaPha from query
+      MaGiaPha  // Sửa NEW: Extract MaGiaPha from query
     } = req.query;
     const userInfo = req.userInfo;  // ⭐ LẤY TỪ MIDDLEWARE
 
@@ -55,7 +55,7 @@ export const traCuuKetThucController = async (req: Request, res: Response, next:
       TenDiaDiem: TenDiaDiem as string | undefined,
       TuNgay: TuNgay as string | undefined,
       DenNgay: DenNgay as string | undefined,
-      MaGiaPha: MaGiaPha as string | undefined  // ✅ NEW: Pass to service
+      MaGiaPha: MaGiaPha as string | undefined  // Sửa NEW: Pass to service
     }, userInfo);  // ⭐ TRUYỀN THÊM userInfo
 
     res.status(HTTP_STATUS.OK).json({

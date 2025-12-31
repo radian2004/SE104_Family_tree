@@ -44,10 +44,10 @@ Khi đăng ký tài khoản với payload:
 
 ```sql
 CREATE TABLE TAIKHOAN(
-	TenDangNhap VARCHAR(50) PRIMARY KEY,  -- ✅ Đúng
+	TenDangNhap VARCHAR(50) PRIMARY KEY,  -- Sửa Đúng
 	MaTV VARCHAR(5),
 	MatKhau VARCHAR(100),
-	MaLoaiTK VARCHAR(5),                  -- ✅ Bắt buộc
+	MaLoaiTK VARCHAR(5),                  -- Sửa Bắt buộc
 	TGTaoMoi TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
 	FOREIGN KEY(MaTV) REFERENCES THANHVIEN(MaTV) ON DELETE CASCADE,
 	FOREIGN KEY(MaLoaiTK) REFERENCES LOAITAIKHOAN(MaLoaiTK)
@@ -59,9 +59,9 @@ CREATE TABLE TAIKHOAN(
 ```sql
 CREATE TABLE REFRESH_TOKENS (
     token VARCHAR(500) PRIMARY KEY,
-    TenDangNhap VARCHAR(50) NOT NULL,     -- ✅ FK đến TAIKHOAN
+    TenDangNhap VARCHAR(50) NOT NULL,     -- Sửa FK đến TAIKHOAN
     NgayTao TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
-    NgayHetHan TIMESTAMP NOT NULL,        -- ✅ Bắt buộc
+    NgayHetHan TIMESTAMP NOT NULL,        -- Sửa Bắt buộc
     FOREIGN KEY(TenDangNhap) REFERENCES TAIKHOAN(TenDangNhap) ON DELETE CASCADE
 );
 ```
@@ -91,7 +91,7 @@ await databaseService.getPool().execute<ResultSetHeader>(
 )
 ```
 
-#### ✅ Code Mới (ĐÚNG)
+#### Sửa Code Mới (ĐÚNG)
 ```typescript
 // Tạo tài khoản
 await databaseService.getPool().execute<ResultSetHeader>(
@@ -120,7 +120,7 @@ await databaseService.getPool().execute<ResultSetHeader>(
 )
 ```
 
-#### ✅ Code Mới (ĐÚNG)
+#### Sửa Code Mới (ĐÚNG)
 ```typescript
 // Tạo tài khoản
 await databaseService.getPool().execute<ResultSetHeader>(
@@ -146,7 +146,7 @@ await databaseService.getPool().execute(
 )
 ```
 
-#### ✅ Code Mới (ĐÚNG)
+#### Sửa Code Mới (ĐÚNG)
 ```typescript
 // Lưu refresh token vào bảng REFRESH_TOKENS
 const expDate = new Date()
@@ -211,7 +211,7 @@ async register(payload: RegisterReqBody) {
       [MaTV, MaTV, MaGiaPha]
     )
     
-    // ✅ Tạo tài khoản (ĐÃ SỬA)
+    // Sửa Tạo tài khoản (ĐÃ SỬA)
     await databaseService.getPool().execute<ResultSetHeader>(
       'INSERT INTO TAIKHOAN (TenDangNhap, MaTV, MatKhau, MaLoaiTK) VALUES (?, ?, ?, ?)',
       [email, MaTV, hashedPassword, 'LTK03']
@@ -249,7 +249,7 @@ async register(payload: RegisterReqBody) {
     )
     const MaTV = memberRows[0].MaTV
     
-    // ✅ Tạo tài khoản (ĐÃ SỬA)
+    // Sửa Tạo tài khoản (ĐÃ SỬA)
     await databaseService.getPool().execute<ResultSetHeader>(
       'INSERT INTO TAIKHOAN (TenDangNhap, MaTV, MatKhau, MaLoaiTK) VALUES (?, ?, ?, ?)',
       [email, MaTV, hashedPassword, 'LTK03']
@@ -262,7 +262,7 @@ async register(payload: RegisterReqBody) {
     this.signRefreshToken(email)
   ])
 
-  // ✅ Lưu refresh token vào bảng REFRESH_TOKENS (ĐÃ SỬA)
+  // Sửa Lưu refresh token vào bảng REFRESH_TOKENS (ĐÃ SỬA)
   const expDate = new Date()
   expDate.setDate(expDate.getDate() + 7) // Hết hạn sau 7 ngày
   
@@ -301,7 +301,7 @@ Bảng `LOAITAIKHOAN` có 3 loại:
 |----------|-----------|-------|
 | `LTK01` | Admin | Quản trị viên hệ thống |
 | `LTK02` | TruongToc | Trưởng tộc gia phả |
-| `LTK03` | User | Người dùng thông thường ✅ (mặc định khi đăng ký) |
+| `LTK03` | User | Người dùng thông thường Sửa (mặc định khi đăng ký) |
 
 > **Lưu ý:** Khi đăng ký mới, tài khoản mặc định có `MaLoaiTK = 'LTK03'` (User).
 
@@ -467,7 +467,7 @@ SELECT * FROM CAYGIAPHA WHERE TenGiaPha = 'Gia phả họ Nguyễn A';
 
 ### 10.1 Các Lỗi Đã Sửa
 
-✅ **3 lỗi SQL đã được sửa:**
+Sửa **3 lỗi SQL đã được sửa:**
 1. Đổi `Email` → `TenDangNhap` trong INSERT TAIKHOAN
 2. Thêm `MaLoaiTK = 'LTK03'` khi tạo tài khoản
 3. Lưu refresh token vào bảng `REFRESH_TOKENS` thay vì UPDATE TAIKHOAN
@@ -480,9 +480,9 @@ SELECT * FROM CAYGIAPHA WHERE TenGiaPha = 'Gia phả họ Nguyễn A';
 
 ### 10.3 Testing
 
-- ✅ Test đăng ký tạo gia phả mới
-- ✅ Test đăng ký gia nhập gia phả có sẵn
-- ✅ Kiểm tra database: TAIKHOAN, REFRESH_TOKENS, THANHVIEN, CAYGIAPHA
+- Sửa Test đăng ký tạo gia phả mới
+- Sửa Test đăng ký gia nhập gia phả có sẵn
+- Sửa Kiểm tra database: TAIKHOAN, REFRESH_TOKENS, THANHVIEN, CAYGIAPHA
 
 ---
 
@@ -502,4 +502,4 @@ SELECT * FROM CAYGIAPHA WHERE TenGiaPha = 'Gia phả họ Nguyễn A';
 
 **Ngày hoàn thành:** 25/12/2025  
 **Người thực hiện:** GitHub Copilot  
-**Trạng thái:** ✅ Hoàn thành
+**Trạng thái:** Sửa Hoàn thành

@@ -217,10 +217,10 @@ REFRESH_TOKEN_EXPIRE=7d
 
 ```bash
 # ❌ KHÔNG BAO GIỜ commit .env lên Git
-# ✅ Thêm vào .gitignore
+# Sửa Thêm vào .gitignore
 echo ".env" >> .gitignore
 
-# ✅ Tạo .env.example cho team
+# Sửa Tạo .env.example cho team
 cp .env .env.example
 # Sau đó xóa giá trị nhạy cảm trong .env.example
 ```
@@ -294,7 +294,7 @@ const x = 10;
 // ❌ ESLint error: Expected '===' but found '=='
 if (user.role == 'admin') { }
 
-// ✅ Fix
+// Sửa Fix
 if (user.role === 'admin') { }
 ```
 
@@ -446,10 +446,10 @@ docker-compose restart mysql
 **Tại sao dùng Docker?**
 
 ```
-✅ Không cần install MySQL trên máy
-✅ Đồng bộ môi trường giữa team members
-✅ Dễ dàng cleanup (docker-compose down -v)
-✅ Tách biệt môi trường dev/prod
+Sửa Không cần install MySQL trên máy
+Sửa Đồng bộ môi trường giữa team members
+Sửa Dễ dàng cleanup (docker-compose down -v)
+Sửa Tách biệt môi trường dev/prod
 ```
 
 ---
@@ -544,7 +544,7 @@ databaseService.connect().then(() => {
 app.use(defaultErrorHandler);
 app.use('/users', usersRouter);  // Không bao giờ chạy!
 
-// ✅ ĐÚNG: Error handler sau routes
+// Sửa ĐÚNG: Error handler sau routes
 app.use('/users', usersRouter);
 app.use(defaultErrorHandler);
 ```
@@ -575,7 +575,7 @@ declare module 'express' {
 req.decoded_authorization  // ❌ Error: Property does not exist
 
 // Có type definition
-req.decoded_authorization  // ✅ OK: TokenPayload | undefined
+req.decoded_authorization  // Sửa OK: TokenPayload | undefined
 ```
 
 **Cách hoạt động:**
@@ -615,7 +615,7 @@ export enum UserRole {
 if (token_type === 0) { }   // 0 nghĩa là gì?
 if (role === 'LTK01') { }   // Typo: 'LTK1' → Bug!
 
-// ✅ Dùng enum - Rõ ràng, autocomplete
+// Sửa Dùng enum - Rõ ràng, autocomplete
 if (token_type === TokenType.AccessToken) { }
 if (role === UserRole.Admin) { }
 ```
@@ -647,7 +647,7 @@ export default HTTP_STATUS;
 // ❌ Magic numbers
 res.status(201).json({ ... });
 
-// ✅ Rõ ràng
+// Sửa Rõ ràng
 res.status(HTTP_STATUS.CREATED).json({ ... });
 ```
 
@@ -675,10 +675,10 @@ export const USERS_MESSAGES = {
 **Tại sao tập trung messages?**
 
 ```
-✅ Dễ dàng đa ngôn ngữ (i18n)
-✅ Thay đổi 1 chỗ → Áp dụng toàn bộ
-✅ Không duplicate strings
-✅ Typo-safe với TypeScript
+Sửa Dễ dàng đa ngôn ngữ (i18n)
+Sửa Thay đổi 1 chỗ → Áp dụng toàn bộ
+Sửa Không duplicate strings
+Sửa Typo-safe với TypeScript
 ```
 
 ---
@@ -767,10 +767,10 @@ export default class TaiKhoan {
 **Lợi ích:**
 
 ```
-✅ Type safety
-✅ Default values
-✅ Data validation
-✅ Tách biệt logic khỏi database
+Sửa Type safety
+Sửa Default values
+Sửa Data validation
+Sửa Tách biệt logic khỏi database
 ```
 
 ---
@@ -818,7 +818,7 @@ export const registerController = async (
   req: Request<ParamsDictionary, any, RegisterReqBody>,
   res: Response
 ) => {
-  const { name, email, password } = req.body;  // ✅ Autocomplete
+  const { name, email, password } = req.body;  // Sửa Autocomplete
   // ...
 };
 ```
@@ -904,7 +904,7 @@ export const validate = (validation: ValidationChain) => {
     const errors = validationResult(req);
     
     if (errors.isEmpty()) {
-      return next();  // ✅ Không có lỗi
+      return next();  // Sửa Không có lỗi
     }
     
     // ❌ Có lỗi → Throw EntityError
@@ -918,9 +918,9 @@ export const validate = (validation: ValidationChain) => {
 **Lợi ích:**
 
 ```
-✅ Tự động catch validation errors
-✅ Format errors thành EntityError
-✅ Reusable cho mọi validator
+Sửa Tự động catch validation errors
+Sửa Format errors thành EntityError
+Sửa Reusable cho mọi validator
 ```
 
 ---
@@ -954,7 +954,7 @@ export const registerController = async (req, res) => {
   }
 };
 
-// ✅ Có wrapper - Gọn gàng
+// Sửa Có wrapper - Gọn gàng
 export const registerController = async (req, res) => {
   const result = await usersService.register(req.body);
   res.json(result);
@@ -1072,7 +1072,7 @@ class DatabaseService {
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME
     });
-    console.log('✅ Kết nối database thành công');
+    console.log('Sửa Kết nối database thành công');
   }
 
   async query<T>(sql: string, params?: any[]): Promise<T> {
@@ -1157,7 +1157,7 @@ export const registerController = async (
 // ❌ Không hash password
 // ❌ Không tạo token
 
-// ✅ Chỉ gọi service và trả response
+// Sửa Chỉ gọi service và trả response
 ```
 
 ---
@@ -1301,7 +1301,7 @@ POST  /register  [registerValidator]  →  registerController
 │    ✓ Check confirm_password (match)                         │
 │                                                              │
 │    ❌ Nếu lỗi → throw EntityError → Error Handler            │
-│    ✅ Nếu OK → next() → Controller                           │
+│    Sửa Nếu OK → next() → Controller                           │
 └────────────────────────┬─────────────────────────────────────┘
                          ↓
 ┌──────────────────────────────────────────────────────────────┐
@@ -1483,7 +1483,7 @@ eslint . --fix
 
 ### 📂 Tổ chức code
 
-✅ **Tách biệt concerns**
+Sửa **Tách biệt concerns**
 
 ```
 Routes     → Định nghĩa API
@@ -1493,17 +1493,17 @@ Services    → Business logic
 Database    → SQL queries
 ```
 
-✅ **Sử dụng path aliases**
+Sửa **Sử dụng path aliases**
 
 ```typescript
 // ❌ Khó đọc
 import usersService from '../../../services/users.services';
 
-// ✅ Rõ ràng
+// Sửa Rõ ràng
 import usersService from '~/services/users.services';
 ```
 
-✅ **Consistent naming**
+Sửa **Consistent naming**
 
 ```
 files:       users.controllers.ts (lowercase, plural)
@@ -1516,7 +1516,7 @@ constants:   HTTP_STATUS (UPPER_CASE)
 
 ### 🔐 Bảo mật
 
-✅ **Không commit secrets**
+Sửa **Không commit secrets**
 
 ```bash
 # .gitignore
@@ -1525,17 +1525,17 @@ constants:   HTTP_STATUS (UPPER_CASE)
 node_modules/
 ```
 
-✅ **Hash passwords**
+Sửa **Hash passwords**
 
 ```typescript
 // ❌ KHÔNG BAO GIỜ lưu plain text
 const password = 'Password123!';
 
-// ✅ Luôn hash
+// Sửa Luôn hash
 const hashedPassword = hashPassword(password);
 ```
 
-✅ **Validate inputs**
+Sửa **Validate inputs**
 
 ```typescript
 // Validate mọi input từ client
@@ -1544,13 +1544,13 @@ loginValidator,
 accessTokenValidator
 ```
 
-✅ **Use environment variables**
+Sửa **Use environment variables**
 
 ```typescript
 // ❌ Hardcode
 const secret = 'my-secret-key';
 
-// ✅ Env var
+// Sửa Env var
 const secret = process.env.JWT_SECRET_ACCESS_TOKEN;
 ```
 
@@ -1558,7 +1558,7 @@ const secret = process.env.JWT_SECRET_ACCESS_TOKEN;
 
 ### ⚡ Performance
 
-✅ **Connection pooling**
+Sửa **Connection pooling**
 
 ```typescript
 // MySQL connection pool
@@ -1567,17 +1567,17 @@ const pool = mysql.createPool({
 });
 ```
 
-✅ **Async/await**
+Sửa **Async/await**
 
 ```typescript
-// ✅ Non-blocking
+// Sửa Non-blocking
 const result = await usersService.register(body);
 ```
 
-✅ **Parallel operations**
+Sửa **Parallel operations**
 
 ```typescript
-// ✅ Chạy song song
+// Sửa Chạy song song
 const [access_token, refresh_token] = await Promise.all([
   signAccessToken(user_id),
   signRefreshToken(user_id)
@@ -1588,7 +1588,7 @@ const [access_token, refresh_token] = await Promise.all([
 
 ### 🧪 Testing (Recommended)
 
-✅ **Unit tests**
+Sửa **Unit tests**
 
 ```typescript
 // tests/services/users.services.test.ts
@@ -1600,7 +1600,7 @@ describe('UsersService', () => {
 });
 ```
 
-✅ **Integration tests**
+Sửa **Integration tests**
 
 ```typescript
 // tests/routes/users.routes.test.ts
@@ -1618,7 +1618,7 @@ describe('POST /users/register', () => {
 
 ### 📝 Documentation
 
-✅ **JSDoc comments**
+Sửa **JSDoc comments**
 
 ```typescript
 /**
@@ -1629,7 +1629,7 @@ describe('POST /users/register', () => {
 async register(payload: RegisterReqBody) { }
 ```
 
-✅ **README.md**
+Sửa **README.md**
 
 ```markdown
 # Backend API

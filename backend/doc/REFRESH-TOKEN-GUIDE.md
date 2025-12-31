@@ -301,9 +301,9 @@ SELECT * FROM REFRESH_TOKENS ORDER BY NgayTao DESC;
 ## BẢO MẬT VÀ LƯU Ý
 
 ### 1. Refresh Token Rotation
-- ✅ Đã implement: Mỗi refresh token chỉ dùng được 1 lần
-- ✅ Token cũ bị xóa ngay khi tạo token mới
-- ✅ Ngăn chặn token replay attacks
+- Sửa Đã implement: Mỗi refresh token chỉ dùng được 1 lần
+- Sửa Token cũ bị xóa ngay khi tạo token mới
+- Sửa Ngăn chặn token replay attacks
 
 ### 2. Lưu trữ token ở client
 - **Access Token:** Lưu trong memory/state (React Context/Redux)

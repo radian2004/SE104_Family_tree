@@ -58,6 +58,15 @@ class ThanhTichService {
     MaLTT: string;
     NgayPhatSinh?: Date;
   }) {
+    // VALIDATE: Ngày ghi nhận không được lớn hơn hiện tại
+    if (payload.NgayPhatSinh) {
+      const now = new Date();
+      const ngayPhatSinh = new Date(payload.NgayPhatSinh);
+      if (ngayPhatSinh > now) {
+        throw new Error('Ngày ghi nhận thành tích không được lớn hơn ngày hiện tại');
+      }
+    }
+
     const ghiNhan = new GhiNhanThanhTich(payload);
 
     const sql = `
@@ -104,7 +113,7 @@ class ThanhTichService {
       TenLoaiThanhTich?: string;
       TuNgay?: Date;
       DenNgay?: Date;
-      MaGiaPha?: string;  // ✅ NEW: Admin có thể filter theo gia phả từ dropdown
+      MaGiaPha?: string;  // Sửa NEW: Admin có thể filter theo gia phả từ dropdown
     },
     userInfo?: { MaLoaiTK: string; MaGiaPha: string | null }
   ) {
@@ -124,7 +133,7 @@ class ThanhTichService {
 
     const params: any[] = [];
 
-    // ✅ PHÂN QUYỀN: 
+    // Sửa PHÂN QUYỀN: 
     // - Admin (LTK01): xem tất cả, nhưng có thể filter theo MaGiaPha từ query
     // - Owner (LTK02): xem tất cả nếu MaGiaPha = NULL, hoặc chỉ gia phả của mình
     // - User (LTK03): chỉ xem trong gia phả
@@ -153,13 +162,13 @@ class ThanhTichService {
 
     // Thêm điều kiện filter
     if (filters) {
-      // ✅ Filter theo MaTV (quan trọng nhất cho per-member query)
+      // Sửa Filter theo MaTV (quan trọng nhất cho per-member query)
       if (filters.MaTV) {
         sql += ' AND g.MaTV = ?';
         params.push(filters.MaTV);
       }
 
-      // ✅ Tìm theo tên thành viên
+      // Sửa Tìm theo tên thành viên
       if (filters.HoTen) {
         sql += ' AND tv.HoTen LIKE ?';
         params.push(`%${filters.HoTen}%`);
@@ -210,7 +219,7 @@ class ThanhTichService {
 
     const params: any[] = [`%${HoTen}%`];
 
-    // ✅ PHÂN QUYỀN: Nếu không phải Admin, chỉ lấy trong gia phả
+    // Sửa PHÂN QUYỀN: Nếu không phải Admin, chỉ lấy trong gia phả
     if (userInfo && userInfo.MaLoaiTK !== 'LTK01') {
       if (!userInfo.MaGiaPha) {
         throw new Error('Bạn chưa thuộc gia phả nào');
@@ -226,7 +235,7 @@ class ThanhTichService {
   }
 
   /**
-   * ✅ MỚI: Xóa thành tích - Đơn giản hóa với object payload
+   * Sửa MỚI: Xóa thành tích - Đơn giản hóa với object payload
    * Thay vì dùng 3 params riêng lẻ
    */
   async xoaThanhTich(payload: {
@@ -363,7 +372,7 @@ class ThanhTichService {
   }
 
   /**
-    * ✅ MỚI: Cập nhật loại thành tích
+    * Sửa MỚI: Cập nhật loại thành tích
     * Do MaLTT là primary key nên phải dùng DELETE + INSERT trong transaction
     */
   async capNhatThanhTich(payload: {

@@ -14,7 +14,7 @@ Type 'string' is not assignable to type 'number | StringValue | undefined'.
 - `SignOptions['expiresIn']` yêu cầu kiểu cụ thể: `number | string` (trong đó string phải là định dạng thời gian như '15m', '7d')
 - Biểu thức `process.env.ACCESS_TOKEN_EXPIRE || '15m'` có kiểu `string | undefined` dù giá trị runtime luôn là string
 
-### ✅ Giải pháp: Type Assertion cho expiresIn
+### Sửa Giải pháp: Type Assertion cho expiresIn
 
 **File cần sửa:** `src/services/users.services.ts`
 
@@ -124,7 +124,7 @@ expiresIn: process.env.REFRESH_TOKEN_EXPIRE || '7d'
 expiresIn: (process.env.REFRESH_TOKEN_EXPIRE || '7d') as any
 ```
 
-### ✅ Sau khi sửa
+### Sửa Sau khi sửa
 
 1. Save file `users.services.ts`
 2. Build lại:
@@ -319,7 +319,7 @@ npm run dev
 
 ```
 [nodemon] starting `ts-node -r tsconfig-paths/register src/index.ts`
-✅ Đã kết nối thành công với MySQL database!
+Sửa Đã kết nối thành công với MySQL database!
 🚀 Server đang chạy tại http://localhost:3000
 ```
 
@@ -402,15 +402,15 @@ if (pm.response.code === 201) {
     const { access_token, refresh_token } = pm.response.json().result;
     pm.environment.set('access_token', access_token);
     pm.environment.set('refresh_token', refresh_token);
-    console.log('✅ Tokens đã được lưu vào environment');
+    console.log('Sửa Tokens đã được lưu vào environment');
 }
 ```
 
 #### Click Send và kiểm tra
 
-✅ Status: 201 Created  
-✅ Response có access_token và refresh_token  
-✅ Tokens tự động lưu vào environment (check Console log)
+Sửa Status: 201 Created  
+Sửa Response có access_token và refresh_token  
+Sửa Tokens tự động lưu vào environment (check Console log)
 
 **Verify trong database:**
 
@@ -472,15 +472,15 @@ if (pm.response.code === 200) {
     const { access_token, refresh_token } = pm.response.json().result;
     pm.environment.set('access_token', access_token);
     pm.environment.set('refresh_token', refresh_token);
-    console.log('✅ Tokens đã được cập nhật');
+    console.log('Sửa Tokens đã được cập nhật');
 }
 ```
 
 #### Click Send và kiểm tra
 
-✅ Status: 200 OK  
-✅ Response có user info  
-✅ Tokens mới được lưu vào environment
+Sửa Status: 200 OK  
+Sửa Response có user info  
+Sửa Tokens mới được lưu vào environment
 
 ---
 
@@ -515,8 +515,8 @@ Content-Type: application/json
 
 #### Click Send và kiểm tra
 
-✅ Status: 200 OK  
-✅ deletedCount: 1 (đã xóa refresh token)
+Sửa Status: 200 OK  
+Sửa deletedCount: 1 (đã xóa refresh token)
 
 **Verify trong database:**
 
@@ -560,7 +560,7 @@ Kết quả sau logout:
 }
 ```
 
-✅ Status: 422 Unprocessable Entity
+Sửa Status: 422 Unprocessable Entity
 
 ---
 
@@ -587,7 +587,7 @@ Kết quả sau logout:
 }
 ```
 
-✅ Status: 422
+Sửa Status: 422
 
 ---
 
@@ -614,7 +614,7 @@ Kết quả sau logout:
 }
 ```
 
-✅ Status: 422
+Sửa Status: 422
 
 ---
 
@@ -636,7 +636,7 @@ Kết quả sau logout:
 }
 ```
 
-✅ Status: 422
+Sửa Status: 422
 
 ---
 
@@ -662,7 +662,7 @@ Kết quả sau logout:
 }
 ```
 
-✅ Status: 401 Unauthorized
+Sửa Status: 401 Unauthorized
 
 ---
 
@@ -692,7 +692,7 @@ Authorization: Bearer {{access_token}}
 }
 ```
 
-✅ Status: 401
+Sửa Status: 401
 
 ---
 
@@ -851,29 +851,29 @@ PORT=3001
 
 ### Checklist cuối cùng
 
-✅ **Docker MySQL:**
+Sửa **Docker MySQL:**
 ```powershell
 docker ps | Select-String cnpm_mysql
 ```
 
-✅ **Database tables:**
+Sửa **Database tables:**
 ```powershell
 docker exec -it cnpm_mysql mysql -uroot -p123456 -e "USE app; SHOW TABLES;"
 ```
 
-✅ **Server running:**
+Sửa **Server running:**
 ```
 🚀 Server đang chạy tại http://localhost:3000
 ```
 
-✅ **Postman tests:**
-- [ ] Register: 201 Created ✅
-- [ ] Login: 200 OK ✅
-- [ ] Logout: 200 OK ✅
-- [ ] Email exists: 422 ✅
-- [ ] Weak password: 422 ✅
-- [ ] Wrong credentials: 422 ✅
-- [ ] Missing token: 401 ✅
+Sửa **Postman tests:**
+- [ ] Register: 201 Created Sửa
+- [ ] Login: 200 OK Sửa
+- [ ] Logout: 200 OK Sửa
+- [ ] Email exists: 422 Sửa
+- [ ] Weak password: 422 Sửa
+- [ ] Wrong credentials: 422 Sửa
+- [ ] Missing token: 401 Sửa
 
 ---
 

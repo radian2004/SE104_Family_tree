@@ -25,7 +25,7 @@ class DatabaseService {
     try {
       // Test connection
       const connection = await this.pool.getConnection();
-      console.log('✅ Đã kết nối thành công với MySQL database!');
+      console.log('Sửa Đã kết nối thành công với MySQL database!');
       connection.release();
     } catch (error) {
       console.error('❌ Lỗi kết nối MySQL:', error);
@@ -38,12 +38,12 @@ class DatabaseService {
     const [rows] = await this.pool.execute(sql, params);
     return rows as T;
   }
-  
+
   // Add this method to get a connection for transactions
   async getConnection(): Promise<PoolConnection> {
     return await this.pool.getConnection();
   }
-  
+
   // Lấy pool để dùng transaction
   getPool() {
     return this.pool;

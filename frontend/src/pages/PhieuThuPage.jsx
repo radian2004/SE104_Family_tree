@@ -25,7 +25,7 @@ export default function PhieuThuPage() {
     const [error, setError] = useState(null);
     const [activeTab, setActiveTab] = useState('list'); // 'list', 'pending', 'create', 'report'
 
-    // ✅ GiaPha filter state for Admin
+    // Sửa GiaPha filter state for Admin
     const [filterGiaPha, setFilterGiaPha] = useState('');
 
     // Report state
@@ -50,7 +50,7 @@ export default function PhieuThuPage() {
         loadData();
     }, []);
 
-    // ✅ Reload thành viên & receipts when GiaPha filter changes
+    // Sửa Reload thành viên & receipts when GiaPha filter changes
     useEffect(() => {
         const loadFilteredData = async () => {
             try {
@@ -442,7 +442,7 @@ export default function PhieuThuPage() {
                             <div className="animate-fade-in">
                                 {pendingList.length === 0 ? (
                                     <div className="glass-card p-12 text-center">
-                                        <div className="text-6xl mb-4">✅</div>
+                                        <div className="text-6xl mb-4">Sửa</div>
                                         <h3 className="text-xl font-bold text-neutral-800 mb-2">Không có phiếu chờ xác nhận</h3>
                                     </div>
                                 ) : (

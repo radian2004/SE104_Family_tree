@@ -144,7 +144,7 @@ class DatabaseService {
     try {
       // Test connection
       const connection = await this.pool.getConnection();
-      console.log('✅ Đã kết nối thành công với MySQL database!');
+      console.log('Sửa Đã kết nối thành công với MySQL database!');
       connection.release();
     } catch (error) {
       console.error('❌ Lỗi kết nối MySQL:', error);

@@ -28,7 +28,7 @@ Tính năng này cho phép người dùng xem báo cáo thống kê tăng giảm
 CREATE TABLE THANHVIEN (
     MaTV VARCHAR(5) PRIMARY KEY,
     HoTen VARCHAR(50),
-    NgayGioSinh DATETIME,        -- ✅ Dùng để đếm số sinh trong năm
+    NgayGioSinh DATETIME,        -- Sửa Dùng để đếm số sinh trong năm
     DiaChi VARCHAR(50),
     TrangThai VARCHAR(20) DEFAULT 'Còn Sống',
     TGTaoMoi TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
@@ -37,7 +37,7 @@ CREATE TABLE THANHVIEN (
     MaNgheNghiep VARCHAR(5),
     GioiTinh VARCHAR(3),
     MaNguyenNhanMat VARCHAR(5),
-    NgayGioMat DATETIME,         -- ✅ Dùng để đếm số mất trong năm
+    NgayGioMat DATETIME,         -- Sửa Dùng để đếm số mất trong năm
     MaDiaDiem VARCHAR(5),
     MaGiaPha VARCHAR(5)
 );
@@ -52,7 +52,7 @@ CREATE TABLE THANHVIEN (
 CREATE TABLE QUANHEVOCHONG(
     MaTV VARCHAR(5),
     MaTVVC VARCHAR(5),           -- Mã thành viên vợ/chồng
-    NgayBatDau DATE,             -- ✅ Dùng để đếm số kết hôn trong năm
+    NgayBatDau DATE,             -- Sửa Dùng để đếm số kết hôn trong năm
     NgayKetThuc DATE,            -- Ngày kết thúc (ly hôn/mất)
     PRIMARY KEY(MaTV, MaTVVC),
     FOREIGN KEY(MaTV) REFERENCES THANHVIEN(MaTV),
@@ -87,7 +87,7 @@ GROUP BY YEAR(NgayGioSinh)
 SELECT YEAR(NgayBatDau) as Nam, COUNT(*) as SoLuongKetHon
 FROM QUANHEVOCHONG
 WHERE YEAR(NgayBatDau) = ?
-  AND MaTV < MaTVVC  -- ✅ Tránh đếm trùng
+  AND MaTV < MaTVVC  -- Sửa Tránh đếm trùng
 GROUP BY YEAR(NgayBatDau)
 ```
 
@@ -144,7 +144,7 @@ export default class BaoCaoTangGiam {
 
 ```typescript
   /**
-   * ✅ MỚI: Lấy báo cáo tăng giảm thành viên theo khoảng năm
+   * Sửa MỚI: Lấy báo cáo tăng giảm thành viên theo khoảng năm
    * Thống kê: Số sinh, số kết hôn, số mất theo từng năm
    * CHỈ HIỂN THỊ những năm có ít nhất 1 sự kiện (bỏ qua năm có cả 3 đều = 0)
    */
@@ -263,7 +263,7 @@ import { RowDataPacket, ResultSetHeader } from 'mysql2';
 
 ```typescript
 /**
- * ✅ MỚI: Controller lấy báo cáo tăng giảm thành viên
+ * Sửa MỚI: Controller lấy báo cáo tăng giảm thành viên
  * GET /thanhvien/tanggiam
  * Query params: 
  * - NamBatDau: Năm bắt đầu (required)
@@ -348,7 +348,7 @@ import {
   getThanhVienByMaTVController,
   updateThanhVienController,
   deleteThanhVienController,
-  getBaoCaoTangGiamController  // ✅ THÊM DÒNG NÀY
+  getBaoCaoTangGiamController  // Sửa THÊM DÒNG NÀY
 } from '~/controllers/thanhvien.controllers';
 ```
 
@@ -358,7 +358,7 @@ import {
 
 ```typescript
 /**
- * ✅ MỚI: GET /thanhvien/baocao/tanggiam - Báo cáo tăng giảm thành viên theo năm
+ * Sửa MỚI: GET /thanhvien/baocao/tanggiam - Báo cáo tăng giảm thành viên theo năm
  * Query params:
  * - NamBatDau: Năm bắt đầu (required, số nguyên)
  * - NamKetThuc: Năm kết thúc (required, số nguyên)
@@ -396,7 +396,7 @@ thanhvienRouter.post('/register', registerController);
 // GET /thanhvien - Lấy tất cả thành viên
 thanhvienRouter.get('/', getAllThanhVienController);
 
-// ✅ THÊM ROUTE BÁO CÁO Ở ĐÂY - TRƯỚC route /:MaTV
+// Sửa THÊM ROUTE BÁO CÁO Ở ĐÂY - TRƯỚC route /:MaTV
 thanhvienRouter.get('/baocao/tanggiam', getBaoCaoTangGiamController);
 
 // GET /thanhvien/:MaTV - Lấy thành viên theo MaTV
@@ -428,7 +428,7 @@ Route `/thanhvien` đã được đăng ký:
 app.use('/thanhvien', thanhvienRouter);
 ```
 
-✅ Không cần thay đổi gì!
+Sửa Không cần thay đổi gì!
 
 ---
 
@@ -543,7 +543,7 @@ Response (200 OK):
     "TongKetHon": 0,
     "TongMat": 0,
     "TangGiamRong": 0,
-    "DanhSach": []  // ✅ Mảng rỗng vì không có năm nào có sự kiện
+    "DanhSach": []  // Sửa Mảng rỗng vì không có năm nào có sự kiện
   }
 }
 ```
@@ -566,7 +566,7 @@ Response (200 OK):
     "DanhSach": [
       { "STT": 1, "Nam": 2020, "SoLuongSinh": 0, "SoLuongKetHon": 0, "SoLuongMat": 1 },
       { "STT": 2, "Nam": 2024, "SoLuongSinh": 1, "SoLuongKetHon": 0, "SoLuongMat": 0 }
-      // ✅ Chỉ hiển thị 2020 và 2024, bỏ qua 2018, 2019, 2021, 2022, 2023, 2025
+      // Sửa Chỉ hiển thị 2020 và 2024, bỏ qua 2018, 2019, 2021, 2022, 2023, 2025
   MaTV,
   HoTen,
   YEAR(NgayGioSinh) as NamSinh,
@@ -1345,12 +1345,12 @@ SELECT MIN(YEAR(NgayGioSinh)), MAX(YEAR(NgayGioSinh)) FROM THANHVIEN;
 
 Tính năng "Báo cáo tăng giảm thành viên" đã được thiết kế với:
 
-✅ **Backend hoàn chỉnh**: Service, Controller, Route  
-✅ **Query tối ưu**: Sử dụng CTE và LEFT JOIN  
-✅ **Tránh đếm trùng**: Xử lý đúng bảng QUANHEVOCHONG  
-✅ **Validation đầy đủ**: Kiểm tra input, xử lý lỗi  
-✅ **Scalable**: Dễ mở rộng (Excel, biểu đồ, chi tiết...)  
-✅ **Documentation đầy đủ**: Hướng dẫn từng bước  
+Sửa **Backend hoàn chỉnh**: Service, Controller, Route  
+Sửa **Query tối ưu**: Sử dụng CTE và LEFT JOIN  
+Sửa **Tránh đếm trùng**: Xử lý đúng bảng QUANHEVOCHONG  
+Sửa **Validation đầy đủ**: Kiểm tra input, xử lý lỗi  
+Sửa **Scalable**: Dễ mở rộng (Excel, biểu đồ, chi tiết...)  
+Sửa **Documentation đầy đủ**: Hướng dẫn từng bước  
 
 **Thời gian ước tính**: 30-60 phút implement backend + 1-2 giờ frontend
 

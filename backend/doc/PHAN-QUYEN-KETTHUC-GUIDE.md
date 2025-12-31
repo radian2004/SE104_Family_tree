@@ -84,33 +84,33 @@ DELIMITER ;
 
 | Chức năng | Admin (LTK01) | Owner/TruongToc (LTK02) | User (LTK03) |
 |-----------|--------------|------------------------|--------------|
-| **Ghi nhận kết thúc** | ✅ Mọi thành viên | ✅ Trong gia phả | ❌ Không |
-| **Xóa kết thúc** | ✅ Mọi thành viên | ✅ Trong gia phả | ❌ Không |
-| **Sửa kết thúc** | ✅ Mọi thành viên | ✅ Trong gia phả | ❌ Không |
-| **Tra cứu kết thúc** | ✅ Mọi gia phả | ✅ Trong gia phả | ✅ Trong gia phả |
-| **Xem chi tiết** | ✅ Mọi gia phả | ✅ Trong gia phả | ✅ Trong gia phả |
+| **Ghi nhận kết thúc** | Sửa Mọi thành viên | Sửa Trong gia phả | ❌ Không |
+| **Xóa kết thúc** | Sửa Mọi thành viên | Sửa Trong gia phả | ❌ Không |
+| **Sửa kết thúc** | Sửa Mọi thành viên | Sửa Trong gia phả | ❌ Không |
+| **Tra cứu kết thúc** | Sửa Mọi gia phả | Sửa Trong gia phả | Sửa Trong gia phả |
+| **Xem chi tiết** | Sửa Mọi gia phả | Sửa Trong gia phả | Sửa Trong gia phả |
 
 ### 2.2. Chi tiết yêu cầu
 
 #### Admin (LTK01)
-- ✅ **Ghi nhận** kết thúc cho **MỌI** thành viên từ **MỌI** gia phả
-- ✅ **Xóa** kết thúc của **MỌI** thành viên (đưa về trạng thái "Còn Sống")
-- ✅ **Chỉnh sửa** thông tin kết thúc của **MỌI** thành viên
-- ✅ **Tra cứu** và **xem chi tiết** kết thúc của **MỌI** gia phả
+- Sửa **Ghi nhận** kết thúc cho **MỌI** thành viên từ **MỌI** gia phả
+- Sửa **Xóa** kết thúc của **MỌI** thành viên (đưa về trạng thái "Còn Sống")
+- Sửa **Chỉnh sửa** thông tin kết thúc của **MỌI** thành viên
+- Sửa **Tra cứu** và **xem chi tiết** kết thúc của **MỌI** gia phả
 - ⚠️ Không bị giới hạn bởi MaGiaPha
 
 #### Owner/TruongToc (LTK02)
-- ✅ **Ghi nhận** kết thúc cho **MỌI** thành viên **TRONG GIA PHẠ**
-- ✅ **Xóa** kết thúc của **MỌI** thành viên **TRONG GIA PHẠ**
-- ✅ **Chỉnh sửa** thông tin kết thúc của **MỌI** thành viên **TRONG GIA PHẠ**
-- ✅ **Tra cứu** và **xem chi tiết** kết thúc **TRONG GIA PHẠ**
+- Sửa **Ghi nhận** kết thúc cho **MỌI** thành viên **TRONG GIA PHẠ**
+- Sửa **Xóa** kết thúc của **MỌI** thành viên **TRONG GIA PHẠ**
+- Sửa **Chỉnh sửa** thông tin kết thúc của **MỌI** thành viên **TRONG GIA PHẠ**
+- Sửa **Tra cứu** và **xem chi tiết** kết thúc **TRONG GIA PHẠ**
 - ⚠️ Kiểm tra: `THANHVIEN.MaGiaPha = (MaGiaPha của Owner)`
 
 #### User (LTK03)
 - ❌ **KHÔNG** được ghi nhận kết thúc
 - ❌ **KHÔNG** được xóa kết thúc
 - ❌ **KHÔNG** được chỉnh sửa kết thúc
-- ✅ Được **TRA CỨU** và **XEM CHI TIẾT** kết thúc **TRONG GIA PHẠ**
+- Sửa Được **TRA CỨU** và **XEM CHI TIẾT** kết thúc **TRONG GIA PHẠ**
 - ⚠️ Chỉ đọc (read-only), không được thay đổi dữ liệu
 
 ---
@@ -122,8 +122,8 @@ DELIMITER ;
 **Mục đích:** Kiểm tra quyền ghi nhận kết thúc (POST)
 
 **Logic:**
-- Admin: ✅ Toàn quyền
-- Owner: ✅ Chỉ ghi nhận cho thành viên trong gia phạ
+- Admin: Sửa Toàn quyền
+- Owner: Sửa Chỉ ghi nhận cho thành viên trong gia phạ
 - User: ❌ Không có quyền
 
 **Code:**
@@ -203,8 +203,8 @@ export const checkGhiNhanKetThucPermission = async (req: Request, res: Response,
 **Mục đích:** Kiểm tra quyền cập nhật/xóa kết thúc (PUT/DELETE)
 
 **Logic:**
-- Admin: ✅ Toàn quyền
-- Owner: ✅ Chỉ sửa/xóa thành viên trong gia phả
+- Admin: Sửa Toàn quyền
+- Owner: Sửa Chỉ sửa/xóa thành viên trong gia phả
 - User: ❌ Không có quyền
 
 **Code:**
@@ -350,12 +350,12 @@ export default ketthucRouter;
 ```
 
 **⚠️ Thay đổi so với code hiện tại:**
-1. ✅ Thêm import 3 middleware
-2. ✅ Route `/ghinhan`: Thêm `checkGhiNhanKetThucPermission`
-3. ✅ Route `/tracuu`: Thêm `attachUserInfoMiddleware`
-4. ✅ Route `/:MaTV` (GET): Thêm `attachUserInfoMiddleware`
-5. ✅ Route `/:MaTV` (PUT): Thêm `checkUpdateDeleteKetThucPermission`
-6. ✅ Route `/:MaTV` (DELETE): Thêm `checkUpdateDeleteKetThucPermission`
+1. Sửa Thêm import 3 middleware
+2. Sửa Route `/ghinhan`: Thêm `checkGhiNhanKetThucPermission`
+3. Sửa Route `/tracuu`: Thêm `attachUserInfoMiddleware`
+4. Sửa Route `/:MaTV` (GET): Thêm `attachUserInfoMiddleware`
+5. Sửa Route `/:MaTV` (PUT): Thêm `checkUpdateDeleteKetThucPermission`
+6. Sửa Route `/:MaTV` (DELETE): Thêm `checkUpdateDeleteKetThucPermission`
 
 ---
 
@@ -721,9 +721,9 @@ async xoaKetThuc(MaTV: string) {
 ```
 
 **⚠️ Tóm tắt thay đổi:**
-1. ✅ `traCuuKetThuc`: Thêm filter `tv.MaGiaPha = ?` nếu không phải Admin
-2. ✅ `getChiTietKetThuc`: Thêm check quyền xem theo MaGiaPha
-3. ✅ Các hàm khác: Không cần thay đổi (middleware đã check)
+1. Sửa `traCuuKetThuc`: Thêm filter `tv.MaGiaPha = ?` nếu không phải Admin
+2. Sửa `getChiTietKetThuc`: Thêm check quyền xem theo MaGiaPha
+3. Sửa Các hàm khác: Không cần thay đổi (middleware đã check)
 
 ---
 
@@ -743,21 +743,21 @@ Body: {
   "MaNguyenNhanMat": "NNM01",
   "MaDiaDiem": "DD01"
 }
-# ✅ Kết quả: Ghi nhận thành công
+# Sửa Kết quả: Ghi nhận thành công
 
 # Test 2: Admin tra cứu kết thúc TẤT CẢ gia phả
 GET http://localhost:3000/users/ketthuc/tracuu?HoTen=Nguyễn
 Headers: {
   "Authorization": "Bearer <admin_access_token>"
 }
-# ✅ Kết quả: Trả về thành viên từ MỌI gia phả
+# Sửa Kết quả: Trả về thành viên từ MỌI gia phả
 
 # Test 3: Admin xem chi tiết kết thúc thành viên NGOÀI gia phạ
 GET http://localhost:3000/users/ketthuc/TV01
 Headers: {
   "Authorization": "Bearer <admin_access_token>"
 }
-# ✅ Kết quả: Xem được chi tiết
+# Sửa Kết quả: Xem được chi tiết
 
 # Test 4: Admin cập nhật kết thúc thành viên NGOÀI gia phạ
 PUT http://localhost:3000/users/ketthuc/TV01
@@ -768,14 +768,14 @@ Body: {
   "MaNguyenNhanMat": "NNM02",
   "MaDiaDiem": "DD02"
 }
-# ✅ Kết quả: Cập nhật thành công
+# Sửa Kết quả: Cập nhật thành công
 
 # Test 5: Admin xóa kết thúc thành viên NGOÀI gia phạ
 DELETE http://localhost:3000/users/ketthuc/TV01
 Headers: {
   "Authorization": "Bearer <admin_access_token>"
 }
-# ✅ Kết quả: Xóa thành công (đưa về "Còn Sống")
+# Sửa Kết quả: Xóa thành công (đưa về "Còn Sống")
 ```
 
 ### 7.2. Test Owner (LTK02) - Trong gia phả
@@ -792,7 +792,7 @@ Body: {
   "MaNguyenNhanMat": "NNM03",
   "MaDiaDiem": "DD01"
 }
-# ✅ Kết quả: Ghi nhận thành công
+# Sửa Kết quả: Ghi nhận thành công
 
 # Test 1.1: Owner ghi nhận kết thúc cho thành viên NGOÀI gia phạ
 POST http://localhost:3000/users/ketthuc/ghinhan
@@ -812,7 +812,7 @@ GET http://localhost:3000/users/ketthuc/tracuu
 Headers: {
   "Authorization": "Bearer <owner_access_token>"
 }
-# ✅ Kết quả: Chỉ trả về thành viên trong gia phả
+# Sửa Kết quả: Chỉ trả về thành viên trong gia phả
 
 # Test 3: Owner xem chi tiết kết thúc NGOÀI gia phạ
 GET http://localhost:3000/users/ketthuc/TV01
@@ -829,7 +829,7 @@ Headers: {
 Body: {
   "MaDiaDiem": "DD02"
 }
-# ✅ Kết quả: Cập nhật thành công
+# Sửa Kết quả: Cập nhật thành công
 
 # Test 4.1: Owner cập nhật kết thúc NGOÀI gia phạ
 PUT http://localhost:3000/users/ketthuc/TV01
@@ -846,7 +846,7 @@ DELETE http://localhost:3000/users/ketthuc/TV04
 Headers: {
   "Authorization": "Bearer <owner_access_token>"
 }
-# ✅ Kết quả: Xóa thành công
+# Sửa Kết quả: Xóa thành công
 ```
 
 ### 7.3. Test User (LTK03) - Chỉ xem
@@ -870,14 +870,14 @@ GET http://localhost:3000/users/ketthuc/tracuu?HoTen=Trần
 Headers: {
   "Authorization": "Bearer <user_access_token>"
 }
-# ✅ Kết quả: Chỉ trả về thành viên trong gia phả
+# Sửa Kết quả: Chỉ trả về thành viên trong gia phả
 
 # Test 3: User xem chi tiết kết thúc TRONG gia phạ
 GET http://localhost:3000/users/ketthuc/TV04
 Headers: {
   "Authorization": "Bearer <user_access_token>"
 }
-# ✅ Kết quả: Xem được chi tiết
+# Sửa Kết quả: Xem được chi tiết
 
 # Test 3.1: User xem chi tiết kết thúc NGOÀI gia phạ
 GET http://localhost:3000/users/ketthuc/TV01
@@ -1038,7 +1038,7 @@ throw new ErrorWithStatus({
 | **Bảng dữ liệu** | GHINHANTHANHTICH (riêng) | THANHVIEN (tích hợp) |
 | **Primary Key** | Composite (MaLTT, MaTV, NgayPhatSinh) | MaTV (params) |
 | **Lấy MaTV** | Từ `req.body` | Từ `req.params` |
-| **User quyền thêm** | ✅ Chỉ cho mình | ❌ Không được thêm |
+| **User quyền thêm** | Sửa Chỉ cho mình | ❌ Không được thêm |
 | **User quyền xóa/sửa** | Có giới hạn | ❌ Hoàn toàn không |
 
 ### 10.2. Trigger tự động
@@ -1056,7 +1056,7 @@ throw new ErrorWithStatus({
 // ❌ SAI: Chỉ xóa NgayGioMat
 UPDATE THANHVIEN SET NgayGioMat = NULL WHERE MaTV = ?
 
-// ✅ ĐÚNG: Xóa toàn bộ thông tin kết thúc
+// Sửa ĐÚNG: Xóa toàn bộ thông tin kết thúc
 UPDATE THANHVIEN
 SET NgayGioMat = NULL,
     MaNguyenNhanMat = NULL,
@@ -1085,9 +1085,9 @@ if (userInfo.MaLoaiTK === 'LTK03') {
 | Tiêu chí | Thành tích | Kết thúc |
 |----------|-----------|----------|
 | Middleware ghi nhận | checkGhiNhanThanhTichPermission | checkGhiNhanKetThucPermission |
-| User ghi nhận | ✅ Của mình | ❌ Không được |
-| User xóa | ✅ Trong gia phả | ❌ Không được |
-| User sửa | ✅ Của mình | ❌ Không được |
+| User ghi nhận | Sửa Của mình | ❌ Không được |
+| User xóa | Sửa Trong gia phả | ❌ Không được |
+| User sửa | Sửa Của mình | ❌ Không được |
 | Owner quyền | Toàn bộ gia phả | Toàn bộ gia phả |
 | Lấy MaTV | req.body | req.params |
 
@@ -1218,7 +1218,7 @@ async ghiNhanKetThuc(payload: GhiNhanKetThucPayload) {
 }
 ```
 
-**✅ Code mới (ĐÚNG):**
+**Sửa Code mới (ĐÚNG):**
 ```typescript
 async ghiNhanKetThuc(payload: GhiNhanKetThucPayload, userInfo?: TaiKhoanInfo) {
   const { MaTV, NgayGioMat, MaNguyenNhanMat, MaDiaDiem } = payload;
@@ -1281,7 +1281,7 @@ export interface TaiKhoanInfo extends RowDataPacket {
 
 #### File 3: `ketthuc.controllers.ts`
 
-**✅ Code đã ĐÚNG** - Không cần sửa gì, chỉ cần service có đúng signature.
+**Sửa Code đã ĐÚNG** - Không cần sửa gì, chỉ cần service có đúng signature.
 
 ---
 
@@ -1382,7 +1382,7 @@ class KetThucService {
 // ❌ CŨ
 async ghiNhanKetThuc(payload: GhiNhanKetThucPayload) {
 
-// ✅ MỚI
+// Sửa MỚI
 async ghiNhanKetThuc(payload: GhiNhanKetThucPayload, userInfo?: TaiKhoanInfo) {
 ```
 
@@ -1498,7 +1498,7 @@ declare module 'express-serve-static-core' {
 }
 ```
 
-**✅ Code mới (ĐÚNG):**
+**Sửa Code mới (ĐÚNG):**
 ```typescript
 import { Request } from 'express';
 import { TokenPayload } from './models/requests/User.requests';
@@ -1552,7 +1552,7 @@ class KetThucService {
 }
 ```
 
-**✅ Code mới (ĐÚNG):**
+**Sửa Code mới (ĐÚNG):**
 ```typescript
 import databaseService from './database.services'
 import { KetThucRow, TraCuuKetThucResult, GhiNhanKetThucPayload } from '~/models/schemas/KetThuc.schema'
@@ -1731,7 +1731,7 @@ npm run build
 npx tsc --noEmit
 ```
 
-**✅ Kết quả mong đợi:**
+**Sửa Kết quả mong đợi:**
 ```
 ✓ No compile errors
 ✓ All types match correctly
@@ -1844,10 +1844,10 @@ class KetThucService {
 **🎯 KẾT LUẬN CUỐI CÙNG:**
 
 Sau khi sửa 4 lỗi:
-1. ✅ **Lỗi 1 - Missing TaiKhoanInfo:** Import từ middleware
-2. ✅ **Lỗi 2 - Missing ErrorWithStatus:** Import từ models/Errors
-3. ✅ **Lỗi 3 - Wrong signature:** Thêm tham số userInfo
-4. ✅ **Lỗi 4 - Type incompatibility userInfo:** Export interface + sửa type.d.ts + xóa duplicate
+1. Sửa **Lỗi 1 - Missing TaiKhoanInfo:** Import từ middleware
+2. Sửa **Lỗi 2 - Missing ErrorWithStatus:** Import từ models/Errors
+3. Sửa **Lỗi 3 - Wrong signature:** Thêm tham số userInfo
+4. Sửa **Lỗi 4 - Type incompatibility userInfo:** Export interface + sửa type.d.ts + xóa duplicate
 
 **Tổng số thay đổi:**
 - `authorization.middlewares.ts`: 1 dòng (thêm `export`)

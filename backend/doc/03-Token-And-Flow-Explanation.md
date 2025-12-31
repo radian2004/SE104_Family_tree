@@ -142,8 +142,8 @@ HMACSHA256(
 ```
 
 **Chữ ký đảm bảo:**
-- ✅ Token không bị giả mạo
-- ✅ Token không bị chỉnh sửa
+- Sửa Token không bị giả mạo
+- Sửa Token không bị chỉnh sửa
 
 **Ví dụ:**
 ```javascript
@@ -165,7 +165,7 @@ const calculatedSignature = HMACSHA256(
 
 // Bước 3: So sánh
 if (signature === calculatedSignature) {
-  // ✅ Token hợp lệ
+  // Sửa Token hợp lệ
   const decoded = base64Decode(payload);
   
   // Kiểm tra hết hạn
@@ -319,10 +319,10 @@ export const registerValidator = validate(
 ```
 
 **Các bước kiểm tra:**
-1. ✅ `name` không rỗng, 1-100 ký tự
-2. ✅ `email` hợp lệ, chưa tồn tại trong DB
-3. ✅ `password` đủ mạnh (6+ ký tự, có hoa, thường, số, ký tự đặc biệt)
-4. ✅ `confirm_password` khớp với password
+1. Sửa `name` không rỗng, 1-100 ký tự
+2. Sửa `email` hợp lệ, chưa tồn tại trong DB
+3. Sửa `password` đủ mạnh (6+ ký tự, có hoa, thường, số, ký tự đặc biệt)
+4. Sửa `confirm_password` khớp với password
 
 **Nếu có lỗi → Throw error → Dừng lại, không chạy tiếp Controller**
 
@@ -608,11 +608,11 @@ async login(email: string, password: string) {
 
 | | Register | Login |
 |---|----------|-------|
-| Tạo user | ✅ INSERT THANHVIEN + TAIKHOAN | ❌ Không |
-| Tìm user | ❌ Không | ✅ SELECT |
-| Verify password | ❌ Không | ✅ So sánh hash |
-| Tạo tokens | ✅ Có | ✅ Có |
-| Lưu refresh token | ✅ Có | ✅ Có |
+| Tạo user | Sửa INSERT THANHVIEN + TAIKHOAN | ❌ Không |
+| Tìm user | ❌ Không | Sửa SELECT |
+| Verify password | ❌ Không | Sửa So sánh hash |
+| Tạo tokens | Sửa Có | Sửa Có |
+| Lưu refresh token | Sửa Có | Sửa Có |
 
 ---
 
@@ -968,14 +968,14 @@ const hashed = hashPassword(password);
 const inputPassword = 'Password123!';
 const inputHashed = hashPassword(inputPassword);
 if (hashed === inputHashed) {
-  console.log('✅ Password đúng');
+  console.log('Sửa Password đúng');
 }
 ```
 
 **Tại sao không thể reverse?**
 ```
 Hash function là one-way (một chiều)
-Input → Hash ✅
+Input → Hash Sửa
 Hash → Input ❌ (không thể)
 
 Chỉ có thể so sánh:
@@ -1066,11 +1066,11 @@ export const validate = (validation: RunnableValidationChains<ValidationChain>) 
 | | Register | Login | Logout |
 |---|----------|-------|--------|
 | **Validate** | name, email, password, confirm | email, password | access_token, refresh_token |
-| **Tìm user** | ❌ | ✅ SELECT | ❌ |
-| **Tạo user** | ✅ INSERT | ❌ | ❌ |
-| **Verify password** | ❌ | ✅ So sánh hash | ❌ |
-| **Tạo tokens** | ✅ | ✅ | ❌ |
-| **Lưu refresh token** | ✅ INSERT | ✅ INSERT | ❌ DELETE |
+| **Tìm user** | ❌ | Sửa SELECT | ❌ |
+| **Tạo user** | Sửa INSERT | ❌ | ❌ |
+| **Verify password** | ❌ | Sửa So sánh hash | ❌ |
+| **Tạo tokens** | Sửa | Sửa | ❌ |
+| **Lưu refresh token** | Sửa INSERT | Sửa INSERT | ❌ DELETE |
 | **Response** | 201 + tokens | 200 + tokens + user | 200 + message |
 
 ---
@@ -1082,17 +1082,17 @@ export const validate = (validation: RunnableValidationChains<ValidationChain>) 
 **Đáp:** Cân bằng giữa bảo mật và trải nghiệm người dùng
 
 - **Nếu chỉ có Access Token dài hạn:**
-  - ✅ Tiện: Không cần refresh
+  - Sửa Tiện: Không cần refresh
   - ❌ Nguy hiểm: Bị đánh cắp → Hacker dùng mãi
   
 - **Nếu chỉ có Access Token ngắn hạn:**
-  - ✅ An toàn: Hết hạn nhanh
+  - Sửa An toàn: Hết hạn nhanh
   - ❌ Phiền: User phải đăng nhập lại liên tục
 
 - **Kết hợp cả 2:**
-  - ✅ An toàn: Access token ngắn hạn
-  - ✅ Tiện: Refresh token tạo access token mới
-  - ✅ Kiểm soát: Có thể thu hồi refresh token (logout)
+  - Sửa An toàn: Access token ngắn hạn
+  - Sửa Tiện: Refresh token tạo access token mới
+  - Sửa Kiểm soát: Có thể thu hồi refresh token (logout)
 
 ---
 
@@ -1102,10 +1102,10 @@ export const validate = (validation: RunnableValidationChains<ValidationChain>) 
 
 | Nơi lưu | Bảo mật | Truy cập | Khuyến nghị |
 |---------|---------|----------|-------------|
-| **localStorage** | ❌ Kém (XSS) | ✅ Dễ | ❌ Không nên |
-| **sessionStorage** | ❌ Kém (XSS) | ✅ Dễ | ❌ Không nên |
-| **Cookie (httpOnly)** | ✅ Tốt | ❌ Khó (server only) | ✅ Tốt nhất |
-| **Memory (Redux)** | ✅ Tốt | ✅ Dễ | ⚠️ Mất khi reload |
+| **localStorage** | ❌ Kém (XSS) | Sửa Dễ | ❌ Không nên |
+| **sessionStorage** | ❌ Kém (XSS) | Sửa Dễ | ❌ Không nên |
+| **Cookie (httpOnly)** | Sửa Tốt | ❌ Khó (server only) | Sửa Tốt nhất |
+| **Memory (Redux)** | Sửa Tốt | Sửa Dễ | ⚠️ Mất khi reload |
 
 **Khuyến nghị:**
 - **Access Token:** Memory (Redux/Context) hoặc Cookie httpOnly
@@ -1122,7 +1122,7 @@ export const validate = (validation: RunnableValidationChains<ValidationChain>) 
 2. Server verify → Token expired (401)
 3. Client tự động gọi /refresh-token với refresh_token
 4. Server verify refresh_token
-   - ✅ Hợp lệ → Tạo access_token mới
+   - Sửa Hợp lệ → Tạo access_token mới
    - ❌ Hết hạn/không tồn tại → Yêu cầu login lại
 5. Client lưu access_token mới
 6. Retry request ban đầu với token mới
@@ -1254,14 +1254,14 @@ async refreshToken(user_id: string, old_refresh_token: string) {
 ## 🚀 Kết luận
 
 Bạn đã hiểu:
-- ✅ Token là gì và tại sao cần token
-- ✅ Phân biệt Access Token vs Refresh Token
-- ✅ JWT hoạt động như thế nào (Header, Payload, Signature)
-- ✅ Luồng Đăng ký chi tiết (Routes → Middleware → Controller → Service)
-- ✅ Luồng Đăng nhập chi tiết
-- ✅ Luồng Đăng xuất chi tiết
-- ✅ Cách verify token và check trong database
-- ✅ Tại sao refresh token phải lưu DB
+- Sửa Token là gì và tại sao cần token
+- Sửa Phân biệt Access Token vs Refresh Token
+- Sửa JWT hoạt động như thế nào (Header, Payload, Signature)
+- Sửa Luồng Đăng ký chi tiết (Routes → Middleware → Controller → Service)
+- Sửa Luồng Đăng nhập chi tiết
+- Sửa Luồng Đăng xuất chi tiết
+- Sửa Cách verify token và check trong database
+- Sửa Tại sao refresh token phải lưu DB
 
 **Bước tiếp theo:**
 - Implement API refresh token

@@ -15,7 +15,7 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true,  // ✅ QUAN TRỌNG: Gửi cookies với mọi request
+  withCredentials: true,  // Sửa QUAN TRỌNG: Gửi cookies với mọi request
 });
 
 // ==================== REQUEST INTERCEPTOR ====================

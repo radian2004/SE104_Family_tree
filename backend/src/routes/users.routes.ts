@@ -127,7 +127,7 @@ usersRouter.post('/verify-reset-permission', wrapAsync(verifyResetPermissionCont
 usersRouter.post('/reset-password', wrapAsync(resetPasswordController));
 
 // 🔍 DEBUG: Log khi route được đăng ký
-console.log('✅ Đang đăng ký nested routes...');
+console.log('Sửa Đang đăng ký nested routes...');
 console.log('  - /thanhvien');
 console.log('  - /thanhtich');
 console.log('  - /ketthuc');
@@ -142,6 +142,6 @@ usersRouter.use('/honnhan', accessTokenValidator, honNhanRouter);
 usersRouter.use('/quanhecon', accessTokenValidator, quanHeConRouter);
 usersRouter.use('/phieuthu', accessTokenValidator, phieuThuRouter);
 usersRouter.use('/phieuchi', accessTokenValidator, phieuChiRouter);
-console.log('✅ Đã đăng ký xong nested routes!');
+console.log('Sửa Đã đăng ký xong nested routes!');
 
 export default usersRouter;

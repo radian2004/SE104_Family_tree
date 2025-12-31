@@ -249,10 +249,10 @@ CREATE TABLE LOAITHANHTICH(
 ```
 
 **Kết luận về database**:
-- ✅ Database đã có cấu trúc authentication đầy đủ
-- ✅ Có bảng TAIKHOAN và REFRESH_TOKENS
-- ✅ Quan hệ giữa tài khoản và thành viên đã được thiết lập
-- ✅ KHÔNG CẦN THAY ĐỔI GÌ Ở DATABASE
+- Sửa Database đã có cấu trúc authentication đầy đủ
+- Sửa Có bảng TAIKHOAN và REFRESH_TOKENS
+- Sửa Quan hệ giữa tài khoản và thành viên đã được thiết lập
+- Sửa KHÔNG CẦN THAY ĐỔI GÌ Ở DATABASE
 
 ---
 
@@ -316,11 +316,11 @@ import {
   getAvailableRelationsController,
   traCuuThanhVienController
 } from '~/controllers/thanhvien.controllers';
-import { wrapAsync } from '~/utils/handlers'; // ✅ THÊM
+import { wrapAsync } from '~/utils/handlers'; // Sửa THÊM
 
 const thanhvienRouter = Router();
 
-// Routes cụ thể - ✅ CHÚ Ý: Wrap bằng wrapAsync()
+// Routes cụ thể - Sửa CHÚ Ý: Wrap bằng wrapAsync()
 thanhvienRouter.post('/register', wrapAsync(registerController));
 thanhvienRouter.post('/ghi-nhan', wrapAsync(ghiNhanThanhVienController));
 thanhvienRouter.get('/available-relations', wrapAsync(getAvailableRelationsController));
@@ -337,8 +337,8 @@ export default thanhvienRouter;
 ```
 
 **CHÚ Ý**:
-- ✅ PHẢI wrap tất cả controllers bằng `wrapAsync()`
-- ✅ KHÔNG cần thêm `accessTokenValidator` ở đây (sẽ thêm khi nest)
+- Sửa PHẢI wrap tất cả controllers bằng `wrapAsync()`
+- Sửa KHÔNG cần thêm `accessTokenValidator` ở đây (sẽ thêm khi nest)
 - `wrapAsync` giúp bắt lỗi async/await tự động
 
 ---
@@ -365,11 +365,11 @@ import {
   capNhatThanhTichController,
   getBaoCaoThanhTichController
 } from '~/controllers/thanhtich.controllers';
-import { wrapAsync } from '~/utils/handlers'; // ✅ THÊM
+import { wrapAsync } from '~/utils/handlers'; // Sửa THÊM
 
 const thanhTichRouter = Router();
 
-// ✅ CHÚ Ý: Wrap tất cả bằng wrapAsync()
+// Sửa CHÚ Ý: Wrap tất cả bằng wrapAsync()
 thanhTichRouter.get('/loai', wrapAsync(getLoaiThanhTichController));
 thanhTichRouter.post('/ghinhan', wrapAsync(ghiNhanThanhTichController));
 thanhTichRouter.get('/tracuu', wrapAsync(traCuuThanhTichController));
@@ -403,11 +403,11 @@ import {
   capNhatKetThucController,
   xoaKetThucController
 } from '~/controllers/ketthuc.controllers';
-import { wrapAsync } from '~/utils/handlers'; // ✅ THÊM
+import { wrapAsync } from '~/utils/handlers'; // Sửa THÊM
 
 const ketthucRouter = Router();
 
-// ✅ CHÚ Ý: Wrap tất cả bằng wrapAsync()
+// Sửa CHÚ Ý: Wrap tất cả bằng wrapAsync()
 ketthucRouter.post('/ghinhan', wrapAsync(ghiNhanKetThucController));
 ketthucRouter.get('/tracuu', wrapAsync(traCuuKetThucController));
 ketthucRouter.get('/:MaTV', wrapAsync(getChiTietKetThucController));
@@ -437,7 +437,7 @@ import ketthucRouter from './ketthuc.routes';
 **ĐỊA ĐIỂM SỬA**: Sau các routes hiện tại, TRƯỚC `export default`
 
 ```typescript
-// ✅ THÊM: Nest sub-routes VỚI accessTokenValidator middleware
+// Sửa THÊM: Nest sub-routes VỚI accessTokenValidator middleware
 usersRouter.use('/thanhvien', accessTokenValidator, thanhvienRouter);
 usersRouter.use('/thanhtich', accessTokenValidator, thanhTichRouter);
 usersRouter.use('/ketthuc', accessTokenValidator, ketthucRouter);
@@ -467,7 +467,7 @@ import {
 } from '~/middlewares/users.middlewares';
 import { wrapAsync } from '~/utils/handlers';
 
-// ✅ THÊM: Import sub-routers
+// Sửa THÊM: Import sub-routers
 import thanhvienRouter from './thanhvien.routes';
 import thanhTichRouter from './thanhtich.routes';
 import ketthucRouter from './ketthuc.routes';
@@ -499,7 +499,7 @@ usersRouter.post('/login', loginValidator, wrapAsync(loginController));
  */
 usersRouter.post('/logout', accessTokenValidator, refreshTokenValidator, wrapAsync(logoutController));
 
-// ✅ THÊM: Nest sub-routes VỚI accessTokenValidator middleware
+// Sửa THÊM: Nest sub-routes VỚI accessTokenValidator middleware
 // Middleware sẽ kiểm tra JWT token trước khi cho phép truy cập routes con
 usersRouter.use('/thanhvien', accessTokenValidator, thanhvienRouter);
 usersRouter.use('/thanhtich', accessTokenValidator, thanhTichRouter);
@@ -554,7 +554,7 @@ app.use(cors({
 app.use(express.json());
 
 // Routes
-app.use('/users', usersRouter); // ✅ Bây giờ chứa tất cả sub-routes với authentication
+app.use('/users', usersRouter); // Sửa Bây giờ chứa tất cả sub-routes với authentication
 
 // Default error handler (đặt sau tất cả routes)
 app.use(defaultErrorHandler);
@@ -942,7 +942,7 @@ Nếu đã merge tất cả vào `users.routes.ts`, có thể xóa:
 | **Tính module** | ⭐⭐⭐ Cao (giữ nguyên cấu trúc) | ⭐ Thấp (gộp vào 1 file) |
 | **Dễ rollback** | ⭐⭐⭐ Rất dễ | ⭐ Khó |
 | **Performance** | Giống nhau | Giống nhau |
-| **Khuyến nghị** | ✅ **Khuyến nghị** | ⚠️ Chỉ dùng khi cần |
+| **Khuyến nghị** | Sửa **Khuyến nghị** | ⚠️ Chỉ dùng khi cần |
 
 ---
 
@@ -1043,7 +1043,7 @@ Action: Frontend PHẢI redirect về trang login
 
 ## 🧪 CHECKLIST KIỂM TRA
 
-### ✅ Backend Changes
+### Sửa Backend Changes
 
 - [ ] **File `src/routes/thanhvien.routes.ts`**
   - [ ] Import `wrapAsync` từ `~/utils/handlers`
@@ -1062,9 +1062,9 @@ Action: Frontend PHẢI redirect về trang login
 
 - [ ] **File `src/routes/users.routes.ts`**
   - [ ] Import `thanhvienRouter`, `thanhTichRouter`, `ketthucRouter`
-  - [ ] ✅ Thêm `usersRouter.use('/thanhvien', accessTokenValidator, thanhvienRouter);`
-  - [ ] ✅ Thêm `usersRouter.use('/thanhtich', accessTokenValidator, thanhTichRouter);`
-  - [ ] ✅ Thêm `usersRouter.use('/ketthuc', accessTokenValidator, ketthucRouter);`
+  - [ ] Sửa Thêm `usersRouter.use('/thanhvien', accessTokenValidator, thanhvienRouter);`
+  - [ ] Sửa Thêm `usersRouter.use('/thanhtich', accessTokenValidator, thanhTichRouter);`
+  - [ ] Sửa Thêm `usersRouter.use('/ketthuc', accessTokenValidator, ketthucRouter);`
   - [ ] ⚠️ CHÚ Ý: `accessTokenValidator` đặt GIỮA path và router
 
 - [ ] **File `src/index.ts`**
@@ -1074,7 +1074,7 @@ Action: Frontend PHẢI redirect về trang login
   - [ ] Xóa `app.use('/ketthuc', ketthucRouter);`
   - [ ] Chỉ giữ lại `app.use('/users', usersRouter);`
 
-### ✅ Testing
+### Sửa Testing
 
 - [ ] **Server khởi động thành công**
   - [ ] Không có lỗi compile/syntax
@@ -1100,7 +1100,7 @@ Action: Frontend PHẢI redirect về trang login
   - [ ] Đợi token hết hạn (hoặc sửa expiry thành 10s để test)
   - [ ] Gọi API với token hết hạn → 401 "jwt expired"
 
-### ✅ Frontend Changes (nếu có)
+### Sửa Frontend Changes (nếu có)
 
 - [ ] **Update API base URLs**
   - [ ] `/thanhvien` → `/users/thanhvien`
@@ -1125,12 +1125,12 @@ Action: Frontend PHẢI redirect về trang login
 
 Bạn đã làm đúng cách:
 ```typescript
-// ✅ Đúng trong users.routes.ts
+// Sửa Đúng trong users.routes.ts
 usersRouter.use('/thanhvien', accessTokenValidator, thanhvienRouter);
 usersRouter.use('/thanhtich', accessTokenValidator, thanhTichRouter);
 usersRouter.use('/ketthuc', accessTokenValidator, ketthucRouter);
 
-// ✅ Đúng trong index.ts - đã comment/xóa
+// Sửa Đúng trong index.ts - đã comment/xóa
 // app.use('/thanhvien', thanhvienRouter);
 // app.use('/thanhtich', thanhTichRouter);
 // app.use('/ketthuc', ketthucRouter);
@@ -1153,12 +1153,12 @@ Khi controller là async function và throw error, Express KHÔNG TỰ ĐỘNG c
 - Hoặc server crash
 - Hoặc trả về lỗi 500 không rõ ràng
 
-### ✅ Giải pháp
+### Sửa Giải pháp
 
 Wrap TẤT CẢ controllers bằng `wrapAsync()`:
 
 ```typescript
-// ✅ ĐÚNG
+// Sửa ĐÚNG
 import { wrapAsync } from '~/utils/handlers';
 
 thanhvienRouter.get('/', wrapAsync(getAllThanhVienController));
@@ -1182,7 +1182,7 @@ Tôi đã sửa tất cả các file routes cho bạn rồi!
 // ❌ SAI
 thanhvienRouter.get('/', getAllThanhVienController);
 
-// ✅ ĐÚNG
+// Sửa ĐÚNG
 thanhvienRouter.get('/', wrapAsync(getAllThanhVienController));
 ```
 
@@ -1216,7 +1216,7 @@ fetch('/users/thanhvien', {
   }
 });
 
-// ✅ ĐÚNG
+// Sửa ĐÚNG
 fetch('/users/thanhvien', {
   headers: {
     'Authorization': `Bearer ${token}` // Có "Bearer "
@@ -1246,7 +1246,7 @@ fetch('/users/thanhvien', {
 thanhvienRouter.get('/:MaTV', ...);
 thanhvienRouter.get('/baocao', ...); // ← Sẽ match với /:MaTV
 
-// ✅ ĐÚNG - Routes cụ thể trước routes có param
+// Sửa ĐÚNG - Routes cụ thể trước routes có param
 thanhvienRouter.get('/baocao', ...);
 thanhvienRouter.get('/:MaTV', ...);
 ```
@@ -1261,7 +1261,7 @@ app.use(cors({
   origin: ['http://localhost:5173'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization'] // ✅ Đã có
+  allowedHeaders: ['Content-Type', 'Authorization'] // Sửa Đã có
 }));
 ```
 
@@ -1293,13 +1293,13 @@ app.use(cors({
    - Sau: `/users/thanhvien`, `/users/thanhtich`, `/users/ketthuc`
 
 3. **Security**: 
-   - ✅ Không thể truy cập API nếu không đăng nhập
-   - ✅ JWT hết hạn → Tự động reject request
-   - ✅ Tất cả requests đều được verify
+   - Sửa Không thể truy cập API nếu không đăng nhập
+   - Sửa JWT hết hạn → Tự động reject request
+   - Sửa Tất cả requests đều được verify
 
 4. **Database**: 
-   - ✅ KHÔNG CẦN THAY ĐỔI GÌ
-   - ✅ Cấu trúc authentication đã sẵn sàng
+   - Sửa KHÔNG CẦN THAY ĐỔI GÌ
+   - Sửa Cấu trúc authentication đã sẵn sàng
 
 ### Lợi ích:
 
@@ -1322,11 +1322,11 @@ app.use(cors({
 
 Nếu gặp vấn đề, kiểm tra theo thứ tự:
 
-1. ✅ Server khởi động thành công?
-2. ✅ Đã login và lấy được token?
-3. ✅ Token được gửi đúng format `Bearer <token>`?
-4. ✅ URL đã đổi từ `/thanhvien` → `/users/thanhvien`?
-5. ✅ CORS đã allow header `Authorization`?
+1. Sửa Server khởi động thành công?
+2. Sửa Đã login và lấy được token?
+3. Sửa Token được gửi đúng format `Bearer <token>`?
+4. Sửa URL đã đổi từ `/thanhvien` → `/users/thanhvien`?
+5. Sửa CORS đã allow header `Authorization`?
 
 **Vẫn lỗi?** → Check console logs và kiểm tra error message cụ thể.
 
@@ -1335,4 +1335,4 @@ Nếu gặp vấn đề, kiểm tra theo thứ tự:
 **Ngày tạo**: 22/12/2025  
 **Phiên bản**: 1.0  
 **Tác giả**: GitHub Copilot  
-**Trạng thái**: ✅ Ready to implement
+**Trạng thái**: Sửa Ready to implement

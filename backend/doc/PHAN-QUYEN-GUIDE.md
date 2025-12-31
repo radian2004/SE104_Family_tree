@@ -31,7 +31,7 @@ CREATE TABLE TAIKHOAN(
 	TenDangNhap VARCHAR(50) PRIMARY KEY,
 	MaTV VARCHAR(5),
 	MatKhau VARCHAR(100),
-	MaLoaiTK VARCHAR(5),  -- ✅ Đã có cột phân loại tài khoản
+	MaLoaiTK VARCHAR(5),  -- Sửa Đã có cột phân loại tài khoản
 	TGTaoMoi TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
 	FOREIGN KEY(MaTV) REFERENCES THANHVIEN(MaTV) ON DELETE CASCADE,
 	FOREIGN KEY(MaLoaiTK) REFERENCES LOAITAIKHOAN(MaLoaiTK)
@@ -56,7 +56,7 @@ CREATE TABLE CAYGIAPHA(
 CREATE TABLE THANHVIEN (
     MaTV VARCHAR(5) PRIMARY KEY,
     HoTen VARCHAR(50),
-    MaGiaPha VARCHAR(5),  -- ✅ Liên kết thành viên với gia phả
+    MaGiaPha VARCHAR(5),  -- Sửa Liên kết thành viên với gia phả
     -- ... các cột khác
     FOREIGN KEY(MaGiaPha) REFERENCES CAYGIAPHA(MaGiaPha)
 );
@@ -69,15 +69,15 @@ CREATE TABLE THANHVIEN (
 ### 1. QUYỀN QUẢN LÝ THÀNH VIÊN
 
 #### Admin (LTK01)
-- ✅ Có toàn quyền thêm, xóa, sửa **MỌI** thành viên từ **MỌI** gia phả
-- ✅ Không bị giới hạn bởi MaGiaPha
+- Sửa Có toàn quyền thêm, xóa, sửa **MỌI** thành viên từ **MỌI** gia phả
+- Sửa Không bị giới hạn bởi MaGiaPha
 
 #### Owner/TruongToc (LTK02)
-- ✅ Có toàn quyền thêm, xóa, sửa thành viên **TRONG GIA PHẢ CỦA MÌNH**
+- Sửa Có toàn quyền thêm, xóa, sửa thành viên **TRONG GIA PHẢ CỦA MÌNH**
 - ⚠️ Kiểm tra: `THANHVIEN.MaGiaPha = CAYGIAPHA.MaGiaPha` (Owner là TruongToc hoặc NguoiLap)
 
 #### User (LTK03)
-- ✅ Chỉ được **SỬA** thông tin cá nhân của **CHÍNH MÌNH**
+- Sửa Chỉ được **SỬA** thông tin cá nhân của **CHÍNH MÌNH**
 - ⚠️ Kiểm tra: `TAIKHOAN.MaTV = MaTV_được_sửa`
 - ❌ **KHÔNG** được thêm/xóa thành viên
 - ❌ **KHÔNG** được sửa thành viên khác
@@ -87,15 +87,15 @@ CREATE TABLE THANHVIEN (
 ### 2. QUYỀN TRA CỨU THÀNH VIÊN
 
 #### Admin (LTK01)
-- ✅ Tra cứu **MỌI** thành viên từ **TẤT CẢ** các gia phả
-- ✅ Không có giới hạn MaGiaPha
+- Sửa Tra cứu **MỌI** thành viên từ **TẤT CẢ** các gia phả
+- Sửa Không có giới hạn MaGiaPha
 
 #### Owner/TruongToc (LTK02)
-- ✅ Tra cứu **MỌI** thành viên **TRONG GIA PHẠ CỦA MÌNH**
+- Sửa Tra cứu **MỌI** thành viên **TRONG GIA PHẠ CỦA MÌNH**
 - ⚠️ Kiểm tra: `THANHVIEN.MaGiaPha = (MaGiaPha của Owner)`
 
 #### User (LTK03)
-- ✅ Tra cứu **MỌI** thành viên **TRONG GIA PHẠ CỦA MÌNH**
+- Sửa Tra cứu **MỌI** thành viên **TRONG GIA PHẠ CỦA MÌNH**
 - ⚠️ Kiểm tra: `THANHVIEN.MaGiaPha = (MaGiaPha của User)`
 
 ---
@@ -103,15 +103,15 @@ CREATE TABLE THANHVIEN (
 ### 3. QUYỀN BÁO CÁO GHI NHẬN THÀNH VIÊN
 
 #### Admin (LTK01)
-- ✅ Lập báo cáo năm cho **MỌI** gia phả
-- ✅ Có thể xem báo cáo tăng giảm thành viên của tất cả gia phả
+- Sửa Lập báo cáo năm cho **MỌI** gia phả
+- Sửa Có thể xem báo cáo tăng giảm thành viên của tất cả gia phả
 
 #### Owner/TruongToc (LTK02)
-- ✅ Lập báo cáo năm **TRONG GIA PHẠ CỦA MÌNH**
+- Sửa Lập báo cáo năm **TRONG GIA PHẠ CỦA MÌNH**
 - ⚠️ Chỉ xem báo cáo thành viên thuộc MaGiaPha của mình
 
 #### User (LTK03)
-- ✅ Lập báo cáo năm **TRONG GIA PHẠ CỦA MÌNH**
+- Sửa Lập báo cáo năm **TRONG GIA PHẠ CỦA MÌNH**
 - ⚠️ Chỉ xem báo cáo thành viên thuộc MaGiaPha của mình
 
 ---
@@ -808,14 +808,14 @@ GET http://localhost:3000/users/thanhvien
 Headers: {
   "Authorization": "Bearer <admin_access_token>"
 }
-# ✅ Kết quả: Trả về TẤT CẢ thành viên từ mọi gia phả
+# Sửa Kết quả: Trả về TẤT CẢ thành viên từ mọi gia phả
 
 # Test: Admin tra cứu bất kỳ thành viên nào
 GET http://localhost:3000/users/thanhvien/tra-cuu?HoTen=Nguyễn
 Headers: {
   "Authorization": "Bearer <admin_access_token>"
 }
-# ✅ Kết quả: Trả về kết quả từ tất cả gia phả
+# Sửa Kết quả: Trả về kết quả từ tất cả gia phả
 
 # Test: Admin sửa bất kỳ thành viên nào
 PUT http://localhost:3000/users/thanhvien/TV04
@@ -825,21 +825,21 @@ Headers: {
 Body: {
   "DiaChi": "Địa chỉ mới"
 }
-# ✅ Kết quả: Cập nhật thành công
+# Sửa Kết quả: Cập nhật thành công
 
 # Test: Admin xóa bất kỳ thành viên nào
 DELETE http://localhost:3000/users/thanhvien/TV08
 Headers: {
   "Authorization": "Bearer <admin_access_token>"
 }
-# ✅ Kết quả: Xóa thành công
+# Sửa Kết quả: Xóa thành công
 
 # Test: Admin xem báo cáo tất cả gia phả
 GET http://localhost:3000/users/thanhvien/baocao?NamBatDau=2020&NamKetThuc=2025
 Headers: {
   "Authorization": "Bearer <admin_access_token>"
 }
-# ✅ Kết quả: Báo cáo tất cả gia phả
+# Sửa Kết quả: Báo cáo tất cả gia phả
 ```
 
 ---
@@ -859,14 +859,14 @@ GET http://localhost:3000/users/thanhvien
 Headers: {
   "Authorization": "Bearer <owner_access_token>"
 }
-# ✅ Kết quả: Chỉ trả về thành viên trong gia phả GP02
+# Sửa Kết quả: Chỉ trả về thành viên trong gia phả GP02
 
 # Test: Owner tra cứu trong gia phả
 GET http://localhost:3000/users/thanhvien/tra-cuu?HoTen=Nguyễn
 Headers: {
   "Authorization": "Bearer <owner_access_token>"
 }
-# ✅ Kết quả: Chỉ trả về thành viên trong gia phả GP02
+# Sửa Kết quả: Chỉ trả về thành viên trong gia phả GP02
 
 # Test: Owner sửa thành viên trong gia phả
 PUT http://localhost:3000/users/thanhvien/TV04
@@ -876,7 +876,7 @@ Headers: {
 Body: {
   "DiaChi": "Địa chỉ mới"
 }
-# ✅ Kết quả: Cập nhật thành công (nếu TV04 thuộc GP02)
+# Sửa Kết quả: Cập nhật thành công (nếu TV04 thuộc GP02)
 
 # Test: Owner sửa thành viên NGOÀI gia phả
 PUT http://localhost:3000/users/thanhvien/TV01
@@ -893,7 +893,7 @@ DELETE http://localhost:3000/users/thanhvien/TV08
 Headers: {
   "Authorization": "Bearer <owner_access_token>"
 }
-# ✅ Kết quả: Xóa thành công (nếu TV08 thuộc GP02)
+# Sửa Kết quả: Xóa thành công (nếu TV08 thuộc GP02)
 
 # Test: Owner xóa thành viên NGOÀI gia phả
 DELETE http://localhost:3000/users/thanhvien/TV01
@@ -907,7 +907,7 @@ GET http://localhost:3000/users/thanhvien/baocao?NamBatDau=2020&NamKetThuc=2025
 Headers: {
   "Authorization": "Bearer <owner_access_token>"
 }
-# ✅ Kết quả: Chỉ báo cáo gia phả GP02
+# Sửa Kết quả: Chỉ báo cáo gia phả GP02
 
 # Test: Owner thêm thành viên mới
 POST http://localhost:3000/users/thanhvien/register
@@ -923,7 +923,7 @@ Body: {
   "GioiTinh": "Nam",
   "MaGiaPha": "GP02"
 }
-# ✅ Kết quả: Thêm thành công
+# Sửa Kết quả: Thêm thành công
 ```
 
 ---
@@ -943,14 +943,14 @@ GET http://localhost:3000/users/thanhvien
 Headers: {
   "Authorization": "Bearer <user_access_token>"
 }
-# ✅ Kết quả: Chỉ trả về thành viên trong gia phả GP02
+# Sửa Kết quả: Chỉ trả về thành viên trong gia phả GP02
 
 # Test: User tra cứu trong gia phả
 GET http://localhost:3000/users/thanhvien/tra-cuu?HoTen=Nguyễn
 Headers: {
   "Authorization": "Bearer <user_access_token>"
 }
-# ✅ Kết quả: Chỉ trả về thành viên trong gia phả GP02
+# Sửa Kết quả: Chỉ trả về thành viên trong gia phả GP02
 
 # Test: User sửa thông tin CHÍNH MÌNH
 PUT http://localhost:3000/users/thanhvien/TV06
@@ -960,7 +960,7 @@ Headers: {
 Body: {
   "DiaChi": "Địa chỉ mới của tôi"
 }
-# ✅ Kết quả: Cập nhật thành công
+# Sửa Kết quả: Cập nhật thành công
 
 # Test: User sửa thông tin NGƯỜI KHÁC
 PUT http://localhost:3000/users/thanhvien/TV04
@@ -995,7 +995,7 @@ GET http://localhost:3000/users/thanhvien/baocao?NamBatDau=2020&NamKetThuc=2025
 Headers: {
   "Authorization": "Bearer <user_access_token>"
 }
-# ✅ Kết quả: Chỉ báo cáo gia phả GP02
+# Sửa Kết quả: Chỉ báo cáo gia phả GP02
 ```
 
 ---
@@ -1004,14 +1004,14 @@ Headers: {
 
 | Chức năng | Admin (LTK01) | Owner (LTK02) | User (LTK03) |
 |-----------|--------------|---------------|--------------|
-| **Thêm thành viên** | ✅ Tất cả | ✅ Trong gia phả | ❌ Không |
-| **Xóa thành viên** | ✅ Tất cả | ✅ Trong gia phả | ❌ Không |
-| **Sửa thành viên** | ✅ Tất cả | ✅ Trong gia phả | ✅ Chính mình |
-| **Xem thành viên** | ✅ Tất cả | ✅ Trong gia phả | ✅ Trong gia phả |
-| **Tra cứu** | ✅ Tất cả gia phả | ✅ Trong gia phả | ✅ Trong gia phả |
-| **Báo cáo** | ✅ Tất cả gia phả | ✅ Trong gia phả | ✅ Trong gia phả |
-| **Ghi nhận quan hệ** | ✅ Tất cả | ✅ Trong gia phả | ❌ Không |
-| **Quản lý gia phả** | ✅ Tất cả | ✅ Của mình | ❌ Không |
+| **Thêm thành viên** | Sửa Tất cả | Sửa Trong gia phả | ❌ Không |
+| **Xóa thành viên** | Sửa Tất cả | Sửa Trong gia phả | ❌ Không |
+| **Sửa thành viên** | Sửa Tất cả | Sửa Trong gia phả | Sửa Chính mình |
+| **Xem thành viên** | Sửa Tất cả | Sửa Trong gia phả | Sửa Trong gia phả |
+| **Tra cứu** | Sửa Tất cả gia phả | Sửa Trong gia phả | Sửa Trong gia phả |
+| **Báo cáo** | Sửa Tất cả gia phả | Sửa Trong gia phả | Sửa Trong gia phả |
+| **Ghi nhận quan hệ** | Sửa Tất cả | Sửa Trong gia phả | ❌ Không |
+| **Quản lý gia phả** | Sửa Tất cả | Sửa Của mình | ❌ Không |
 
 ---
 
@@ -1068,7 +1068,7 @@ export const traCuuThanhVienController = async (req: Request, res: Response) => 
   }
 }
 
-// ✅ ĐÚNG - Code mới
+// Sửa ĐÚNG - Code mới
 export const traCuuThanhVienController = async (req: Request, res: Response) => {
   const { search, doi, maGiaPha, trangThai } = req.query as unknown as TraCuuThanhVienQuery;
   const userInfo = req.userInfo!;
@@ -1162,7 +1162,7 @@ async traCuuThanhVien(
   };
 }
 
-// ✅ ĐÚNG - Code mới
+// Sửa ĐÚNG - Code mới
 async traCuuThanhVien(
   query: TraCuuThanhVienQuery,
   userInfo: { MaLoaiTK: string; MaGiaPha: string | null }
@@ -1284,8 +1284,8 @@ async traCuuThanhVien(
 - `databaseService.query` implementation:
   ```typescript
   async query<T = any>(sql: string, params?: any[]): Promise<T> {
-    const [rows] = await this.pool.execute(sql, params);  // ✅ Đã destructure ở đây
-    return rows as T;  // ✅ Return rows (array) trực tiếp
+    const [rows] = await this.pool.execute(sql, params);  // Sửa Đã destructure ở đây
+    return rows as T;  // Sửa Return rows (array) trực tiếp
   }
   ```
 - Nếu destructure thêm lần nữa `const [rows] = await databaseService.query(...)` thì `rows` sẽ là phần tử đầu tiên của array thay vì array
@@ -1318,7 +1318,7 @@ const getUserInfo = async (user_id: string): Promise<TaiKhoanInfo> => {
   return rows[0];
 };
 
-// ✅ ĐÚNG - Code mới
+// Sửa ĐÚNG - Code mới
 const getUserInfo = async (user_id: string): Promise<TaiKhoanInfo> => {
   const sql = `
     SELECT 
@@ -1331,9 +1331,9 @@ const getUserInfo = async (user_id: string): Promise<TaiKhoanInfo> => {
     WHERE tk.TenDangNhap = ?
   `;
   
-  const rows = await databaseService.query<TaiKhoanInfo[]>(sql, [user_id]);  // ✅ Lấy trực tiếp
+  const rows = await databaseService.query<TaiKhoanInfo[]>(sql, [user_id]);  // Sửa Lấy trực tiếp
   
-  if (!rows || rows.length === 0) {  // ✅ Thêm check !rows
+  if (!rows || rows.length === 0) {  // Sửa Thêm check !rows
     throw new ErrorWithStatus({
       message: 'Không tìm thấy thông tin tài khoản',
       status: HTTP_STATUS.UNAUTHORIZED
@@ -1377,21 +1377,21 @@ sinhRows.forEach((row: any) => years.add(row.Nam));  // ❌ sinhRows.forEach is 
 ketHonRows.forEach((row: any) => years.add(row.Nam));
 matRows.forEach((row: any) => years.add(row.Nam));
 
-// ✅ ĐÚNG - Code mới
+// Sửa ĐÚNG - Code mới
 // Execute queries
 const paramsSinh = [NamBatDau, NamKetThuc, ...params];
 const paramsKetHon = [NamBatDau, NamKetThuc, ...params];
 const paramsMat = [NamBatDau, NamKetThuc, ...params];
 
-const sinhRows = await databaseService.query<RowDataPacket[]>(sqlSinh, paramsSinh);  // ✅
-const ketHonRows = await databaseService.query<RowDataPacket[]>(sqlKetHon, paramsKetHon);  // ✅
-const matRows = await databaseService.query<RowDataPacket[]>(sqlMat, paramsMat);  // ✅
+const sinhRows = await databaseService.query<RowDataPacket[]>(sqlSinh, paramsSinh);  // Sửa
+const ketHonRows = await databaseService.query<RowDataPacket[]>(sqlKetHon, paramsKetHon);  // Sửa
+const matRows = await databaseService.query<RowDataPacket[]>(sqlMat, paramsMat);  // Sửa
 
 // Tổng hợp kết quả
 const result: any[] = [];
 const years = new Set<number>();
 
-sinhRows.forEach((row: any) => years.add(row.Nam));  // ✅ Hoạt động bình thường
+sinhRows.forEach((row: any) => years.add(row.Nam));  // Sửa Hoạt động bình thường
 ketHonRows.forEach((row: any) => years.add(row.Nam));
 matRows.forEach((row: any) => years.add(row.Nam));
 ```
@@ -1423,7 +1423,7 @@ Array.from(years).sort().forEach(year => {
   // ...
 });
 
-// ✅ ĐÚNG - Code mới (thêm type annotation)
+// Sửa ĐÚNG - Code mới (thêm type annotation)
 sinhRows.forEach((row: any) => years.add(row.Nam));
 ketHonRows.forEach((row: any) => years.add(row.Nam));
 matRows.forEach((row: any) => years.add(row.Nam));

@@ -99,7 +99,7 @@ export const traCuuThanhTichController = async (req: Request, res: Response) => 
     if (TenLoaiThanhTich) filters.TenLoaiThanhTich = TenLoaiThanhTich as string;
     if (TuNgay) filters.TuNgay = new Date(TuNgay as string);
     if (DenNgay) filters.DenNgay = new Date(DenNgay as string);
-    if (MaGiaPha) filters.MaGiaPha = MaGiaPha as string;  // ✅ NEW: Filter by GiaPha for Admin
+    if (MaGiaPha) filters.MaGiaPha = MaGiaPha as string;  // Sửa NEW: Filter by GiaPha for Admin
 
     // Truyền userInfo vào service để filter theo gia phả
     const result = await thanhTichService.traCuuThanhTich(filters, userInfo);
@@ -151,7 +151,7 @@ export const getThanhTichByHoTenController = async (req: Request, res: Response)
 };
 
 /**
- * ✅ MỚI: Controller xóa thành tích - Đơn giản hóa với DELETE + body
+ * Sửa MỚI: Controller xóa thành tích - Đơn giản hóa với DELETE + body
  * DELETE /thanhtich/xoa
  * Body: { MaTV, MaLTT, NgayPhatSinh }
  */
@@ -189,7 +189,7 @@ export const xoaThanhTichController = async (req: Request, res: Response) => {
 };
 
 /**
- * ✅ MỚI: Controller cập nhật thành tích
+ * Sửa MỚI: Controller cập nhật thành tích
  * PUT /thanhtich/capnhat
  * Body: { 
  *   MaTV: string, 

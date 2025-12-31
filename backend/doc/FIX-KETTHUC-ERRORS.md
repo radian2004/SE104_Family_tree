@@ -54,7 +54,7 @@ import { wrapRequestHandler } from '~/utils/handlers'
 
 const ketthucRouter = Router()
 
-// ✅ THAY ĐỔI TẤT CẢ CÁC ROUTE
+// Sửa THAY ĐỔI TẤT CẢ CÁC ROUTE
 // Từ:
 ketthucRouter.post('/ghinhan', wrapRequestHandler(ghiNhanKetThucController))
 
@@ -66,12 +66,12 @@ ketthucRouter.post('/ghinhan', ghiNhanKetThucController)
 Thay `wrapRequestHandler` thành `wrapAsync`
 
 ```typescript
-// ✅ SỬA DÒNG NÀY
+// Sửa SỬA DÒNG NÀY
 import { wrapAsync } from '~/utils/handlers'
 
 const ketthucRouter = Router()
 
-// ✅ THAY ĐỔI TẤT CẢ CÁC ROUTE
+// Sửa THAY ĐỔI TẤT CẢ CÁC ROUTE
 ketthucRouter.post('/ghinhan', wrapAsync(ghiNhanKetThucController))
 ketthucRouter.get('/tracuu', wrapAsync(traCuuKetThucController))
 ketthucRouter.get('/:MaTV', wrapAsync(getChiTietKetThucController))
@@ -88,7 +88,7 @@ Vì:
 
 ---
 
-### ✅ CODE HOÀN CHỈNH SAU KHI SỬA - OPTION 1
+### Sửa CODE HOÀN CHỈNH SAU KHI SỬA - OPTION 1
 
 File: `src/routes/ketthuc.routes.ts`
 
@@ -176,20 +176,20 @@ export default HTTP_STATUS; // ← Default export
 // ❌ SAI - Named import
 import { HTTP_STATUS } from '~/constants/httpStatus'
 
-// ✅ ĐÚNG - Default import
+// Sửa ĐÚNG - Default import
 import HTTP_STATUS from '~/constants/httpStatus'
 ```
 
 ---
 
-### ✅ CODE HOÀN CHỈNH SAU KHI SỬA
+### Sửa CODE HOÀN CHỈNH SAU KHI SỬA
 
 File: `src/controllers/ketthuc.controllers.ts`
 
 ```typescript
 import { Request, Response, NextFunction } from 'express'
 import ketthucService from '~/services/ketthuc.services'
-import HTTP_STATUS from '~/constants/httpStatus' // ✅ SỬA DÒNG NÀY
+import HTTP_STATUS from '~/constants/httpStatus' // Sửa SỬA DÒNG NÀY
 
 /**
  * Controller 1: Ghi nhận kết thúc
@@ -339,7 +339,7 @@ Property 'executeQuery' does not exist on type 'DatabaseService'.
 **Code hiện tại trong database.services.ts:**
 ```typescript
 class DatabaseService {
-  // ✅ Method đúng là query(), KHÔNG phải executeQuery()
+  // Sửa Method đúng là query(), KHÔNG phải executeQuery()
   async query<T = any>(sql: string, params?: any[]): Promise<T> {
     const [rows] = await this.pool.execute(sql, params);
     return rows as T;
@@ -361,10 +361,10 @@ const [rows] = await databaseService.executeQuery<RowDataPacket[]>(query, params
 Thay tất cả `executeQuery` → `query` và bỏ destructuring `[result]` / `[rows]`
 
 ```typescript
-// ✅ ĐÚNG - Dùng query()
+// Sửa ĐÚNG - Dùng query()
 const result = await databaseService.query<ResultSetHeader>(query, params)
 
-// ✅ ĐÚNG - Dùng query()
+// Sửa ĐÚNG - Dùng query()
 const rows = await databaseService.query<RowDataPacket[]>(query, params)
 ```
 
@@ -375,7 +375,7 @@ const rows = await databaseService.query<RowDataPacket[]>(query, params)
 
 ---
 
-### ✅ CODE HOÀN CHỈNH SAU KHI SỬA
+### Sửa CODE HOÀN CHỈNH SAU KHI SỬA
 
 File: `src/services/ketthuc.services.ts`
 
@@ -401,7 +401,7 @@ class KetThucService {
       WHERE MaTV = ? AND TrangThai = 'Còn Sống'
     `
     
-    // ✅ SỬA: executeQuery → query, bỏ destructuring
+    // Sửa SỬA: executeQuery → query, bỏ destructuring
     const result = await databaseService.query<ResultSetHeader>(
       query,
       [NgayGioMat, MaNguyenNhanMat, MaDiaDiem, MaTV]
@@ -479,7 +479,7 @@ class KetThucService {
       ORDER BY tv.NgayGioMat DESC
     `
 
-    // ✅ SỬA: executeQuery → query, bỏ destructuring
+    // Sửa SỬA: executeQuery → query, bỏ destructuring
     const rows = await databaseService.query<RowDataPacket[]>(query, params)
     return rows as TraCuuKetThucResult[]
   }
@@ -505,7 +505,7 @@ class KetThucService {
       WHERE tv.MaTV = ? AND tv.TrangThai = 'Mất'
     `
 
-    // ✅ SỬA: executeQuery → query, bỏ destructuring
+    // Sửa SỬA: executeQuery → query, bỏ destructuring
     const rows = await databaseService.query<RowDataPacket[]>(query, [MaTV])
     
     if (rows.length === 0) {
@@ -554,7 +554,7 @@ class KetThucService {
       WHERE MaTV = ? AND TrangThai = 'Mất'
     `
 
-    // ✅ SỬA: executeQuery → query, bỏ destructuring
+    // Sửa SỬA: executeQuery → query, bỏ destructuring
     const result = await databaseService.query<ResultSetHeader>(query, params)
 
     if (result.affectedRows === 0) {
@@ -582,7 +582,7 @@ class KetThucService {
       WHERE MaTV = ? AND TrangThai = 'Mất'
     `
 
-    // ✅ SỬA: executeQuery → query, bỏ destructuring
+    // Sửa SỬA: executeQuery → query, bỏ destructuring
     const result = await databaseService.query<ResultSetHeader>(query, [MaTV])
 
     if (result.affectedRows === 0) {
@@ -646,7 +646,7 @@ class DatabaseService {
 // ❌ SAI - Destructure 2 lần
 const [result] = await databaseService.executeQuery<ResultSetHeader>(query, params)
 
-// ✅ ĐÚNG - Không cần destructure vì query() đã làm sẵn
+// Sửa ĐÚNG - Không cần destructure vì query() đã làm sẵn
 const result = await databaseService.query<ResultSetHeader>(query, params)
 ```
 
@@ -662,7 +662,7 @@ async getAllLoaiThanhTich() {
 
 ---
 
-## ✅ CHECKLIST SỬA LỖI
+## Sửa CHECKLIST SỬA LỖI
 
 ```
 □ Sửa ketthuc.routes.ts:
@@ -719,7 +719,7 @@ npm run dev
 ```bash
 # Server phải chạy không lỗi
 # Output mong muốn:
-✅ Đã kết nối thành công với MySQL database!
+Sửa Đã kết nối thành công với MySQL database!
 🚀 Server đang chạy tại http://localhost:4000
 ```
 
@@ -758,8 +758,8 @@ GET http://localhost:4000/ketthuc/TV06
 3. ❌ `executeQuery` không tồn tại → Đổi thành `query` và bỏ destructuring
 
 **Sau khi sửa:**
-- ✅ Server chạy không lỗi TypeScript
-- ✅ Tất cả endpoints hoạt động bình thường
-- ✅ Code thống nhất với các service khác (thanhtich, thanhvien)
+- Sửa Server chạy không lỗi TypeScript
+- Sửa Tất cả endpoints hoạt động bình thường
+- Sửa Code thống nhất với các service khác (thanhtich, thanhvien)
 
 Chúc bạn sửa lỗi thành công! 🚀

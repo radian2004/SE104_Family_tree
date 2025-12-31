@@ -97,11 +97,11 @@ export default function KetThucPage() {
     useEffect(() => {
         const loadMembers = async () => {
             try {
-                // ✅ Filter members by selected GiaPha
+                // Sửa Filter members by selected GiaPha
                 const params = filterGiaPha ? { MaGiaPha: filterGiaPha } : {};
                 const data = await thanhVienService.getAll(params);
                 const memberList = Array.isArray(data) ? data : (data.items || []);
-                // ✅ Add null check để tránh lỗi "Cannot read properties of undefined"
+                // Sửa Add null check để tránh lỗi "Cannot read properties of undefined"
                 const livingMembers = memberList.filter(m => m && !m.NgayGioMat);
                 setMembers(livingMembers);
             } catch (err) {
@@ -109,7 +109,7 @@ export default function KetThucPage() {
             }
         };
         loadMembers();
-    }, [filterGiaPha]);  // ✅ Reload when GiaPha changes
+    }, [filterGiaPha]);  // Sửa Reload when GiaPha changes
 
     // Filter members for autocomplete
     useEffect(() => {

@@ -934,15 +934,15 @@ if (ddCheck.length === 0) {
 
 | Chức năng | Trước (Không có) | Sau (Có chức năng kết thúc) |
 |-----------|------------------|------------------------------|
-| Ghi nhận kết thúc | ❌ Không có API | ✅ POST /api/ketthuc/ghinhan |
-| Tra cứu danh sách | ❌ Không có | ✅ GET /api/ketthuc/tracuu với bộ lọc |
-| Xem chi tiết | ❌ Không có | ✅ GET /api/ketthuc/:MaTV |
-| Cập nhật thông tin | ❌ Không có | ✅ PUT /api/ketthuc/:MaTV |
-| Xóa/Phục hồi | ❌ Không có | ✅ DELETE /api/ketthuc/:MaTV |
-| Tự động đổi trạng thái | ✅ Có trigger | ✅ Trigger hoạt động bình thường |
-| STT tự động | ❌ Không có | ✅ ROW_NUMBER() trong query |
-| Lọc theo ngày | ❌ Không có | ✅ TuNgay, DenNgay |
-| Tìm kiếm họ tên | ❌ Không có | ✅ LIKE %keyword% |
+| Ghi nhận kết thúc | ❌ Không có API | Sửa POST /api/ketthuc/ghinhan |
+| Tra cứu danh sách | ❌ Không có | Sửa GET /api/ketthuc/tracuu với bộ lọc |
+| Xem chi tiết | ❌ Không có | Sửa GET /api/ketthuc/:MaTV |
+| Cập nhật thông tin | ❌ Không có | Sửa PUT /api/ketthuc/:MaTV |
+| Xóa/Phục hồi | ❌ Không có | Sửa DELETE /api/ketthuc/:MaTV |
+| Tự động đổi trạng thái | Sửa Có trigger | Sửa Trigger hoạt động bình thường |
+| STT tự động | ❌ Không có | Sửa ROW_NUMBER() trong query |
+| Lọc theo ngày | ❌ Không có | Sửa TuNgay, DenNgay |
+| Tìm kiếm họ tên | ❌ Không có | Sửa LIKE %keyword% |
 
 ---
 
@@ -1004,9 +1004,9 @@ npm run dev
 ## 🎯 PHẦN 11: LƯU Ý QUAN TRỌNG
 
 ### 1. Về cơ sở dữ liệu
-- ✅ **KHÔNG CẦN TẠO BẢNG MỚI** - Dữ liệu đã có trong bảng `THANHVIEN`
-- ✅ Trigger `TRG_UPDATE_TRANGTHAI_THANHVIEN_MaNguyenNhanMat` tự động đổi trạng thái
-- ✅ Các bảng lookup (NGUYENNHANMAT, DIADIEMMAITANG) đã có sẵn
+- Sửa **KHÔNG CẦN TẠO BẢNG MỚI** - Dữ liệu đã có trong bảng `THANHVIEN`
+- Sửa Trigger `TRG_UPDATE_TRANGTHAI_THANHVIEN_MaNguyenNhanMat` tự động đổi trạng thái
+- Sửa Các bảng lookup (NGUYENNHANMAT, DIADIEMMAITANG) đã có sẵn
 
 ### 2. Về logic nghiệp vụ
 - Chỉ cho phép ghi nhận kết thúc cho thành viên có `TrangThai = 'Còn Sống'`
@@ -1061,7 +1061,7 @@ CREATE INDEX idx_ngaygiomat ON THANHVIEN(NgayGioMat);
 
 ---
 
-## ✅ CHECKLIST TRIỂN KHAI
+## Sửa CHECKLIST TRIỂN KHAI
 
 ```
 □ Tạo file KetThuc.schema.ts
@@ -1094,11 +1094,11 @@ CREATE INDEX idx_ngaygiomat ON THANHVIEN(NgayGioMat);
 Chức năng **Ghi nhận và Tra cứu kết thúc** sử dụng dữ liệu có sẵn trong bảng `THANHVIEN`, không cần tạo bảng mới. Trigger trong database tự động xử lý việc đổi trạng thái khi có thành viên qua đời.
 
 **Điểm mạnh:**
-- ✅ Tận dụng schema hiện có
-- ✅ Trigger tự động xử lý trạng thái
-- ✅ STT tự động với ROW_NUMBER()
-- ✅ Bộ lọc linh hoạt (họ tên, nguyên nhân, địa điểm, khoảng thời gian)
-- ✅ CRUD đầy đủ (Create, Read, Update, Delete)
+- Sửa Tận dụng schema hiện có
+- Sửa Trigger tự động xử lý trạng thái
+- Sửa STT tự động với ROW_NUMBER()
+- Sửa Bộ lọc linh hoạt (họ tên, nguyên nhân, địa điểm, khoảng thời gian)
+- Sửa CRUD đầy đủ (Create, Read, Update, Delete)
 
 **Áp dụng:**
 1. Copy code từ markdown vào các file tương ứng

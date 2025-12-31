@@ -1327,14 +1327,14 @@ Client → POST /users/logout
 
 ### Bảo mật đã implement
 
-✅ Password được hash bằng SHA-256 + secret
-✅ JWT với secret key riêng cho access & refresh token
-✅ Refresh token được lưu database → có thể thu hồi
-✅ Access token ngắn hạn (15 phút)
-✅ Refresh token dài hạn (7 ngày)
-✅ Validation đầy đủ với express-validator
-✅ Error handling tập trung
-✅ SQL injection prevention (prepared statements)
+Sửa Password được hash bằng SHA-256 + secret
+Sửa JWT với secret key riêng cho access & refresh token
+Sửa Refresh token được lưu database → có thể thu hồi
+Sửa Access token ngắn hạn (15 phút)
+Sửa Refresh token dài hạn (7 ngày)
+Sửa Validation đầy đủ với express-validator
+Sửa Error handling tập trung
+Sửa SQL injection prevention (prepared statements)
 
 ### Mở rộng tiếp theo
 

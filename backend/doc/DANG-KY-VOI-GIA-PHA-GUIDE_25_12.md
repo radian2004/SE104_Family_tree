@@ -884,9 +884,9 @@ curl -X POST http://localhost:3000/users/register \
 
 | Trường hợp | Trước (CŨ) | Sau (MỚI) |
 |------------|------------|-----------|
-| Đăng ký không có gia phả | ✅ Thành công | ❌ **Lỗi 400** |
-| Đăng ký với gia phả mới | ❌ Không hỗ trợ | ✅ Thành công (người lập + trưởng tộc) |
-| Đăng ký gia nhập gia phả | ❌ Không hỗ trợ | ✅ Thành công |
+| Đăng ký không có gia phả | Sửa Thành công | ❌ **Lỗi 400** |
+| Đăng ký với gia phả mới | ❌ Không hỗ trợ | Sửa Thành công (người lập + trưởng tộc) |
+| Đăng ký gia nhập gia phả | ❌ Không hỗ trợ | Sửa Thành công |
 
 ---
 
@@ -1007,7 +1007,7 @@ class DatabaseService {
 // ❌ SAI
 const [insertGiaPhaResult] = await databaseService.pool.execute<ResultSetHeader>(
 
-// ✅ ĐÚNG
+// Sửa ĐÚNG
 const [insertGiaPhaResult] = await databaseService.getPool().execute<ResultSetHeader>(
 ```
 
@@ -1016,7 +1016,7 @@ const [insertGiaPhaResult] = await databaseService.getPool().execute<ResultSetHe
 // ❌ SAI
 const [rows] = await databaseService.pool.execute<RowDataPacket[]>(
 
-// ✅ ĐÚNG
+// Sửa ĐÚNG
 const [rows] = await databaseService.getPool().execute<RowDataPacket[]>(
 ```
 
@@ -1025,7 +1025,7 @@ const [rows] = await databaseService.getPool().execute<RowDataPacket[]>(
 // ❌ SAI
 const [insertMemberResult] = await databaseService.pool.execute<ResultSetHeader>(
 
-// ✅ ĐÚNG
+// Sửa ĐÚNG
 const [insertMemberResult] = await databaseService.getPool().execute<ResultSetHeader>(
 ```
 
@@ -1034,7 +1034,7 @@ const [insertMemberResult] = await databaseService.getPool().execute<ResultSetHe
 // ❌ SAI
 const [memberRows] = await databaseService.pool.execute<RowDataPacket[]>(
 
-// ✅ ĐÚNG
+// Sửa ĐÚNG
 const [memberRows] = await databaseService.getPool().execute<RowDataPacket[]>(
 ```
 
@@ -1043,7 +1043,7 @@ const [memberRows] = await databaseService.getPool().execute<RowDataPacket[]>(
 // ❌ SAI
 await databaseService.pool.execute(
 
-// ✅ ĐÚNG
+// Sửa ĐÚNG
 await databaseService.getPool().execute(
 ```
 
@@ -1052,7 +1052,7 @@ await databaseService.getPool().execute(
 // ❌ SAI
 await databaseService.pool.execute<ResultSetHeader>(
 
-// ✅ ĐÚNG
+// Sửa ĐÚNG
 await databaseService.getPool().execute<ResultSetHeader>(
 ```
 
@@ -1061,7 +1061,7 @@ await databaseService.getPool().execute<ResultSetHeader>(
 // ❌ SAI
 const [giaPhaRows] = await databaseService.pool.execute<RowDataPacket[]>(
 
-// ✅ ĐÚNG
+// Sửa ĐÚNG
 const [giaPhaRows] = await databaseService.getPool().execute<RowDataPacket[]>(
 ```
 
@@ -1070,7 +1070,7 @@ const [giaPhaRows] = await databaseService.getPool().execute<RowDataPacket[]>(
 // ❌ SAI
 await databaseService.pool.execute(
 
-// ✅ ĐÚNG
+// Sửa ĐÚNG
 await databaseService.getPool().execute(
 ```
 
@@ -1191,4 +1191,4 @@ async register(payload: RegisterReqBody) {
 - **Số chỗ cần sửa**: 12 chỗ (tất cả `.pool.execute` → `.getPool().execute`)
 - **Lưu ý**: Đảm bảo import `USERS_MESSAGES` ở đầu file
 
-✅ Sau khi sửa, code sẽ chạy được mà không có lỗi TypeScript.
+Sửa Sau khi sửa, code sẽ chạy được mà không có lỗi TypeScript.

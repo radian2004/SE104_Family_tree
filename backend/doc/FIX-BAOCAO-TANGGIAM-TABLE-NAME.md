@@ -280,7 +280,7 @@ CREATE TABLE HONNHAN(
 
 ### 2. Logic đếm số lượng kết hôn:
 ```sql
--- ✅ ĐÚNG: Đếm số cặp (chỉ lấy MaTV < MaTVVC để tránh đếm trùng)
+-- Sửa ĐÚNG: Đếm số cặp (chỉ lấy MaTV < MaTVVC để tránh đếm trùng)
 SELECT COUNT(*) FROM HONNHAN 
 WHERE YEAR(NgayBatDau) = 2020 AND MaTV < MaTVVC
 ```
@@ -289,13 +289,13 @@ WHERE YEAR(NgayBatDau) = 2020 AND MaTV < MaTVVC
 
 ### 3. Không cần sửa database:
 - ❌ KHÔNG cần tạo bảng `QUANHEVOCHONG`
-- ✅ CHỈ cần sửa code để dùng đúng bảng `HONNHAN` đã có sẵn
+- Sửa CHỈ cần sửa code để dùng đúng bảng `HONNHAN` đã có sẵn
 
 ### 4. Các file KHÔNG cần sửa:
 - ❌ `init.sql` - Đã đúng (bảng HONNHAN)
 - ❌ `honnhan.services.ts` - Đã đúng
 - ❌ `honnhan.controllers.ts` - Đã đúng
-- ✅ CHỈ SỬA: `thanhvien.services.ts`
+- Sửa CHỈ SỬA: `thanhvien.services.ts`
 
 ---
 
@@ -307,9 +307,9 @@ GET http://localhost:3000/users/thanhvien/baocao?NamBatDau=1900&NamKetThuc=2025
 ```
 
 **Expected:**
-- ✅ Status: 200 OK
-- ✅ Có data báo cáo theo từng năm
-- ✅ Các năm có kết hôn hiển thị đúng `SoLuongKetHon`
+- Sửa Status: 200 OK
+- Sửa Có data báo cáo theo từng năm
+- Sửa Các năm có kết hôn hiển thị đúng `SoLuongKetHon`
 
 ### Test Case 2: Query báo cáo 2020-2025
 ```bash
@@ -317,8 +317,8 @@ GET http://localhost:3000/users/thanhvien/baocao?NamBatDau=2020&NamKetThuc=2025
 ```
 
 **Expected:**
-- ✅ Status: 200 OK
-- ✅ Chỉ hiển thị các năm có sự kiện trong khoảng 2020-2025
+- Sửa Status: 200 OK
+- Sửa Chỉ hiển thị các năm có sự kiện trong khoảng 2020-2025
 
 ---
 

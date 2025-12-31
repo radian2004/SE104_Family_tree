@@ -319,7 +319,7 @@ WHERE tv.MaTV = 'TV04';
 
 ---
 
-## ✅ CHECKLIST
+## Sửa CHECKLIST
 
 - [ ] Sửa method trong `thanhvien.services.ts`
 - [ ] Đổi tên controller trong `thanhvien.controllers.ts`

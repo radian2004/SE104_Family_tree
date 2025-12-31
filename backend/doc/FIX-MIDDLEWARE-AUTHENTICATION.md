@@ -8,10 +8,10 @@ Cannot GET /users/ketthuc/tracuu
 ```
 
 **Tình trạng code:**
-- ✅ `index.ts` - Đúng (chỉ có `app.use('/users', usersRouter)`)
-- ✅ `users.routes.ts` - Đúng (có nested routes với authentication)
-- ✅ `ketthuc.routes.ts` - Đúng (có route `/tracuu`)
-- ✅ Server đang chạy bình thường
+- Sửa `index.ts` - Đúng (chỉ có `app.use('/users', usersRouter)`)
+- Sửa `users.routes.ts` - Đúng (có nested routes với authentication)
+- Sửa `ketthuc.routes.ts` - Đúng (có route `/tracuu`)
+- Sửa Server đang chạy bình thường
 
 **→ VẬY TẠI SAO VẪN LỖI?**
 
@@ -31,7 +31,7 @@ usersRouter.use('/ketthuc', accessTokenValidator, ketthucRouter);
 - Nếu không có token hoặc token sai → **KHÔNG BẮN 404**, mà bắn **401 Unauthorized**
 - Nhưng user báo lỗi `Cannot GET` → đây là lỗi 404, KHÔNG phải 401
 
-### Giả Thuyết 2: Middleware Đang Bắn HTML Thay Vì JSON ✅
+### Giả Thuyết 2: Middleware Đang Bắn HTML Thay Vì JSON Sửa
 
 **Phân tích lỗi HTML:**
 ```html
@@ -106,7 +106,7 @@ usersRouter.post('/login', loginValidator, wrapAsync(loginController));
 usersRouter.post('/logout', accessTokenValidator, refreshTokenValidator, wrapAsync(logoutController));
 
 // 🔍 DEBUG: Log khi route được đăng ký
-console.log('✅ Đang đăng ký nested routes...');
+console.log('Sửa Đang đăng ký nested routes...');
 console.log('  - /thanhvien');
 console.log('  - /thanhtich');
 console.log('  - /ketthuc');
@@ -116,18 +116,18 @@ usersRouter.use('/thanhvien', accessTokenValidator, thanhvienRouter);
 usersRouter.use('/thanhtich', accessTokenValidator, thanhTichRouter);
 usersRouter.use('/ketthuc', accessTokenValidator, ketthucRouter);
 
-console.log('✅ Đã đăng ký xong nested routes!');
+console.log('Sửa Đã đăng ký xong nested routes!');
 
 export default usersRouter;
 ```
 
 **Chạy lại server, check console xem có log này không:**
 ```
-✅ Đang đăng ký nested routes...
+Sửa Đang đăng ký nested routes...
   - /thanhvien
   - /thanhtich
   - /ketthuc
-✅ Đã đăng ký xong nested routes!
+Sửa Đã đăng ký xong nested routes!
 ```
 
 Nếu KHÔNG có → Routes chưa được load!
@@ -152,7 +152,7 @@ GET http://localhost:3000/users/ketthuc/tracuu
 ```
 
 **Kết quả:**
-- ✅ Nếu trả về data → Route OK, lỗi do authentication
+- Sửa Nếu trả về data → Route OK, lỗi do authentication
 - ❌ Nếu vẫn 404 → Route CHƯA được đăng ký đúng
 
 ### Bước 3: Kiểm Tra accessTokenValidator
@@ -165,14 +165,14 @@ export const accessTokenValidator = validate(
   checkSchema(
     {
       Authorization: {
-        optional: true,  // ✅ Đã optional
+        optional: true,  // Sửa Đã optional
         trim: true,
         custom: {
           options: async (value: string, { req }) => {
-            // ✅ ƯU TIÊN ĐỌC TỪ COOKIES
+            // Sửa ƯU TIÊN ĐỌC TỪ COOKIES
             let access_token = (req as any).cookies?.access_token;
             
-            // ✅ NẾU KHÔNG CÓ TRONG COOKIES, ĐỌC TỪ HEADER
+            // Sửa NẾU KHÔNG CÓ TRONG COOKIES, ĐỌC TỪ HEADER
             if (!access_token && value) {
               const parts = value.split(' ');
               if (parts.length === 2 && parts[0] === 'Bearer') {
@@ -207,7 +207,7 @@ export const accessTokenValidator = validate(
 
 ---
 
-## ✅ GIẢI PHÁP CUỐI CÙNG
+## Sửa GIẢI PHÁP CUỐI CÙNG
 
 ### Vấn Đề: Middleware Validation Conflict
 
@@ -231,7 +231,7 @@ import HTTP_STATUS from '~/constants/httpStatus';
 import { USERS_MESSAGES } from '~/constants/messages';
 
 /**
- * ✅ Middleware validate access token - VIẾT LẠI HOÀN TOÀN
+ * Sửa Middleware validate access token - VIẾT LẠI HOÀN TOÀN
  * Đọc từ cookies hoặc Authorization header
  */
 export const accessTokenValidator = async (
@@ -296,10 +296,10 @@ export const accessTokenValidator = async (
   next: NextFunction
 ) => {
   try {
-    // ✅ ĐỌC TỪ COOKIES TRƯỚC
+    // Sửa ĐỌC TỪ COOKIES TRƯỚC
     let access_token = req.cookies?.access_token;
 
-    // ✅ NẾU KHÔNG CÓ, ĐỌC TỪ HEADER
+    // Sửa NẾU KHÔNG CÓ, ĐỌC TỪ HEADER
     if (!access_token) {
       const authHeader = req.headers.authorization;
       if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -307,20 +307,20 @@ export const accessTokenValidator = async (
       }
     }
 
-    // ✅ KIỂM TRA TOKEN
+    // Sửa KIỂM TRA TOKEN
     if (!access_token) {
       return res.status(401).json({
         message: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED
       });
     }
 
-    // ✅ VERIFY TOKEN
+    // Sửa VERIFY TOKEN
     const decoded = await verifyToken(
       access_token,
       process.env.JWT_SECRET_ACCESS_TOKEN as string
     );
 
-    // ✅ GẮN VÀO REQUEST
+    // Sửa GẮN VÀO REQUEST
     (req as any).decoded_authorization = decoded;
 
     next();
@@ -512,7 +512,7 @@ export const loginValidator = validate(
 );
 
 /**
- * ✅ Middleware validate access token - VIẾT LẠI HOÀN TOÀN
+ * Sửa Middleware validate access token - VIẾT LẠI HOÀN TOÀN
  * Đọc từ cookies hoặc Authorization header
  */
 export const accessTokenValidator = async (
@@ -558,7 +558,7 @@ export const accessTokenValidator = async (
 };
 
 /**
- * ✅ Middleware validate refresh token - VIẾT LẠI
+ * Sửa Middleware validate refresh token - VIẾT LẠI
  */
 export const refreshTokenValidator = async (
   req: Request,
@@ -719,7 +719,7 @@ Authorization: Bearer <access_token>
    - `defaultErrorHandler` không catch được
    - Express dùng default 404 handler → HTML response
 
-3. ✅ **Giải pháp**: 
+3. Sửa **Giải pháp**: 
    - VIẾT LẠI middleware không dùng `checkSchema`
    - Trả về response trực tiếp thay vì throw error
    - Đảm bảo error handling rõ ràng
@@ -739,8 +739,8 @@ Authorization: Bearer <access_token>
 - Ensure proper error handling
 
 **Đường dẫn API đúng:**
-- ✅ `POST /users/login` (đăng nhập trước)
-- ✅ `GET /users/ketthuc/tracuu` (sau khi có token)
-- ✅ Cookies hoặc Authorization header
+- Sửa `POST /users/login` (đăng nhập trước)
+- Sửa `GET /users/ketthuc/tracuu` (sau khi có token)
+- Sửa Cookies hoặc Authorization header
 
 **Sau khi sửa, API SẼ HOẠT ĐỘNG!** 🎉

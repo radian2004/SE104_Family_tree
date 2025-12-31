@@ -73,7 +73,7 @@ interface ThanhVienType {
   DOI?: number;
   MaQueQuan?: string;
   MaNgheNghiep?: string;
-  GioiTinh?: string;  // ✅ Đúng: VARCHAR(3) - 'Nam'/'Nữ'
+  GioiTinh?: string;  // Sửa Đúng: VARCHAR(3) - 'Nam'/'Nữ'
   MaNguyenNhanMat?: string;
   NgayGioMat?: Date;
   MaDiaDiem?: string;
@@ -90,7 +90,7 @@ export default class ThanhVien {
   DOI: number;
   MaQueQuan: string;
   MaNgheNghiep: string;
-  GioiTinh: string;  // ✅ Đúng: 'Nam' hoặc 'Nữ'
+  GioiTinh: string;  // Sửa Đúng: 'Nam' hoặc 'Nữ'
   MaNguyenNhanMat?: string;
   NgayGioMat?: Date;
   MaDiaDiem?: string;
@@ -107,7 +107,7 @@ export default class ThanhVien {
     this.DOI = thanhvien.DOI || 0;
     this.MaQueQuan = thanhvien.MaQueQuan || '';
     this.MaNgheNghiep = thanhvien.MaNgheNghiep || '';
-    this.GioiTinh = thanhvien.GioiTinh || 'Nam';  // ✅ Đúng: Mặc định 'Nam'
+    this.GioiTinh = thanhvien.GioiTinh || 'Nam';  // Sửa Đúng: Mặc định 'Nam'
     this.MaNguyenNhanMat = thanhvien.MaNguyenNhanMat;
     this.NgayGioMat = thanhvien.NgayGioMat;
     this.MaDiaDiem = thanhvien.MaDiaDiem;
@@ -215,9 +215,9 @@ async register(payload: RegisterReqBody) {
 ```
 
 **Giải thích thay đổi:**
-- ❌ `MaGioiTinh` → ✅ `GioiTinh` (theo schema mới trong init.sql)
-- ❌ `'GT00'` → ✅ `'Nam'` (giá trị hợp lệ: 'Nam' hoặc 'Nữ')
-- ❌ `'LTK02'` → ✅ `'LTK03'` (LTK03 là User, LTK02 là TruongToc theo init.sql)
+- ❌ `MaGioiTinh` → Sửa `GioiTinh` (theo schema mới trong init.sql)
+- ❌ `'GT00'` → Sửa `'Nam'` (giá trị hợp lệ: 'Nam' hoặc 'Nữ')
+- ❌ `'LTK02'` → Sửa `'LTK03'` (LTK03 là User, LTK02 là TruongToc theo init.sql)
 
 ---
 
@@ -236,7 +236,7 @@ CREATE TABLE THANHVIEN (
     DOI	INT DEFAULT 0,
     MaQueQuan VARCHAR(5),
     MaNgheNghiep VARCHAR(5),
-    GioiTinh VARCHAR(3), -- Nam/Nữ  ✅
+    GioiTinh VARCHAR(3), -- Nam/Nữ  Sửa
     MaNguyenNhanMat VARCHAR(5),
     NgayGioMat DATETIME,
     MaDiaDiem VARCHAR(5),
@@ -259,7 +259,7 @@ CREATE TABLE THANHVIEN (
 ### Chức năng Đăng nhập (login)
 **File:** `src/services/users.services.ts` - Hàm `login`
 
-✅ **Không cần sửa** - Logic đăng nhập chỉ làm việc với bảng `TAIKHOAN` và `REFRESH_TOKENS`, không liên quan đến cột `GioiTinh`.
+Sửa **Không cần sửa** - Logic đăng nhập chỉ làm việc với bảng `TAIKHOAN` và `REFRESH_TOKENS`, không liên quan đến cột `GioiTinh`.
 
 ```typescript
 async login(email: string, password: string) {
@@ -309,7 +309,7 @@ async login(email: string, password: string) {
 ### Chức năng Đăng xuất (logout)
 **File:** `src/services/users.services.ts` - Hàm `logout`
 
-✅ **Không cần sửa** - Logic đăng xuất chỉ xóa token trong bảng `REFRESH_TOKENS`.
+Sửa **Không cần sửa** - Logic đăng xuất chỉ xóa token trong bảng `REFRESH_TOKENS`.
 
 ```typescript
 async logout(refresh_token: string) {

@@ -43,7 +43,7 @@ class KetThucService {
     }
 
     // ⭐ VALIDATE: Ngày mất phải sau ngày sinh
-    const [memberRows] = await databaseService.query<RowDataPacket[]>(
+    const memberRows = await databaseService.query<RowDataPacket[]>(
       'SELECT NgayGioSinh FROM THANHVIEN WHERE MaTV = ?',
       [MaTV]
     );
@@ -56,14 +56,25 @@ class KetThucService {
     }
 
     const member = memberRows[0];
-    // ✅ Add safer null/undefined check
+
+    // VALIDATE: NgayGioMat không được lớn hơn hiện tại
+    const now = new Date();
+    const ngayMat = new Date(NgayGioMat);
+
+    if (ngayMat > now) {
+      throw new ErrorWithStatus({
+        message: 'Ngày giờ mất không được lớn hơn thời điểm hiện tại',
+        status: HTTP_STATUS.BAD_REQUEST
+      });
+    }
+
+    // VALIDATE: NgayGioMat phải sau NgayGioSinh
     if (member && member.NgayGioSinh != null) {
       const ngaySinh = new Date(member.NgayGioSinh);
-      const ngayMat = new Date(NgayGioMat);
 
       if (ngayMat < ngaySinh) {
         throw new ErrorWithStatus({
-          message: 'Ngày mất không thể trước ngày sinh',
+          message: 'Ngày giờ mất không được nhỏ hơn ngày sinh',
           status: HTTP_STATUS.BAD_REQUEST
         });
       }
@@ -108,7 +119,7 @@ class KetThucService {
     TenDiaDiem?: string
     TuNgay?: string
     DenNgay?: string
-    MaGiaPha?: string  // ✅ NEW: Admin có thể filter theo gia phả từ dropdown
+    MaGiaPha?: string  // Sửa NEW: Admin có thể filter theo gia phả từ dropdown
   }, userInfo?: TaiKhoanInfo): Promise<TraCuuKetThucResult[]> {
     let whereClauses: string[] = ["tv.TrangThai = 'Mất'"];
     const params: any[] = [];
@@ -250,6 +261,36 @@ class KetThucService {
     MaNguyenNhanMat?: string
     MaDiaDiem?: string
   }) {
+    // Sửa VALIDATE NgayGioMat if provided
+    if (updates.NgayGioMat) {
+      const now = new Date();
+      const ngayMat = new Date(updates.NgayGioMat);
+
+      // Không được lớn hơn hiện tại
+      if (ngayMat > now) {
+        throw new ErrorWithStatus({
+          message: 'Ngày giờ mất không được lớn hơn thời điểm hiện tại',
+          status: HTTP_STATUS.BAD_REQUEST
+        });
+      }
+
+      // Phải sau ngày sinh
+      const memberRows = await databaseService.query<RowDataPacket[]>(
+        'SELECT NgayGioSinh FROM THANHVIEN WHERE MaTV = ?',
+        [MaTV]
+      );
+
+      if (memberRows.length > 0 && memberRows[0].NgayGioSinh) {
+        const ngaySinh = new Date(memberRows[0].NgayGioSinh);
+        if (ngayMat < ngaySinh) {
+          throw new ErrorWithStatus({
+            message: 'Ngày giờ mất không được nhỏ hơn ngày sinh',
+            status: HTTP_STATUS.BAD_REQUEST
+          });
+        }
+      }
+    }
+
     const setClauses: string[] = []
     const params: any[] = []
 
@@ -280,7 +321,7 @@ class KetThucService {
       WHERE MaTV = ? AND TrangThai = 'Mất'
     `
 
-    // ✅ SỬA: executeQuery → query, bỏ destructuring
+    // Sửa SỬA: executeQuery → query, bỏ destructuring
     const result = await databaseService.query<ResultSetHeader>(query, params)
 
     if (result.affectedRows === 0) {
@@ -308,7 +349,7 @@ class KetThucService {
       WHERE MaTV = ? AND TrangThai = 'Mất'
     `
 
-    // ✅ SỬA: executeQuery → query, bỏ destructuring
+    // Sửa SỬA: executeQuery → query, bỏ destructuring
     const result = await databaseService.query<ResultSetHeader>(query, [MaTV])
 
     if (result.affectedRows === 0) {

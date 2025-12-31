@@ -71,7 +71,7 @@ export default function ThanhTichPage() {
     useEffect(() => {
         const loadMembers = async () => {
             try {
-                // ✅ Filter members by selected GiaPha
+                // Sửa Filter members by selected GiaPha
                 const params = filterGiaPha ? { MaGiaPha: filterGiaPha } : {};
                 const data = await thanhVienService.getAll(params);
                 setMembers(Array.isArray(data) ? data : (data.items || []));
@@ -80,7 +80,7 @@ export default function ThanhTichPage() {
             }
         };
         loadMembers();
-    }, [filterGiaPha]);  // ✅ Reload when GiaPha changes
+    }, [filterGiaPha]);  // Sửa Reload when GiaPha changes
 
     // Load loại thành tích từ API
     useEffect(() => {

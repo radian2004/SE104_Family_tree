@@ -42,7 +42,7 @@ Với request body:
 
 ---
 
-## ✅ Giải Pháp
+## Sửa Giải Pháp
 
 ### Chiến Lược Validation
 
@@ -55,7 +55,7 @@ Kiểm tra xem cha/mẹ đã có con với thông tin giống hệt chưa:
 
 #### 2. Đối với quan hệ "Vợ/Chồng"  
 Đã được kiểm tra (có code `checkExistingSpouse`) nhưng **chưa đủ**:
-- ✅ **Hiện tại:** Kiểm tra thành viên cũ có vợ/chồng chưa
+- Sửa **Hiện tại:** Kiểm tra thành viên cũ có vợ/chồng chưa
 - ❌ **Thiếu:** Kiểm tra người mới có phải là người đã tồn tại trong hệ thống chưa
 
 ---
@@ -170,7 +170,7 @@ Kiểm tra xem cha/mẹ đã có con với thông tin giống hệt chưa:
           throw new Error('Thành viên cũ phải có giới tính hợp lệ');
         }
         
-        // ✅ THÊM MỚI: Kiểm tra trùng lặp con
+        // Sửa THÊM MỚI: Kiểm tra trùng lặp con
         const isDuplicateChild = await this.checkDuplicateChildWithConnection(
           connection,
           payload.HoTen,
@@ -206,7 +206,7 @@ Kiểm tra xem cha/mẹ đã có con với thông tin giống hệt chưa:
           throw new Error('Thành viên cũ đã có vợ/chồng hiện tại');
         }
         
-        // ✅ THÊM MỚI: Kiểm tra người này đã tồn tại trong hệ thống chưa
+        // Sửa THÊM MỚI: Kiểm tra người này đã tồn tại trong hệ thống chưa
         const duplicatePerson = await this.checkDuplicatePersonWithConnection(
           connection,
           payload.HoTen,
@@ -345,7 +345,7 @@ curl -X POST http://localhost:3000/thanhvien/ghi-nhan \
   }'
 ```
 
-**Expected Response (201):** ✅ Thành công - tạo TV09
+**Expected Response (201):** Sửa Thành công - tạo TV09
 
 **Request lần 2 (CÙNG THÔNG TIN):**
 ```bash
@@ -380,7 +380,7 @@ curl -X POST http://localhost:3000/thanhvien/ghi-nhan \
   }'
 ```
 
-**Expected Response (201):** ✅ Thành công - tạo thành viên mới
+**Expected Response (201):** Sửa Thành công - tạo thành viên mới
 
 ---
 
@@ -418,19 +418,19 @@ curl -X POST http://localhost:3000/thanhvien/ghi-nhan \
 
 | Tình Huống | Trước Khi Sửa | Sau Khi Sửa |
 |-----------|---------------|-------------|
-| Gửi 10 lần cùng request con | ✅ Tạo 10 TV (TV09-TV18) | ❌ Chỉ tạo 1 TV, 9 lần sau báo lỗi |
-| Con cùng tên, khác ngày sinh | ✅ Tạo thành công | ✅ Tạo thành công |
-| Con khác tên, cùng ngày sinh | ✅ Tạo thành công | ✅ Tạo thành công |
-| Ghi nhận người đã tồn tại | ✅ Tạo duplicate | ❌ Báo lỗi, gợi ý dùng "Thêm quan hệ" |
+| Gửi 10 lần cùng request con | Sửa Tạo 10 TV (TV09-TV18) | ❌ Chỉ tạo 1 TV, 9 lần sau báo lỗi |
+| Con cùng tên, khác ngày sinh | Sửa Tạo thành công | Sửa Tạo thành công |
+| Con khác tên, cùng ngày sinh | Sửa Tạo thành công | Sửa Tạo thành công |
+| Ghi nhận người đã tồn tại | Sửa Tạo duplicate | ❌ Báo lỗi, gợi ý dùng "Thêm quan hệ" |
 
 ---
 
 ## 🎯 Lợi Ích
 
-1. ✅ **Đảm bảo tính toàn vẹn dữ liệu:** Không có thành viên trùng lặp
-2. ✅ **Logic nghiệp vụ đúng:** Một người chỉ được ghi nhận 1 lần
-3. ✅ **UX tốt hơn:** Thông báo lỗi rõ ràng, gợi ý giải pháp
-4. ✅ **Dễ bảo trì:** Dữ liệu sạch, không có "rác"
+1. Sửa **Đảm bảo tính toàn vẹn dữ liệu:** Không có thành viên trùng lặp
+2. Sửa **Logic nghiệp vụ đúng:** Một người chỉ được ghi nhận 1 lần
+3. Sửa **UX tốt hơn:** Thông báo lỗi rõ ràng, gợi ý giải pháp
+4. Sửa **Dễ bảo trì:** Dữ liệu sạch, không có "rác"
 
 ---
 
@@ -452,7 +452,7 @@ curl -X POST http://localhost:3000/thanhvien/ghi-nhan \
 
 ---
 
-## ✅ Checklist Triển Khai
+## Sửa Checklist Triển Khai
 
 - [ ] Thêm method `checkDuplicateChild` vào service
 - [ ] Thêm method `checkDuplicatePerson` vào service

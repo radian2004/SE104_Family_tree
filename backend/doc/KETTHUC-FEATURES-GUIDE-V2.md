@@ -3,13 +3,13 @@
 ## 📋 TỔNG QUAN YÊU CẦU
 
 ### Hiện trạng
-- ✅ Tra cứu tất cả thành viên kết thúc: **HOẠT ĐỘNG BÌNH THƯỜNG**
-- ✅ Tra cứu theo mã thành viên (MaTV): **HOẠT ĐỘNG BÌNH THƯỜNG**
+- Sửa Tra cứu tất cả thành viên kết thúc: **HOẠT ĐỘNG BÌNH THƯỜNG**
+- Sửa Tra cứu theo mã thành viên (MaTV): **HOẠT ĐỘNG BÌNH THƯỜNG**
 - ❌ Tra cứu theo tên địa điểm: **CHƯA CÓ** (hiện chỉ có MaDiaDiem)
 - ❌ Tra cứu theo tên nguyên nhân: **CHƯA CÓ** (hiện chỉ có MaNguyenNhanMat)
 
 ### Yêu cầu mới
-1. ✅ Sửa URL từ `localhost:4000` → `localhost:3000` trong tài liệu
+1. Sửa Sửa URL từ `localhost:4000` → `localhost:3000` trong tài liệu
 2. ➕ **Thêm tra cứu theo tên địa điểm mai táng** (LIKE search, VD: "Hà Nội" tìm tất cả địa điểm có "Hà Nội")
 3. ➕ **Thêm tra cứu theo tên nguyên nhân mất** (LIKE search, VD: "Bệnh" tìm "Bệnh hiểm nghèo")
 
@@ -54,7 +54,7 @@ GET http://localhost:3000/ketthuc/tracuu
 }
 ```
 
-✅ **Kết luận**: Tra cứu tất cả hoạt động bình thường!
+Sửa **Kết luận**: Tra cứu tất cả hoạt động bình thường!
 
 ---
 
@@ -93,7 +93,7 @@ export interface GhiNhanKetThucPayload {
 
 **THÊM SAU ĐOẠN CODE TRÊN:**
 ```typescript
-// ✅ MỚI: Interface cho filters tra cứu linh hoạt
+// Sửa MỚI: Interface cho filters tra cứu linh hoạt
 export interface TraCuuKetThucFilters {
   HoTen?: string                // Tìm theo họ tên thành viên (LIKE)
   MaNguyenNhanMat?: string      // Tìm theo mã nguyên nhân (bỏ trong V2)
@@ -526,13 +526,13 @@ GET http://localhost:3000/ketthuc/tracuu?MaDiaDiem=DD02
 
 | Tính năng | Trước (V1) | Sau (V2 - Cải tiến) |
 |-----------|-----------|---------------------|
-| Tra cứu tất cả | ✅ Có | ✅ Có (không đổi) |
-| Tra cứu theo họ tên | ✅ LIKE search | ✅ LIKE search (không đổi) |
-| Tra cứu theo nguyên nhân | ✅ MaNguyenNhanMat = | ✅✅ TenNguyenNhanMat LIKE (mới) |
-| Tra cứu theo địa điểm | ✅ MaDiaDiem = | ✅✅ TenDiaDiem LIKE (mới) |
-| Tra cứu theo khoảng thời gian | ✅ TuNgay, DenNgay | ✅ TuNgay, DenNgay (không đổi) |
-| User-friendly | ❌ Phải biết mã (NNM01, DD02) | ✅✅ Gõ từ khóa ("Bệnh", "Hà Nội") |
-| Tương thích ngược | N/A | ✅ API cũ vẫn hoạt động |
+| Tra cứu tất cả | Sửa Có | Sửa Có (không đổi) |
+| Tra cứu theo họ tên | Sửa LIKE search | Sửa LIKE search (không đổi) |
+| Tra cứu theo nguyên nhân | Sửa MaNguyenNhanMat = | SửaSửa TenNguyenNhanMat LIKE (mới) |
+| Tra cứu theo địa điểm | Sửa MaDiaDiem = | SửaSửa TenDiaDiem LIKE (mới) |
+| Tra cứu theo khoảng thời gian | Sửa TuNgay, DenNgay | Sửa TuNgay, DenNgay (không đổi) |
+| User-friendly | ❌ Phải biết mã (NNM01, DD02) | SửaSửa Gõ từ khóa ("Bệnh", "Hà Nội") |
+| Tương thích ngược | N/A | Sửa API cũ vẫn hoạt động |
 
 ---
 
@@ -605,8 +605,8 @@ Backend xử lý:
   - JOIN với bảng NGUYENNHANMAT
     ↓
 Kết quả: Tất cả thành viên có nguyên nhân chứa "Bệnh"
-  - "Bệnh hiểm nghèo" ✅
-  - "Bệnh tim mạch" ✅
+  - "Bệnh hiểm nghèo" Sửa
+  - "Bệnh tim mạch" Sửa
   - "Tuổi già" ❌
 ```
 
@@ -622,8 +622,8 @@ Backend xử lý:
   - JOIN với bảng DIADIEMMAITANG
     ↓
 Kết quả: Tất cả thành viên mai táng có địa điểm chứa "Hà Nội"
-  - "Nghĩa trang Văn Điển - Hà Nội" ✅
-  - "Hỏa táng Hà Nội" ✅
+  - "Nghĩa trang Văn Điển - Hà Nội" Sửa
+  - "Hỏa táng Hà Nội" Sửa
   - "Nghĩa trang Nghệ An" ❌
 ```
 
@@ -671,7 +671,7 @@ Kết quả: Người chết vì bệnh + mai táng Hà Nội + năm 2024
 
 ---
 
-## ✅ CHECKLIST TRIỂN KHAI
+## Sửa CHECKLIST TRIỂN KHAI
 
 ```
 □ SỬA KetThuc.schema.ts:
@@ -760,12 +760,12 @@ GET http://localhost:3000/ketthuc/tracuu?TenNguyenNhanMat=Bệnh&TenDiaDiem=Hà 
 
 ### Cải tiến chính
 
-1. ✅ **Tra cứu tất cả hoạt động bình thường** - Không có lỗi như user nghĩ
-2. ✅ **Thêm tra cứu theo TÊN nguyên nhân** thay vì phải nhớ mã (NNM01, NNM02...)
-3. ✅ **Thêm tra cứu theo TÊN địa điểm** thay vì phải nhớ mã (DD01, DD02...)
-4. ✅ **LIKE search linh hoạt** - Gõ "Bệnh" tìm "Bệnh hiểm nghèo", gõ "Hà Nội" tìm tất cả địa điểm ở Hà Nội
-5. ✅ **Tương thích ngược** - API cũ (MaNguyenNhanMat, MaDiaDiem) vẫn hoạt động
-6. ✅ **Sửa URL** từ `localhost:4000` → `localhost:3000` trong tài liệu
+1. Sửa **Tra cứu tất cả hoạt động bình thường** - Không có lỗi như user nghĩ
+2. Sửa **Thêm tra cứu theo TÊN nguyên nhân** thay vì phải nhớ mã (NNM01, NNM02...)
+3. Sửa **Thêm tra cứu theo TÊN địa điểm** thay vì phải nhớ mã (DD01, DD02...)
+4. Sửa **LIKE search linh hoạt** - Gõ "Bệnh" tìm "Bệnh hiểm nghèo", gõ "Hà Nội" tìm tất cả địa điểm ở Hà Nội
+5. Sửa **Tương thích ngược** - API cũ (MaNguyenNhanMat, MaDiaDiem) vẫn hoạt động
+6. Sửa **Sửa URL** từ `localhost:4000` → `localhost:3000` trong tài liệu
 
 ### Lợi ích
 

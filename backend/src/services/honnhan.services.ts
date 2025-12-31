@@ -65,6 +65,21 @@ class HonNhanService {
   }) {
     const { MaTV, MaTVVC, NgayBatDau, NgayKetThuc } = payload;
 
+    // [0] VALIDATE: Các ngày không được lớn hơn hiện tại
+    const now = new Date();
+    const ngayKetHon = new Date(NgayBatDau);
+
+    if (ngayKetHon > now) {
+      throw new Error('Ngày bắt đầu hôn nhân không được lớn hơn ngày hiện tại');
+    }
+
+    if (NgayKetThuc) {
+      const ngayKetThucDate = new Date(NgayKetThuc);
+      if (ngayKetThucDate > now) {
+        throw new Error('Ngày kết thúc hôn nhân không được lớn hơn ngày hiện tại');
+      }
+    }
+
     // [1] Lấy thông tin 2 thành viên
     const tv1 = await this.getThanhVienInfo(MaTV);
     const tv2 = await this.getThanhVienInfo(MaTVVC);
@@ -78,8 +93,6 @@ class HonNhanService {
     }
 
     // [3] VALIDATION: Hai người đều còn sống
-    const ngayKetHon = new Date(NgayBatDau);
-
     if (tv1.TrangThai === 'Mất' || tv1.NgayGioMat) {
       const ngayMat1 = new Date(tv1.NgayGioMat!);
       if (ngayKetHon > ngayMat1) {

@@ -1,8 +1,8 @@
 # 📥 Hướng Dẫn Import Database
 
 ## Yêu Cầu
-- ✅ Docker đã cài đặt
-- ✅ Đã chạy `docker-compose up -d` trong thư mục `backend`
+- Sửa Docker đã cài đặt
+- Sửa Đã chạy `docker-compose up -d` trong thư mục `backend`
 
 ## Cách 1: Dùng Script (Khuyến nghị)
 
